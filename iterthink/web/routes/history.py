@@ -33,11 +33,16 @@ def who(actor: str) -> str:
     return actor
 
 
+def _stamp(ts: str) -> datetime:
+    """Event stamps have no fraction. Snapshot stamps do. Both are UTC."""
+    parsed = datetime.fromisoformat(ts.replace("Z", "+00:00"))
+    return parsed.astimezone(UTC)
+
+
 def when(ts: str) -> str:
     """UTC stamp shown in the local zone. Default Europe/Zurich."""
     zone = ZoneInfo(os.environ.get("ITERTHINK_TZ", "Europe/Zurich"))
-    parsed = datetime.strptime(ts, "%Y-%m-%dT%H:%M:%SZ").replace(tzinfo=UTC)
-    return parsed.astimezone(zone).strftime("%Y-%m-%d %H:%M")
+    return _stamp(ts).astimezone(zone).strftime("%Y-%m-%d %H:%M")
 
 
 @dataclass(frozen=True)
