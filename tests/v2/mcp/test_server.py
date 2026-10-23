@@ -142,6 +142,23 @@ async def test_actor_comes_from_client_name(bridge: FakeBridge, project_id: str)
     assert bridge.proposals(project_id)[0].actor == "agent:claude"
 
 
+async def test_propose_of_hidden_config_is_refused(
+    bridge: FakeBridge, project_id: str, project_dir: Path
+) -> None:
+    app = build(bridge)
+    with pytest.raises(ToolError, match="hidden"):
+        await app.mcp.call_tool(
+            "propose",
+            {
+                "project": project_id,
+                "changes": {".cursor/mcp.json": "{}"},
+                "reason": "add a server",
+            },
+        )
+    assert bridge.proposals(project_id, None) == []
+    assert not (project_dir / ".cursor").exists()
+
+
 async def test_bridge_error_becomes_tool_error(bridge: FakeBridge, project_id: str) -> None:
     bridge.set_egress(project_id, "allowed", "user:simon")
     app = build(bridge)

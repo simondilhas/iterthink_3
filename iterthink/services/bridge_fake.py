@@ -109,6 +109,8 @@ class FakeBridge:
             raise Forbidden(f"path leaves the project: {path!r}")
         if pure.parts[0] in DATA_DIRS:
             raise Forbidden(f"iterthink's own data is not a project file: {path!r}")
+        if any(part.startswith(".") for part in pure.parts):
+            raise Forbidden(f"hidden files are not project files: {path!r}")
         return pure.as_posix()
 
     def _file(self, p: _Project, path: str) -> Path:
@@ -123,7 +125,8 @@ class FakeBridge:
         snap: Snapshot = {}
         for full in sorted(root.rglob("*")):
             rel = full.relative_to(root)
-            if rel.parts[0] in DATA_DIRS or full.suffix == ".claim" or not full.is_file():
+            hidden = any(part.startswith(".") for part in rel.parts)
+            if hidden or full.suffix == ".claim" or not full.is_file():
                 continue
             snap[rel.as_posix()] = full.read_bytes()
         return snap

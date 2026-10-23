@@ -99,6 +99,8 @@ def relative(path: str) -> str:
         raise Forbidden(f"path leaves the project: {path!r}")
     if parts[0] in _OWN:
         raise Forbidden(f"iterthink's own data is not a project file: {path!r}")
+    if any(part.startswith(".") for part in parts):
+        raise Forbidden(f"hidden files are not project files: {path!r}")
     return path
 
 

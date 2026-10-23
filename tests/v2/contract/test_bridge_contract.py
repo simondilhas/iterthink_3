@@ -115,6 +115,11 @@ def test_read_missing_file_raises_not_found(ctx: Ctx) -> None:
         ".jj/x",
         "Pläne/../../x.md",
         "C:\\x.md",
+        ".vscode/tasks.json",
+        ".cursor/mcp.json",
+        ".github/workflows/x.yml",
+        "Pläne/.hidden/x.md",
+        "notes/.draft.md",
     ],
 )
 def test_paths_outside_the_project_are_forbidden(ctx: Ctx, path: str) -> None:
@@ -124,6 +129,25 @@ def test_paths_outside_the_project_are_forbidden(ctx: Ctx, path: str) -> None:
         ctx.bridge.save(ctx.project, path, "x", ctx.actor)
     with pytest.raises(Forbidden):
         ctx.bridge.propose(ctx.project, {path: "x"}, "agent:t", "test")
+
+
+def test_files_hides_hidden_files(ctx: Ctx) -> None:
+    (ctx.root / ".vscode").mkdir()
+    (ctx.root / ".vscode" / "tasks.json").write_text("{}", encoding="utf-8")
+    (ctx.root / "Pläne" / ".draft.md").write_text("x", encoding="utf-8")
+    paths = {e.path for e in ctx.bridge.files(ctx.project)}
+    assert not any(part.startswith(".") for p in paths for part in p.split("/"))
+
+
+def test_proposal_with_one_hidden_path_is_refused_whole(ctx: Ctx) -> None:
+    before = snapshot_sources(ctx.root)
+    with pytest.raises(Forbidden):
+        ctx.bridge.propose(
+            ctx.project, {MD: "# Neu\n", ".cursor/mcp.json": "{}"}, "agent:t", "test"
+        )
+    assert ctx.bridge.proposals(ctx.project, None) == []
+    assert snapshot_sources(ctx.root) == before
+    assert not (ctx.root / ".cursor").exists()
 
 
 def test_save_writes_file_and_creates_version(ctx: Ctx) -> None:
