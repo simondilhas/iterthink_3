@@ -96,7 +96,7 @@ I'm testing these ideas on iterthink. Disclosure: iterthink is built by my compa
 
 Nothing described here is built yet. What exists is the current iterthink, and a spec for iterthink 3. Before writing the spec, Claude read through the existing code. A large part of it is interface code, and the logic underneath barely depends on it: change detection, impact checks, search, imports, the model router. If the analysis holds, the rebuild replaces the interface and keeps most of the logic. That would support the thesis that the value sits in the logic and the data. Whether it holds is what the build will show.
 
-The spec is the result of this discussion. Every thought in these notes ended up as a rule in one file that I hand to the coding agent, `.cursor/rules/iterthink-2.mdc`. The build runs in its own repository, private for now; I'm publishing the spec alongside this article. It is the plan, not the finished state, and it will change once it meets the code.
+The spec is the result of this discussion. Every thought in these notes ended up as a rule in one file that I hand to the coding agent. It is public, with the slices and everything the agent builds, in the [iterthink_3 repository](https://github.com/simondilhas/iterthink_3) as `.cursor/rules/iterthink-2.mdc`. It is the plan, not the finished state, and it will change once it meets the code.
 
 Put together, the pieces map onto the classic operating system, layer by layer.
 
