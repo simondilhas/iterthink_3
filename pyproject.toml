@@ -7,7 +7,7 @@ name = "iterthink"
 version = "2.0.0a0"
 description = "iterthink 2.0 — local-first project workspace"
 readme = "README.md"
-license = { text = "BUSL-1.1" }
+license = { text = "MIT" }
 requires-python = ">=3.11"
 dependencies = [
     "cryptography>=42.0.0",

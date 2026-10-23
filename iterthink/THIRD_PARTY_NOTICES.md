@@ -5,7 +5,7 @@ This file lists third-party software typically present when installing **iterthi
 **Generated:** 2026-06-06  
 **Regenerate before each release:** run `python scripts/generate_third_party_notices.py` from the repository root with the same interpreter / lockfile you ship.
 
-The **iterthink** application is licensed under the Business Source License 1.1 (see the repository `LICENSE` file). That license is separate from the third-party components listed below.
+The **iterthink** application is licensed under the MIT License (see the repository `LICENSE` file). That license is separate from the third-party components listed below.
 
 ---
 
@@ -991,4 +991,4 @@ Section 8 -- Interpretation.
 
 ---
 
-*This document is not legal advice. Confirm compliance—including BUSL-1.1 and model or binary redistribution terms—with qualified counsel.*
+*This document is not legal advice. Confirm compliance—including model or binary redistribution terms—with qualified counsel.*

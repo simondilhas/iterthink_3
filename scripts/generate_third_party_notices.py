@@ -179,7 +179,7 @@ def main() -> int:
     )
     lines.append("")
     lines.append(
-        "The **iterthink** application is licensed under the Business Source License 1.1 "
+        "The **iterthink** application is licensed under the MIT License "
         "(see the repository `LICENSE` file). That license is separate from the third-party "
         "components listed below."
     )
@@ -245,7 +245,7 @@ def main() -> int:
     lines.append("---")
     lines.append("")
     lines.append(
-        "*This document is not legal advice. Confirm compliance—including BUSL-1.1 and "
+        "*This document is not legal advice. Confirm compliance—including "
         "model or binary redistribution terms—with qualified counsel.*"
     )
     lines.append("")

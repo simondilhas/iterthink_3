@@ -16,3 +16,9 @@ This repo has the Python core copied from 1.x (`compare`, `services`, `persisten
 uv sync --extra dev
 uv run python scripts/check.py
 ```
+
+## License
+
+MIT, see [LICENSE](LICENSE). This covers the code, the spec in `docs/spec/`
+and the file formats iterthink writes, so other tools can read and write an
+iterthink project folder.

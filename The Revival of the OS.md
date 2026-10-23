@@ -92,7 +92,7 @@ There's a limit: a hash chain is tamper-evident, not tamper-proof. Editing one l
 
 ## 10. Testing it on iterthink
 
-I'm testing these ideas on iterthink. Disclosure: iterthink is built by my company, abstract. It started as a tool that shows every change to a document, human or AI, and whether it matters.
+I'm testing these ideas on iterthink. Disclosure: iterthink is built by my company, abstract. The code is open source under the MIT license. It started as a tool that shows every change to a document, human or AI, and whether it matters.
 
 Nothing described here is built yet. What exists is the current iterthink, and a spec for iterthink 3. Before writing the spec, Claude read through the existing code. A large part of it is interface code, and the logic underneath barely depends on it: change detection, impact checks, search, imports, the model router. If the analysis holds, the rebuild replaces the interface and keeps most of the logic. That would support the thesis that the value sits in the logic and the data. Whether it holds is what the build will show.
 
