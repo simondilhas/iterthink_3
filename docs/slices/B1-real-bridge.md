@@ -1,6 +1,6 @@
 ```
 id: B1
-status: ready
+status: done
 depends_on: [A2, A3, A4]
 ```
 # B1 · Real bridge
@@ -99,15 +99,15 @@ def conflicts(proposal: Proposal, snaps: Snapshots, project_dir: Path) -> list[s
 - `get_bridge()` now returns `RealBridge` by default (already coded in bridge.py).
 
 ## Acceptance
-- [ ] All of `tests/v2/contract/` passes for `real`, no skips.
-- [ ] `test_machine_id_created_once`
-- [ ] `test_project_id_survives_move` — move the folder, open again, same id, same history
-- [ ] `test_copy_is_detected_when_both_paths_exist`
-- [ ] `test_restart_keeps_proposals_and_statuses` — new `RealBridge` on same state
-- [ ] `test_proposal_status_moves_with_the_folder` — copy the folder elsewhere, statuses intact
-- [ ] `test_every_version_has_a_log_event_with_version_id`
-- [ ] `test_log_verifies_after_session_and_fails_after_tamper`
-- [ ] `test_accepting_one_proposal_marks_competing_one_conflict`
-- [ ] `test_hidden_and_large_files_are_not_tracked`
-- [ ] `test_close_writes_checkpoint`
-- [ ] `test_windows_hidden_attribute` — skips off Windows
+- [x] All of `tests/v2/contract/` passes for `real`, no skips.
+- [x] `test_machine_id_created_once`
+- [x] `test_project_id_survives_move` — move the folder, open again, same id, same history
+- [x] `test_copy_is_detected_when_both_paths_exist`
+- [x] `test_restart_keeps_proposals_and_statuses` — new `RealBridge` on same state
+- [x] `test_proposal_status_moves_with_the_folder` — copy the folder elsewhere, statuses intact
+- [x] `test_every_version_has_a_log_event_with_version_id`
+- [x] `test_log_verifies_after_session_and_fails_after_tamper`
+- [x] `test_accepting_one_proposal_marks_competing_one_conflict`
+- [x] `test_hidden_and_large_files_are_not_tracked`
+- [x] `test_close_writes_checkpoint`
+- [x] `test_windows_hidden_attribute` — skips off Windows
