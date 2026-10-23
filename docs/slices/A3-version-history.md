@@ -1,6 +1,6 @@
 ```
 id: A3
-status: ready
+status: done
 depends_on: []
 ```
 # A3 · Version history (snapshots)
@@ -52,15 +52,15 @@ class Snapshots:
 - No subprocess, no `jj`, no network.
 
 ## Acceptance
-- [ ] `test_init_creates_versions_dirs_only` — no `.jj`, no `.git`, no `.gitignore`, sources unchanged
-- [ ] `test_init_is_idempotent`
-- [ ] `test_snapshot_returns_id_and_paths`, `test_snapshot_without_changes_returns_none`
-- [ ] `test_object_is_content_addressed` — same bytes, one object file
-- [ ] `test_object_write_is_atomic` — a crash mid-write leaves the previous object
-- [ ] `test_large_file_is_stored` — 5 MB
-- [ ] `test_history_newest_first`, `test_history_filtered_by_path`
-- [ ] `test_file_at_returns_old_bytes_and_none_when_absent`
-- [ ] `test_restore_creates_new_version_and_keeps_old`
-- [ ] `test_draft_leaves_source_files_untouched`
-- [ ] `test_paths_with_spaces_and_umlauts`
-- [ ] `test_path_escape_raises`
+- [x] `test_init_creates_versions_dirs_only` — no `.jj`, no `.git`, no `.gitignore`, sources unchanged
+- [x] `test_init_is_idempotent`
+- [x] `test_snapshot_returns_id_and_paths`, `test_snapshot_without_changes_returns_none`
+- [x] `test_object_is_content_addressed` — same bytes, one object file
+- [x] `test_object_write_is_atomic` — a crash mid-write leaves the previous object
+- [x] `test_large_file_is_stored` — 5 MB
+- [x] `test_history_newest_first`, `test_history_filtered_by_path`
+- [x] `test_file_at_returns_old_bytes_and_none_when_absent`
+- [x] `test_restore_creates_new_version_and_keeps_old`
+- [x] `test_draft_leaves_source_files_untouched`
+- [x] `test_paths_with_spaces_and_umlauts`
+- [x] `test_path_escape_raises`
