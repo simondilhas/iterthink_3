@@ -88,7 +88,9 @@ under Blocked and finishes its other items.
 - **`bridge_fake.py`** labels (`NotImplementedError("slice C2")` for
   `interpret`, `"slice C3"` for chats) use the old numbering.
 - **Seeds:** intent prompt in `defaults/prompts.yaml` (C3). Three.js in
-  `static/vendor/` (C9b).
+  `static/vendor/` (C9b). Theme keys `warning` (orange) and `error` (red) in
+  both palettes of `defaults/config.yaml`, mapped to `--warn` / `--error` in
+  `web/routes/home.py` `_TOKEN` and `app.css`, for the dot (C3).
 - **Spec:** an Erase section (C19) and a connector / API access section
   (C20). Both slices are `ready` and propose the text in their run report.
   An external timestamp service is not in the spec (C13 leaves it out).

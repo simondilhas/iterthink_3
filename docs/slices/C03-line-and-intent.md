@@ -78,8 +78,24 @@ def interpret(project_dir: Path, line: str, context: LineContext, router: Router
   it acts on that document; on the start screen on the project). `/` at the
   start of an empty paragraph does the same in C4's editor (C4 dispatches an
   `it-recall` event; this slice handles it).
-- The dot: steady = idle, pulsing = open proposals exist; clicking it opens
-  A5's panel on the Proposals tab.
+- The dot (spec The line → Recall and state, table): a `data-state` attribute
+  on the dot, one of `idle | typing | working | verdict | error`; CSS in
+  `c3-line.css` maps each to colour and pulse (idle ≈ 3 s, working faster,
+  `prefers-reduced-motion` → no animation). Precedence error > verdict >
+  working > typing > idle.
+  - `typing`: set by `the-line.js` on input while the line is not empty;
+    back to the server state when the line is cleared or sent.
+  - `working`: from Enter until the response arrives (`htmx:beforeRequest` /
+    `htmx:afterRequest`).
+  - `verdict`: any open proposal or task in Needs input for the project (on
+    the start screen: any opened project). Updated over SSE on
+    `proposals-changed`. Click → A5's panel on the Proposals tab.
+  - `error`: the last line request failed, or a task is Failed / blocked.
+    Click → the error message (`partials/error.html`) or the task card.
+  - Ink is `--fg`. Orange and red use `--warn` and `--error`, mapped from new
+    theme keys `warning` and `error`. Those keys are not in the seed
+    `defaults/config.yaml` yet (see slices README → Needs the human): until
+    they are, fall back to `--accent` for both and record it under Blocked.
 - Typing a project name, a file name or "continue" and pressing Enter reopens
   that work (rule, no model).
 - No project active (start screen) and the line is work, not a project name
@@ -100,5 +116,10 @@ def interpret(project_dir: Path, line: str, context: LineContext, router: Router
 - [ ] `test_unbuilt_mode_falls_back_to_search`
 - [ ] `test_intent_is_logged_with_prompt_id`
 - [ ] `test_continue_and_file_name_reopen_work`
-- [ ] `test_dot_pulses_when_proposals_are_open`
+- [ ] `test_dot_is_idle_with_slow_pulse_by_default`
+- [ ] `test_dot_is_still_while_typing_and_the_model_is_not_called`
+- [ ] `test_dot_pulses_faster_while_working_after_enter`
+- [ ] `test_dot_is_orange_when_a_verdict_waits` (open proposal, task in Needs input)
+- [ ] `test_dot_is_red_on_error_or_blocked_task`
+- [ ] `test_dot_state_precedence_and_reduced_motion`
 - [ ] `test_work_without_project_creates_one_in_default_workspace`

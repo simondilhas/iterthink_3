@@ -32,7 +32,7 @@ moves the rest.
 - Review: the task's proposals (`produced_by` relation) wait in review. The
   card links straight to them. Accepting all proposals moves the card to Done;
   rejecting moves it to Rejected with the reason.
-- Needs input: the agent asked a question. The card shows it, the dot pulses,
+- Needs input: the agent asked a question. The card shows it, the dot turns orange,
   the user answers on the card (or via the line). Answers are appended to the
   task file.
 

@@ -46,8 +46,24 @@ Shift+Enter is a line break in line and chat.
 - Mod+K, or `/` at the start of an empty paragraph, brings the line back from
   any mode. It is scoped: inside a document it acts on that document; on the
   start screen on the project.
-- The dot carries state: steady = idle, pulsing = something waits for review.
-  Clicking it opens the review queue.
+- The dot carries state:
+
+  | State                            | Dot                                   |
+  |----------------------------------|---------------------------------------|
+  | idle                             | ink colour, slow pulse (about 3 s)    |
+  | typing                           | solid, no pulse                       |
+  | working after Enter              | faster pulse                          |
+  | something waits for your verdict | orange, solid                         |
+  | error or blocked                 | red                                   |
+
+  Typing stills the dot: nothing runs until Enter, and the still dot shows
+  that. When several states apply, the strongest wins: error, then verdict,
+  then working, then typing, then idle. Ink is the text colour; orange and
+  red are theme tokens, never colours written into the stylesheet. With
+  reduced motion set in the OS, the dot does not pulse; colour still carries
+  the state. Clicking an orange dot opens the review queue; clicking a red
+  dot shows what failed or is blocked. Voice states (listening,
+  transcribing) are described under Voice input.
 - Typing a project name, a file name or "continue" in the line reopens work.
 - The line needs a project. If none is active, the first answer places the
   work in one or creates it (folder model applies). A created project is a
