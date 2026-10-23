@@ -10,7 +10,7 @@ from fastapi.responses import HTMLResponse, RedirectResponse
 
 from iterthink.services.bridge import Bridge, FileEntry
 from iterthink.web.app import bridge_of
-from iterthink.web.routes.home import render
+from iterthink.web.routes.home import folder_page, render
 
 router = APIRouter()
 _bridge = Depends(bridge_of)
@@ -19,8 +19,7 @@ _path = Form()
 
 @router.post("/open", response_class=HTMLResponse, name="open_folder")
 def open_folder(request: Request, path: str = _path, bridge: Bridge = _bridge) -> HTMLResponse:
-    folders = bridge.open_folder(Path(path))
-    return render(request, "home/folders.html", folders=folders)
+    return folder_page(request, bridge, path)
 
 
 @router.post("/projects", name="make_project")

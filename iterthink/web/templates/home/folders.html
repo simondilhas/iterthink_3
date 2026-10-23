@@ -1,12 +1,21 @@
 <ul>
-  {% for folder in folders %}
+  {% if folder %}
   <li>
-    {% if folder.project_id %}
-    <a href="/p/{{ folder.project_id }}">{{ folder.name }}</a>
+    <form method="post" action="/projects">
+      <input type="hidden" name="path" value="{{ folder }}">
+      <span>{{ folder.name }} (this folder)</span>
+      <button type="submit">Make project</button>
+    </form>
+  </li>
+  {% endif %}
+  {% for entry in folders %}
+  <li>
+    {% if entry.project_id %}
+    <a href="/p/{{ entry.project_id }}">{{ entry.name }}</a>
     {% else %}
     <form method="post" action="/projects">
-      <input type="hidden" name="path" value="{{ folder.path }}">
-      <span>{{ folder.name }}</span>
+      <input type="hidden" name="path" value="{{ entry.path }}">
+      <span>{{ entry.name }}</span>
       <button type="submit">Make project</button>
     </form>
     {% endif %}

@@ -1,6 +1,9 @@
 {% extends "base.html" %}
 {% block title %}iterthink{% endblock %}
-{% block head %}{% include "home/head.html" %}{% endblock %}
+{% block head %}
+{% include "home/head.html" %}
+<meta name="htmx-config" content='{"responseHandling":[{"code":"204","swap":false},{"code":"[23]..","swap":true},{"code":"[45]..","swap":true,"error":true}]}'>
+{% endblock %}
 {% block line %}
 <div class="start">
   <form method="post" action="/line" hx-post="/line" hx-target="#search-results" hx-swap="innerHTML">

@@ -75,6 +75,19 @@ def matching_projects(projects: list[ProjectInfo], text: str) -> list[ProjectInf
     return [p for p in projects if wanted in p.name.casefold()]
 
 
+def folder_page(request: Request, bridge: Bridge, raw: str) -> HTMLResponse:
+    """The folder's first-level subfolders, plus the folder itself unless it is a project."""
+    folder = Path(raw).expanduser().resolve()
+    folders = bridge.open_folder(folder)
+    is_project = len(folders) == 1 and folders[0].path == str(folder) and folders[0].project_id
+    return render(
+        request,
+        "home/folders.html",
+        folders=folders,
+        folder=None if is_project else folder,
+    )
+
+
 def _open(request: Request, href: str) -> Response:
     if request.headers.get("HX-Request"):
         return Response(status_code=200, headers={"HX-Redirect": href})
@@ -86,8 +99,7 @@ def home_line(request: Request, q: str = _query, bridge: Bridge = _bridge) -> Re
     """Enter on the start screen. Fixed rules, no AI: list, open a project, or open a folder."""
     text = " ".join(q.split())
     if _PATH.match(text):
-        folders = bridge.open_folder(Path(text))
-        return render(request, "home/folders.html", folders=folders)
+        return folder_page(request, bridge, text)
     projects = bridge.projects()
     if _LIST_PROJECTS.match(text.casefold()):
         return render(request, "home/projects.html", projects=projects)

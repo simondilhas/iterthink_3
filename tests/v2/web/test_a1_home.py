@@ -55,6 +55,44 @@ def test_home_line_path_lists_folders(client: TestClient, project_dir: Path) -> 
     assert "Make project" in page.text
 
 
+def test_home_line_missing_folder_says_so(client: TestClient, tmp_path: Path) -> None:
+    missing = tmp_path / "missing"
+    page = client.post("/line", data={"q": str(missing)}, headers={"HX-Request": "true"})
+    assert page.status_code == 404
+    assert f"no folder at {missing}" in page.text
+
+
+def test_home_shows_error_responses_in_place(client: TestClient) -> None:
+    page = client.get("/")
+    assert '<meta name="htmx-config"' in page.text
+    assert '{"code":"[45]..","swap":true,"error":true}' in page.text
+
+
+def test_home_line_empty_folder_offers_make_project(client: TestClient, tmp_path: Path) -> None:
+    empty = tmp_path / "test"
+    empty.mkdir()
+    page = client.post("/line", data={"q": str(empty)})
+    assert page.status_code == 200
+    assert "Make project" in page.text
+    assert f'value="{empty}"' in page.text
+
+
+def test_home_line_folder_with_subfolders_offers_itself_too(
+    client: TestClient, project_dir: Path
+) -> None:
+    page = client.post("/line", data={"q": str(project_dir)})
+    assert f'value="{project_dir}"' in page.text
+    assert project_dir.name in page.text
+
+
+def test_home_line_project_folder_links_without_make_project(
+    client: TestClient, project_dir: Path, project_id: str
+) -> None:
+    page = client.post("/line", data={"q": str(project_dir)})
+    assert f'href="/p/{project_id}"' in page.text
+    assert "Make project" not in page.text
+
+
 def test_home_line_unknown_shows_hint(client: TestClient) -> None:
     page = client.post("/line", data={"q": "fire protection concept"})
     assert page.status_code == 200
