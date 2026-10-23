@@ -1,0 +1,28 @@
+---
+description: How agents work on iterthink — unattended slice runs, tests first, hard stops
+alwaysApply: true
+---
+
+# Workflow
+- Follow `AGENTS.md`. Runs are unattended: nobody answers during a run.
+- A slice is scope and tests, not a day. Take the next `docs/slices/` entry
+  with `status: ready` whose dependencies are `done`, then the next.
+- Where a slice disagrees with `.cursor/rules/iterthink-2.mdc`, follow the
+  spec, record the disagreement, and continue with work that does not depend
+  on it. Open disagreements are in `docs/decisions.md` under Conflicts.
+- Tests first: write the slice's acceptance tests, watch them fail, implement.
+- Unclear point: use the slice's **Decided for you**; else internal and
+  reversible → decide, record as provisional; visible or hard to undo →
+  record under Blocked, finish items it does not affect, continue.
+- Every slice ends with a run report in `docs/runs/` and a commit. Then start
+  the next slice that can start. Stop when none can.
+
+# Hard limits
+- No test deletion, skipping, xfail or weakening to get green.
+- Allowlists and `tests/legacy_known_failures.txt` only shrink. A0 may fill
+  the baseline once; after that they only shrink.
+- No new dependency, config file, contract enum value or network call.
+- Do not push, open pull requests, or merge unless the human asks.
+- Never edit `docs/decisions.md`, `AGENTS.md`, `.cursor/` or CI. Propose
+  changes in the run report.
+- Three attempts per failing test, then record and move on.

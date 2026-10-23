@@ -1,0 +1,37 @@
+---
+description: Core boundaries — single writers, contract first, no UI imports
+globs: iterthink/compare/**,iterthink/services/**,iterthink/persistence/**,iterthink/db/**,iterthink/contract/**,iterthink/ai/**
+alwaysApply: false
+---
+
+# Single owners (enforced by tests/v2/architecture)
+- `persistence/vcs.py` is the only module that runs `jj`.
+- `services/event_log.py` is the only module that appends to a log file.
+- `services/egress.py` decides every remote call; `ai/` asks it first.
+- `services/indexer.py` is the only writer of the SQLite index, and only from events.
+- `services/bridge.py` is the contract UI, apps, MCP and CLI call. Human-owned;
+  `bridge_real.py` implements it and must pass `tests/v2/contract/`.
+
+# Imports
+- Core (`compare`, `services`, `persistence`, `db`, `contract`, `ai`) never
+  imports `web`, `mcp`, `desktop`, `studio` or `flet`.
+- `web` and `mcp` call core through `services/bridge.py`, not module internals.
+
+# Data
+- Files are the truth; SQLite is a projection. If a value cannot be rebuilt
+  from logs and files, it does not belong in SQLite. Version bytes live in
+  `.iterthink/versions/` (content-addressed) until the jj conflict in
+  `docs/decisions.md` is settled.
+- Kinds, statuses and relation types come from `contract/` enums. Adding one
+  is a contract change: decision entry first.
+- Canonical JSON for events: sorted keys, UTF-8, ids as strings.
+- Free text goes to `blobs/<sha256>`; events carry the hash.
+- Paths inside `.iterthink/` are relative to the project root.
+
+# Code
+- Python 3.11, full type hints, mypy strict on new modules.
+- Pure functions where possible; I/O at the edges, passed in as parameters
+  so tests can use `tmp_path` and fakes.
+- Errors: raise specific exceptions defined in the module; no bare `except`.
+- No global state beyond module-level constants. Config is passed in.
+- subprocess: list arguments, never `shell=True`, always a timeout.

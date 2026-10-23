@@ -1,0 +1,22 @@
+---
+description: Version history via jj — allowed operations and test rules
+globs: iterthink/persistence/vcs.py,tests/v2/persistence/test_vcs*.py
+alwaysApply: false
+---
+
+2.0 stores versions in `.iterthink/versions/` via `persistence/snapshots.py`
+(slice A3). Do not add `persistence/vcs.py`. The notes below apply only if a
+later version adopts jj (`iterthink-2.mdc`, "Later").
+
+- Call jj via subprocess with `--no-pager`, `--color never`, `-T` templates,
+  list args, timeout. Parse template output, never human output.
+- Repo is non-colocated: `.jj/` at the project root, no `.git`.
+- Config is written by iterthink into the repo config, never a `.gitignore`.
+- Allowed: snapshot, describe, new, workspace add/forget, bookmark create,
+  restore --from, rebase of proposals, log, diff, op log.
+- Forbidden on recorded history: `op undo`, `abandon`, `squash`, `util gc`,
+  force push. Only a function named `erase_*` may use `abandon`/`gc`, and
+  only with an audit event.
+- Every public function returns typed results (change id, commit id), not raw text.
+- Tests run against a real jj in `tmp_path` (`jj_bin` fixture). Do not mock jj
+  in integration tests; unit tests may fake the subprocess layer.

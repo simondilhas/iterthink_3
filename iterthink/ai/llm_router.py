@@ -1,0 +1,812 @@
+"""Route chat completions: Ollama (local) vs OpenAI-compatible / Anthropic / Gemini (HTTP)."""
+
+from __future__ import annotations
+
+import json
+import re
+from collections.abc import AsyncIterator, Callable
+from dataclasses import dataclass
+from typing import Any
+
+import httpx
+
+from iterthink.ai.privacy_shield import privacy_shield_enabled_for_tier, redact_messages, reinject_response
+from iterthink.db.session import session_scope
+from iterthink.persistence import token_usage
+from iterthink import licensing
+from iterthink.token_cost_settings import remote_tier_applies
+
+# Encrypted JSON keys (must match studio.settings_ui / studio defaults)
+SECRET_COMPANY_OPENAI = "company_openai"
+SECRET_CLOUD_ANTHROPIC = "cloud_anthropic"
+SECRET_CLOUD_OPENAI = "cloud_openai"
+SECRET_CLOUD_GOOGLE = "cloud_google"
+SECRET_YOURCOMPANYOS_API = "yourcompanyos_api"
+SECRET_ITER_THINK_LICENSE = "iterthink_license"
+
+DEFAULT_COMPANY_OPENAI_BASE = "https://api.openai.com/v1"
+ANTHROPIC_API_URL = "https://api.anthropic.com/v1/messages"
+ANTHROPIC_VERSION = "2023-06-01"
+
+UsageRecordedCb = Callable[[], None]
+
+
+@dataclass(frozen=True)
+class TokenUsage:
+    prompt_tokens: int = 0
+    completion_tokens: int = 0
+
+    def has_tokens(self) -> bool:
+        return self.prompt_tokens > 0 or self.completion_tokens > 0
+
+
+def _openai_parse_usage(data: dict[str, Any]) -> TokenUsage | None:
+    u = data.get("usage")
+    if not isinstance(u, dict):
+        return None
+    pt = int(u.get("prompt_tokens") or 0)
+    ct = int(u.get("completion_tokens") or 0)
+    if pt == 0 and ct == 0:
+        return None
+    return TokenUsage(prompt_tokens=pt, completion_tokens=ct)
+
+
+def _anthropic_parse_usage(data: dict[str, Any]) -> TokenUsage | None:
+    u = data.get("usage")
+    if not isinstance(u, dict):
+        return None
+    pt = int(u.get("input_tokens") or 0)
+    ct = int(u.get("output_tokens") or 0)
+    if pt == 0 and ct == 0:
+        return None
+    return TokenUsage(prompt_tokens=pt, completion_tokens=ct)
+
+
+def _gemini_parse_usage(data: dict[str, Any]) -> TokenUsage | None:
+    u = data.get("usageMetadata")
+    if not isinstance(u, dict):
+        return None
+    pt = int(u.get("promptTokenCount") or 0)
+    ct = int(u.get("candidatesTokenCount") or 0)
+    if pt == 0 and ct == 0:
+        total = int(u.get("totalTokenCount") or 0)
+        if total > 0:
+            return TokenUsage(prompt_tokens=total, completion_tokens=0)
+        return None
+    return TokenUsage(prompt_tokens=pt, completion_tokens=ct)
+
+
+def _store_usage(sink: list[TokenUsage] | None, usage: TokenUsage | None) -> None:
+    if sink is not None and usage is not None and usage.has_tokens():
+        sink[:] = [usage]
+
+
+class _StreamUsageWrapper:
+    """Wrap a streaming response; record token usage when the stream ends."""
+
+    def __init__(
+        self,
+        inner: AsyncIterator[dict[str, Any]],
+        *,
+        usage_sink: list[TokenUsage],
+        on_complete: Callable[[TokenUsage | None], None],
+    ) -> None:
+        self._inner = inner
+        self._usage_sink = usage_sink
+        self._on_complete = on_complete
+
+    def __aiter__(self) -> _StreamUsageWrapper:
+        return self
+
+    async def __anext__(self) -> dict[str, Any]:
+        try:
+            return await self._inner.__anext__()
+        except StopAsyncIteration:
+            usage = self._usage_sink[0] if self._usage_sink else None
+            self._on_complete(usage)
+            raise
+
+
+def normalize_openai_base_url(url: str) -> str:
+    u = (url or "").strip().rstrip("/")
+    if not u:
+        u = DEFAULT_COMPANY_OPENAI_BASE.rstrip("/")
+    return u
+
+
+def _openai_chat_url(base: str) -> str:
+    """``{base}/chat/completions`` — standard OpenAI-compatible pattern."""
+    return f"{normalize_openai_base_url(base)}/chat/completions"
+
+
+def _openai_messages_json_hint(messages: list[dict[str, str]]) -> list[dict[str, str]]:
+    """OpenAI ``json_object`` format requires the word *json* in the input messages."""
+    out = [dict(m) for m in messages]
+    joined = "\n".join(str(m.get("content") or "") for m in out).lower()
+    if "json" in joined:
+        return out
+    if out and out[0].get("role") == "system":
+        out[0] = {
+            **out[0],
+            "content": (str(out[0].get("content") or "") + "\n\nRespond with valid JSON only."),
+        }
+    else:
+        out.insert(0, {"role": "system", "content": "Respond with valid JSON only."})
+    return out
+
+
+def _messages_split_system(messages: list[dict[str, str]]) -> tuple[str, list[dict[str, str]]]:
+    sys_chunks: list[str] = []
+    rest: list[dict[str, str]] = []
+    for m in messages:
+        if m.get("role") == "system":
+            sys_chunks.append(str(m.get("content") or ""))
+        else:
+            rest.append({"role": str(m.get("role") or "user"), "content": str(m.get("content") or "")})
+    return "\n\n".join(sys_chunks).strip(), rest
+
+
+def _gemini_model_id_for_url(model: str) -> str:
+    """REST path is ``.../v1beta/models/{id}:generateContent`` — ``id`` is not ``models/...``."""
+    s = (model or "").strip()
+    if s.startswith("models/"):
+        s = s[len("models/") :]
+    return s.replace("/", "-")
+
+
+def _gemini_url_fixed(model: str, api_key: str, stream: bool) -> str:
+    from urllib.parse import quote
+
+    key_q = quote(api_key, safe="")
+    enc_model = _gemini_model_id_for_url(model)
+    if stream:
+        return (
+            f"https://generativelanguage.googleapis.com/v1beta/models/"
+            f"{enc_model}:streamGenerateContent?alt=sse&key={key_q}"
+        )
+    return (
+        f"https://generativelanguage.googleapis.com/v1beta/models/"
+        f"{enc_model}:generateContent?key={key_q}"
+    )
+
+
+def _build_gemini_body(messages: list[dict[str, str]], json_mode: bool) -> dict[str, Any]:
+    system_text, rest = _messages_split_system(messages)
+    contents: list[dict[str, Any]] = []
+    for m in rest:
+        role = "user" if m["role"] == "user" else "model"
+        contents.append({"role": role, "parts": [{"text": m["content"]}]})
+    body: dict[str, Any] = {"contents": contents}
+    if system_text:
+        body["systemInstruction"] = {"parts": [{"text": system_text}]}
+    if json_mode:
+        body["generationConfig"] = {"responseMimeType": "application/json"}
+    return body
+
+
+async def _openai_nonstream(
+    client: httpx.AsyncClient,
+    *,
+    url: str,
+    api_key: str,
+    model: str,
+    messages: list[dict[str, str]],
+    json_mode: bool,
+    strict_response_format: bool = False,
+    extra_headers: dict[str, str] | None = None,
+) -> tuple[dict[str, Any], TokenUsage | None]:
+    msgs = _openai_messages_json_hint(messages) if json_mode else messages
+    payload: dict[str, Any] = {"model": model, "messages": msgs}
+    if json_mode and strict_response_format:
+        payload["response_format"] = {"type": "json_object"}
+    headers = {"Authorization": f"Bearer {api_key}", "Content-Type": "application/json"}
+    if extra_headers:
+        headers.update(extra_headers)
+    r = await client.post(
+        url,
+        headers=headers,
+        json=payload,
+        timeout=120.0,
+    )
+    r.raise_for_status()
+    data = r.json()
+    text = ""
+    try:
+        text = (data["choices"][0]["message"].get("content")) or ""
+    except (KeyError, IndexError, TypeError):
+        text = ""
+    return {"message": {"content": str(text)}}, _openai_parse_usage(data)
+
+
+async def _openai_stream_iter(
+    client: httpx.AsyncClient,
+    *,
+    url: str,
+    api_key: str,
+    model: str,
+    messages: list[dict[str, str]],
+    json_mode: bool,
+    strict_response_format: bool = False,
+    usage_sink: list[TokenUsage] | None = None,
+    extra_headers: dict[str, str] | None = None,
+) -> AsyncIterator[dict[str, Any]]:
+    msgs = _openai_messages_json_hint(messages) if json_mode else messages
+    payload: dict[str, Any] = {
+        "model": model,
+        "messages": msgs,
+        "stream": True,
+        "stream_options": {"include_usage": True},
+    }
+    if json_mode and strict_response_format:
+        payload["response_format"] = {"type": "json_object"}
+    headers = {"Authorization": f"Bearer {api_key}", "Content-Type": "application/json"}
+    if extra_headers:
+        headers.update(extra_headers)
+    async with client.stream(
+        "POST",
+        url,
+        headers=headers,
+        json=payload,
+        timeout=120.0,
+    ) as resp:
+        resp.raise_for_status()
+        async for line in resp.aiter_lines():
+            if not line or not line.startswith("data: "):
+                continue
+            chunk = line[6:].strip()
+            if chunk == "[DONE]":
+                break
+            try:
+                data = json.loads(chunk)
+            except json.JSONDecodeError:
+                continue
+            _store_usage(usage_sink, _openai_parse_usage(data))
+            try:
+                delta = data["choices"][0].get("delta") or {}
+                piece = delta.get("content") or ""
+            except (KeyError, IndexError, TypeError):
+                piece = ""
+            if piece:
+                yield {"message": {"content": piece}}
+
+
+async def _openai_stream_full(
+    *,
+    url: str,
+    api_key: str,
+    model: str,
+    messages: list[dict[str, str]],
+    json_mode: bool,
+    strict_response_format: bool = False,
+    usage_sink: list[TokenUsage] | None = None,
+    extra_headers: dict[str, str] | None = None,
+) -> AsyncIterator[dict[str, Any]]:
+    async with httpx.AsyncClient() as client:
+        async for part in _openai_stream_iter(
+            client,
+            url=url,
+            api_key=api_key,
+            model=model,
+            messages=messages,
+            json_mode=json_mode,
+            strict_response_format=strict_response_format,
+            usage_sink=usage_sink,
+            extra_headers=extra_headers,
+        ):
+            yield part
+
+
+async def _anthropic_nonstream(
+    client: httpx.AsyncClient,
+    *,
+    api_key: str,
+    model: str,
+    messages: list[dict[str, str]],
+    json_mode: bool,
+) -> tuple[dict[str, Any], TokenUsage | None]:
+    system_text, rest = _messages_split_system(messages)
+    if json_mode and system_text:
+        system_text = system_text + "\n\nReply with valid JSON only, no markdown fences."
+    elif json_mode:
+        system_text = "Reply with valid JSON only, no markdown fences."
+    anth_msgs: list[dict[str, str]] = []
+    for m in rest:
+        if m["role"] in ("user", "assistant"):
+            anth_msgs.append({"role": m["role"], "content": m["content"]})
+    if not anth_msgs:
+        anth_msgs = [{"role": "user", "content": ""}]
+    payload: dict[str, Any] = {
+        "model": model,
+        "max_tokens": 8192,
+        "messages": anth_msgs,
+    }
+    if system_text:
+        payload["system"] = system_text
+    r = await client.post(
+        ANTHROPIC_API_URL,
+        headers={
+            "x-api-key": api_key,
+            "anthropic-version": ANTHROPIC_VERSION,
+            "content-type": "application/json",
+        },
+        json=payload,
+        timeout=120.0,
+    )
+    r.raise_for_status()
+    data = r.json()
+    parts = data.get("content") or []
+    text = ""
+    for p in parts:
+        if isinstance(p, dict) and p.get("type") == "text":
+            text += str(p.get("text") or "")
+    return {"message": {"content": text}}, _anthropic_parse_usage(data)
+
+
+async def _anthropic_stream_iter(
+    client: httpx.AsyncClient,
+    *,
+    api_key: str,
+    model: str,
+    messages: list[dict[str, str]],
+    json_mode: bool,
+    usage_sink: list[TokenUsage] | None = None,
+) -> AsyncIterator[dict[str, Any]]:
+    system_text, rest = _messages_split_system(messages)
+    if json_mode and system_text:
+        system_text = system_text + "\n\nReply with valid JSON only, no markdown fences."
+    elif json_mode:
+        system_text = "Reply with valid JSON only, no markdown fences."
+    anth_msgs: list[dict[str, str]] = []
+    for m in rest:
+        if m["role"] in ("user", "assistant"):
+            anth_msgs.append({"role": m["role"], "content": m["content"]})
+    if not anth_msgs:
+        anth_msgs = [{"role": "user", "content": ""}]
+    payload: dict[str, Any] = {
+        "model": model,
+        "max_tokens": 8192,
+        "messages": anth_msgs,
+        "stream": True,
+    }
+    if system_text:
+        payload["system"] = system_text
+    input_tokens = 0
+    output_tokens = 0
+    async with client.stream(
+        "POST",
+        ANTHROPIC_API_URL,
+        headers={
+            "x-api-key": api_key,
+            "anthropic-version": ANTHROPIC_VERSION,
+            "content-type": "application/json",
+        },
+        json=payload,
+        timeout=120.0,
+    ) as resp:
+        resp.raise_for_status()
+        async for line in resp.aiter_lines():
+            if not line or not line.startswith("data: "):
+                continue
+            raw = line[6:].strip()
+            try:
+                evt = json.loads(raw)
+            except json.JSONDecodeError:
+                continue
+            evt_type = evt.get("type")
+            if evt_type == "message_start":
+                msg = evt.get("message") or {}
+                u = msg.get("usage") if isinstance(msg.get("usage"), dict) else {}
+                input_tokens = int(u.get("input_tokens") or 0)
+            elif evt_type == "message_delta":
+                u = evt.get("usage") if isinstance(evt.get("usage"), dict) else {}
+                output_tokens = int(u.get("output_tokens") or output_tokens)
+            elif evt_type == "content_block_delta":
+                delta = evt.get("delta") or {}
+                if delta.get("type") == "text_delta":
+                    piece = str(delta.get("text") or "")
+                    if piece:
+                        yield {"message": {"content": piece}}
+    if input_tokens or output_tokens:
+        _store_usage(usage_sink, TokenUsage(prompt_tokens=input_tokens, completion_tokens=output_tokens))
+
+
+async def _anthropic_stream_full(
+    *,
+    api_key: str,
+    model: str,
+    messages: list[dict[str, str]],
+    json_mode: bool,
+    usage_sink: list[TokenUsage] | None = None,
+) -> AsyncIterator[dict[str, Any]]:
+    async with httpx.AsyncClient() as client:
+        async for part in _anthropic_stream_iter(
+            client,
+            api_key=api_key,
+            model=model,
+            messages=messages,
+            json_mode=json_mode,
+            usage_sink=usage_sink,
+        ):
+            yield part
+
+
+async def _gemini_nonstream(
+    client: httpx.AsyncClient,
+    *,
+    api_key: str,
+    model: str,
+    messages: list[dict[str, str]],
+    json_mode: bool,
+) -> tuple[dict[str, Any], TokenUsage | None]:
+    url = _gemini_url_fixed(model, api_key, stream=False)
+    body = _build_gemini_body(messages, json_mode)
+    r = await client.post(url, json=body, timeout=120.0)
+    r.raise_for_status()
+    data = r.json()
+    text = ""
+    for cand in data.get("candidates") or []:
+        for part in (cand.get("content") or {}).get("parts") or []:
+            if "text" in part:
+                text += str(part["text"] or "")
+    return {"message": {"content": text}}, _gemini_parse_usage(data)
+
+
+_sse_data = re.compile(r"^data:\s*(.+)$")
+
+
+async def _gemini_stream_iter(
+    client: httpx.AsyncClient,
+    *,
+    api_key: str,
+    model: str,
+    messages: list[dict[str, str]],
+    json_mode: bool,
+    usage_sink: list[TokenUsage] | None = None,
+) -> AsyncIterator[dict[str, Any]]:
+    url = _gemini_url_fixed(model, api_key, stream=True)
+    body = _build_gemini_body(messages, json_mode)
+    last_usage: TokenUsage | None = None
+    async with client.stream("POST", url, json=body, timeout=120.0) as resp:
+        resp.raise_for_status()
+        async for line in resp.aiter_lines():
+            m = _sse_data.match(line or "")
+            if not m:
+                continue
+            chunk = m.group(1).strip()
+            if not chunk or chunk == "[DONE]":
+                continue
+            try:
+                data = json.loads(chunk)
+            except json.JSONDecodeError:
+                continue
+            u = _gemini_parse_usage(data)
+            if u is not None:
+                last_usage = u
+            for cand in data.get("candidates") or []:
+                for part in (cand.get("content") or {}).get("parts") or []:
+                    if "text" in part:
+                        piece = str(part.get("text") or "")
+                        if piece:
+                            yield {"message": {"content": piece}}
+    _store_usage(usage_sink, last_usage)
+
+
+async def _gemini_stream_full(
+    *,
+    api_key: str,
+    model: str,
+    messages: list[dict[str, str]],
+    json_mode: bool,
+    usage_sink: list[TokenUsage] | None = None,
+) -> AsyncIterator[dict[str, Any]]:
+    async with httpx.AsyncClient() as client:
+        async for part in _gemini_stream_iter(
+            client,
+            api_key=api_key,
+            model=model,
+            messages=messages,
+            json_mode=json_mode,
+            usage_sink=usage_sink,
+        ):
+            yield part
+
+
+class LlmChatBackend:
+    """
+    Duck-compatible with ``ollama.AsyncClient.chat`` for call sites that pass
+    ``model``, ``messages``, ``stream``, and optional ``format``.
+    """
+
+    def __init__(
+        self,
+        ollama: Any,
+        *,
+        tier: str,
+        cloud_vendor: str,
+        local_model: str,
+        company_openai_model: str,
+        company_openai_base_url: str,
+        cloud_anthropic_model: str,
+        cloud_openai_model: str,
+        cloud_google_model: str,
+        secrets: dict[str, str],
+        privacy_shield_reinject: bool = True,
+        on_usage_recorded: UsageRecordedCb | None = None,
+    ) -> None:
+        self._ollama = ollama
+        self._tier = tier
+        self._cloud_vendor = (cloud_vendor or "openai").strip().lower()
+        self._local_model = local_model
+        self._company_openai_model = company_openai_model
+        self._company_base = company_openai_base_url
+        self._cloud_anthropic_model = cloud_anthropic_model
+        self._cloud_openai_model = cloud_openai_model
+        self._cloud_google_model = cloud_google_model
+        self._secrets = secrets
+        self._privacy_shield_reinject = bool(privacy_shield_reinject)
+        self._on_usage_recorded = on_usage_recorded
+
+    def _privacy_shield_applies(self) -> bool:
+        return privacy_shield_enabled_for_tier(self._tier)
+
+    def _maybe_reinject(self, resp: Any, rmap: Any) -> Any:
+        if rmap and self._privacy_shield_reinject:
+            return reinject_response(resp, rmap)
+        return resp
+
+    def _usage_vendor(self) -> str:
+        if self._tier == "company":
+            return "openai"
+        if self._tier == "cloud":
+            return self._cloud_vendor
+        return ""
+
+    def _record_token_usage(self, model: str, usage: TokenUsage | None) -> None:
+        if not remote_tier_applies(self._tier) or usage is None or not usage.has_tokens():
+            return
+        with session_scope() as session:
+            token_usage.record_usage(
+                session,
+                tier=self._tier,
+                vendor=self._usage_vendor(),
+                model=model,
+                prompt_tokens=usage.prompt_tokens,
+                completion_tokens=usage.completion_tokens,
+            )
+        if self._on_usage_recorded is not None:
+            self._on_usage_recorded()
+
+    def _wrap_stream(
+        self,
+        inner: AsyncIterator[dict[str, Any]],
+        *,
+        usage_sink: list[TokenUsage],
+        model: str,
+    ) -> _StreamUsageWrapper:
+        return _StreamUsageWrapper(
+            inner,
+            usage_sink=usage_sink,
+            on_complete=lambda u: self._record_token_usage(model, u),
+        )
+
+    def effective_model(self, explicit: str | None) -> str:
+        if explicit and explicit.strip():
+            return explicit.strip()
+        if self._tier == "local":
+            return self._local_model
+        if self._tier == "company":
+            return self._company_openai_model or "gpt-4o-mini"
+        if self._tier == "cloud":
+            if self._cloud_vendor == "hosted":
+                return "google/gemma-4-31B-it"
+            if self._cloud_vendor == "anthropic":
+                return (self._cloud_anthropic_model or "").strip()
+            if self._cloud_vendor == "google":
+                return (self._cloud_google_model or "").strip()
+            return (self._cloud_openai_model or "").strip()
+        return self._local_model
+
+    def _require_secret(self, key: str) -> str:
+        v = (self._secrets.get(key) or "").strip()
+        if not v:
+            raise ValueError(f"Missing API key for {key}. Unlock or save credentials in Settings → Models.")
+        return v
+
+    async def chat(
+        self,
+        *,
+        model: str = "",
+        messages: list[dict[str, str]] | None = None,
+        stream: bool = False,
+        format: str | None = None,
+        skip_privacy_redaction: bool = False,
+    ) -> Any:
+        messages = messages or []
+        m = self.effective_model(model or None)
+        json_mode = format == "json"
+        rmap = None
+        if self._privacy_shield_applies() and not skip_privacy_redaction:
+            # Coerce non-stream so reinject runs on the full assistant text.
+            stream = False
+            messages, rmap = await redact_messages(messages, self._tier)
+
+        if self._tier == "local":
+            kwargs: dict[str, Any] = {"model": m, "messages": messages, "stream": stream}
+            if format:
+                kwargs["format"] = format
+            resp = await self._ollama.chat(**kwargs)
+            return self._maybe_reinject(resp, rmap)
+
+        if self._tier == "company":
+            key = self._require_secret(SECRET_COMPANY_OPENAI)
+            url = _openai_chat_url(self._company_base)
+            strict_rf = False
+            if stream:
+                usage_sink: list[TokenUsage] = []
+                stream_iter = _openai_stream_full(
+                    url=url,
+                    api_key=key,
+                    model=m,
+                    messages=messages,
+                    json_mode=json_mode,
+                    strict_response_format=strict_rf,
+                    usage_sink=usage_sink,
+                )
+                return self._wrap_stream(stream_iter, usage_sink=usage_sink, model=m)
+            async with httpx.AsyncClient() as client:
+                resp, usage = await _openai_nonstream(
+                    client,
+                    url=url,
+                    api_key=key,
+                    model=m,
+                    messages=messages,
+                    json_mode=json_mode,
+                    strict_response_format=strict_rf,
+                )
+            self._record_token_usage(m, usage)
+            return self._maybe_reinject(resp, rmap)
+
+        if self._tier == "cloud":
+            if self._cloud_vendor == "hosted":
+                key = (self._secrets.get(SECRET_ITER_THINK_LICENSE) or licensing.get_license_key() or "").strip()
+                if not key:
+                    raise ValueError(
+                        "Swiss AI Hosting requires an active license. "
+                        "Settings → License: enter your key, or subscribe at iterthink.com."
+                    )
+                url = f"{licensing.api_base_url()}/v1/ai/chat/completions"
+                model_name = (m or "").strip() or "google/gemma-4-31B-it"
+                hosted_headers = licensing.api_headers()
+                if stream:
+                    usage_sink = []
+                    stream_iter = _openai_stream_full(
+                        url=url,
+                        api_key=key,
+                        model=model_name,
+                        messages=messages,
+                        json_mode=json_mode,
+                        strict_response_format=False,
+                        usage_sink=usage_sink,
+                        extra_headers=hosted_headers,
+                    )
+                    return self._wrap_stream(stream_iter, usage_sink=usage_sink, model=model_name)
+                async with httpx.AsyncClient() as client:
+                    resp, usage = await _openai_nonstream(
+                        client,
+                        url=url,
+                        api_key=key,
+                        model=model_name,
+                        messages=messages,
+                        json_mode=json_mode,
+                        strict_response_format=False,
+                        extra_headers=hosted_headers,
+                    )
+                self._record_token_usage(model_name, usage)
+                return self._maybe_reinject(resp, rmap)
+            if self._cloud_vendor == "anthropic":
+                if not (m or "").strip():
+                    raise ValueError(
+                        "No Claude model id. Settings → Models: enter your Anthropic key, click "
+                        "«List Claude models», choose a model, then Save."
+                    )
+                key = self._require_secret(SECRET_CLOUD_ANTHROPIC)
+                if stream:
+                    usage_sink = []
+                    stream_iter = _anthropic_stream_full(
+                        api_key=key,
+                        model=m,
+                        messages=messages,
+                        json_mode=json_mode,
+                        usage_sink=usage_sink,
+                    )
+                    return self._wrap_stream(stream_iter, usage_sink=usage_sink, model=m)
+                async with httpx.AsyncClient() as client:
+                    resp, usage = await _anthropic_nonstream(
+                        client, api_key=key, model=m, messages=messages, json_mode=json_mode
+                    )
+                self._record_token_usage(m, usage)
+                return self._maybe_reinject(resp, rmap)
+            if self._cloud_vendor == "google":
+                if not (m or "").strip():
+                    raise ValueError(
+                        "No Gemini model id. Settings → Models: enter your Google AI key, click "
+                        "«List Gemini models», choose a model, then Save."
+                    )
+                key = self._require_secret(SECRET_CLOUD_GOOGLE)
+                if stream:
+                    usage_sink = []
+                    stream_iter = _gemini_stream_full(
+                        api_key=key,
+                        model=m,
+                        messages=messages,
+                        json_mode=json_mode,
+                        usage_sink=usage_sink,
+                    )
+                    return self._wrap_stream(stream_iter, usage_sink=usage_sink, model=m)
+                async with httpx.AsyncClient() as client:
+                    resp, usage = await _gemini_nonstream(
+                        client, api_key=key, model=m, messages=messages, json_mode=json_mode
+                    )
+                self._record_token_usage(m, usage)
+                return self._maybe_reinject(resp, rmap)
+            if not (m or "").strip():
+                raise ValueError(
+                    "No OpenAI cloud model id. Settings → Models: enter your OpenAI key, click "
+                    "«List OpenAI models», choose a model, then Save."
+                )
+            key = self._require_secret(SECRET_CLOUD_OPENAI)
+            url = _openai_chat_url(DEFAULT_COMPANY_OPENAI_BASE)
+            strict_rf = False
+            if stream:
+                usage_sink = []
+                stream_iter = _openai_stream_full(
+                    url=url,
+                    api_key=key,
+                    model=m,
+                    messages=messages,
+                    json_mode=json_mode,
+                    strict_response_format=strict_rf,
+                    usage_sink=usage_sink,
+                )
+                return self._wrap_stream(stream_iter, usage_sink=usage_sink, model=m)
+            async with httpx.AsyncClient() as client:
+                resp, usage = await _openai_nonstream(
+                    client,
+                    url=url,
+                    api_key=key,
+                    model=m,
+                    messages=messages,
+                    json_mode=json_mode,
+                    strict_response_format=strict_rf,
+                )
+            self._record_token_usage(m, usage)
+            return self._maybe_reinject(resp, rmap)
+
+        kwargs = {"model": m, "messages": messages, "stream": stream}
+        if format:
+            kwargs["format"] = format
+        resp = await self._ollama.chat(**kwargs)
+        return self._maybe_reinject(resp, rmap)
+
+
+def _http_status_error_detail_safe(exc: httpx.HTTPStatusError) -> str:
+    """Body snippet for UI; never use str(exc) — httpx embeds the full request URL (e.g. Gemini ``key=``)."""
+    try:
+        body = exc.response.text[:400]
+    except Exception:
+        body = ""
+    if body.strip():
+        return body
+    reason = (exc.response.reason_phrase or "").strip() or "HTTP error"
+    try:
+        safe_url = str(exc.request.url.copy_with(query=None, fragment=None))
+    except Exception:
+        safe_url = ""
+    return f"{reason} ({safe_url})" if safe_url else reason
+
+
+def remote_http_error_message(exc: BaseException) -> str:
+    if isinstance(exc, httpx.HTTPStatusError):
+        detail = _http_status_error_detail_safe(exc)
+        return f"HTTP {exc.response.status_code}: {detail}".strip()
+    return f"{type(exc).__name__}: {exc}"

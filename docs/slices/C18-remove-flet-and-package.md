@@ -1,0 +1,47 @@
+```
+id: C18
+status: draft
+depends_on: [B2, C9b, C16]
+```
+# C18 · Package the app
+
+**Goal:** iterthink installs and starts as a desktop app on Fedora, Windows
+and macOS, and nothing in it imports Flet.
+
+**Spec sections:** What changes (remove Flet); Tech stack (pywebview);
+The line → Voice input (macOS microphone entitlement).
+
+**Already done in this tree:** no `studio/`, no `app_entry.py`, no Flet
+dependency, no `compare/diff_card.py`; `compare/judge.py` holds the semantic
+tie-break. This slice packages the desktop window and guards against Flet
+coming back. It comes last so the build includes the `ifc` and `voice` extras.
+
+**Ready when** the human has added a packaging tool to `pyproject.toml`
+(e.g. a `package` dependency group with PyInstaller). It is not there today,
+and adding a dependency is a hard stop for the agent.
+
+## Scope
+- `iterthink/__main__.py` → starts `desktop.py`; `iterthink --version`
+- `tests/v2/architecture/allowlists.py` — remove all Flet entries
+- `packaging/` — PyInstaller spec per platform, macOS `Info.plist` with
+  `NSMicrophoneUsageDescription` and the audio-input entitlement
+- `tests/v2/packaging/test_package.py`
+- `.github/workflows/desktop-build.yml` — **human-owned**: propose the change in the run report
+- `scripts/strict_paths.d/C18.txt`
+
+## Out of scope
+- Deleting tests: there are no Flet tests in this tree. Code signing and notarisation.
+
+## Decided for you
+- PyInstaller one-folder per platform, including the `ifc` and `voice`
+  extras; models (embeddings, STT) are not bundled, they download on first use.
+- The build includes `web/templates/`, `web/static/` (with `vendor/`),
+  `defaults/` and `verify_log.py`.
+
+## Acceptance
+- [ ] `test_core_imports_without_flet` — subprocess with a finder that blocks `flet`
+- [ ] Architecture tests pass with every Flet allowlist entry removed
+- [ ] `test_main_starts_desktop_and_version_prints`
+- [ ] `test_spec_includes_templates_static_defaults`
+- [ ] `test_macos_plist_has_microphone_description`
+- [ ] Linux build runs `--version` locally; CI change proposed in the run report

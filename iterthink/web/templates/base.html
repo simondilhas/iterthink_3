@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="{{ lang | default('de') }}">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}iterthink{% endblock %}</title>
+  <link rel="stylesheet" href="/static/app.css">
+  {% for href in stylesheets() %}<link rel="stylesheet" href="{{ href }}">
+  {% endfor %}
+  <script type="importmap">
+    { "imports": {} }
+  </script>
+  <script src="/static/vendor/htmx-2.0.11.min.js"></script>
+  <script src="/static/vendor/htmx-ext-sse-2.2.4.js"></script>
+  {% block head %}{% endblock %}
+</head>
+<body hx-ext="sse" hx-headers='{"Accept": "text/html"}'>
+  {#
+    Layout regions. Slices fill blocks; they do not restructure this file.
+    line  : the one line, always on top
+    left  : projects and files
+    main  : the open file, document, chat or app
+    right : history, proposals, log for the current context
+  #}
+  <header class="line-bar">{% block line %}{% endblock %}</header>
+  <div class="workspace">
+    <nav class="pane pane-left" id="left">{% block left %}{% endblock %}</nav>
+    <main class="pane pane-main" id="main">{% block main %}{% endblock %}</main>
+    <aside class="pane pane-right" id="right">{% block right %}{% endblock %}</aside>
+  </div>
+  <div id="toast" role="status" aria-live="polite"></div>
+</body>
+</html>

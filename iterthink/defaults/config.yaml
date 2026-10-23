@@ -1,0 +1,105 @@
+# App config (bootstrap file). Editable in Settings or here.
+# Precedence: OLLAMA_MODEL, OLLAMA_HOST override these when set.
+#
+# Theme: appearance selects theme.dark vs theme.light. Legacy top-level keys
+# (higlight_color, surface, …) still override the dark palette when present.
+
+documents_root: ~/Documents/iterthink
+store_dir: ~/Documents/.iterthink
+
+default_ollama_model: llama3:8B
+ollama_host: null
+
+appearance: dark
+
+theme:
+  # Dark: near-black panels, muted lavender pills (dark text on fill), lavender accents.
+  dark:
+    page_background: "#0F0F12"
+    surface: "#18181C"
+    sidebar_surface: "#1E1E24"
+    primary: "#B8A8D4"
+    highlight: "#D2C4E8"
+    on_primary: "#141416"
+    on_surface: "#F2EEF8"
+    on_surface_soft: "#9A9AA8"
+    on_sidebar_surface: "#A8A6B4"
+    outline: "#3E3E4A"
+    success: "#C8E4C4"
+    selection_overlay: "#88B8A8D4"
+  # Light: white editor, soft gray sidebars, indigo action pills, lavender tab/icons.
+  light:
+    page_background: "#FFFFFF"
+    surface: "#FFFFFF"
+    sidebar_surface: "#F6F6F8"
+    primary: "#2E2C6E"
+    highlight: "#8B76B8"
+    on_primary: "#FFFFFF"
+    on_surface: "#1A1A24"
+    on_surface_soft: "#5A5A68"
+    on_sidebar_surface: "#6B6B78"
+    outline: "#C6C6D2"
+    success: "#C8E4C4"
+    selection_overlay: "#552E2C6E"
+
+chat_system: "You are a prose editor focusing on intent and clarity."
+
+# Startup: when true, open or create one YYYYMMDD-n.md per calendar day in documents_root.
+# When false, open the first note in the tree (name order by default) or create from template.
+startup_daily_log: true
+# Used for "New file" and first-run create when startup_daily_log is false; must contain {n} once.
+new_note_name_template: "unnamed-{n}.md"
+
+# Review tab: when false, hide Difference|Impact subtabs — only diff/compare under Review.
+# User ~/.config/iterthink/config.yaml overrides this file.
+rag_system: true
+
+# Workspace RAG indexing and semantic search
+# Sidebar search (semantic queries and /f filename filter).
+rag_search_enabled: true
+rag_index_on_startup: false
+rag_overlap_chars: 200
+rag_reranker_enabled: false
+rag_reranker_model: Xenova/ms-marco-MiniLM-L-6-v2
+rag_context_max_chars: 2400
+# Top-k RAG excerpts per paragraph for Review → Impact context checks.
+rag_impact_top_k: 3
+
+# Privacy shield: redact names, orgs, and API keys locally before Office/Cloud LLM calls.
+privacy_shield_company_enabled: true
+privacy_shield_cloud_enabled: true
+# Hugging Face GGUF (streamed into store_dir/privacy_shield/ on first run).
+privacy_shield_hf_repo: Qwen/Qwen2.5-1.5B-Instruct-GGUF
+privacy_shield_hf_file: qwen2.5-1.5b-instruct-q4_k_m.gguf
+privacy_shield_cache_name: qwen-2.5-1.5b.gguf
+# When false, AI replies keep placeholders ({{PERSON_1}}, etc.) so you can inspect redaction.
+privacy_shield_reinject: true
+# When true, KI chat bubbles show masked text (Office/Cloud) instead of what you typed.
+privacy_shield_show_masked_in_chat: false
+# LLM redaction: chunk when regex-preprocessed text exceeds this (chars).
+privacy_shield_chunk_max_chars: 2800
+# Paragraphs repeated at chunk boundaries (0 = no overlap).
+privacy_shield_chunk_overlap_paragraphs: 1
+
+# Token cost counter (Office/Cloud): aggregation window for AI bar and Usage settings.
+token_cost_period: year
+
+# Layout-aware plan PDF import (experimental; Content and Layout profile).
+plan_pdf_import_enabled: true
+
+# Review plan compare: LLaVA model for change-region impact narratives.
+plan_region_impact_vision_model: llava:13b
+
+# Focus editor text-selection toolbar: spelling review button and LLM sparkle menu.
+focus_selection_review_actions_enabled: false
+
+# Import document-function autoclassification (contract v0.1.0).
+import_classification_llm_enabled: false
+import_classification_tier: local
+import_classification_model: ""
+import_classification_excerpt_max_chars: 1200
+
+# Scanned PDF / image import OCR (off by default; models download on first use).
+ocr_enabled: false
+ocr_engine: rapidocr
+ocr_model: ppocrv4_latin_mobile

@@ -1,0 +1,55 @@
+---
+description: Test conventions — levels, markers, fixtures, invariants
+globs: tests/**/*.py
+alwaysApply: false
+---
+
+# Where tests go
+- `tests/` (existing 1.x suite): keep green. Do not restructure.
+- `tests/v2/` for all 2.0 work, mirroring the package:
+  `tests/v2/services/test_event_log.py` tests `iterthink/services/event_log.py`.
+- `tests/v2/architecture/`: static checks on the codebase. Allowlists only shrink.
+- `tests/v2/contract/`: human-owned behaviour of the bridge, run against the
+  fake and the real implementation. Never edit; make implementations pass.
+- `tests/v2/invariants/`: property-based tests (Hypothesis) for the rules
+  below. Every invariant gets at least one.
+
+# Levels and markers (registered in `tests/v2/conftest.py`)
+- no marker = unit: pure, in-memory or `tmp_path`, < 100 ms each.
+- `@pytest.mark.integration`: real files, real SQLite, several modules.
+- `@pytest.mark.jj`: needs the `jj` binary; use the `jj_bin` fixture.
+- `@pytest.mark.slow`: > 1 s. Only `--full` runs them.
+- `@pytest.mark.e2e`: FastAPI TestClient through a full user flow.
+- `@pytest.mark.network`: allowed to open non-loopback sockets. Avoid; the
+  default blocks them and the test fails loudly.
+
+# Fixtures to use, not reinvent
+- `project_dir`: a fresh project folder with a `.md`, a `.csv` and a
+  subfolder. Treat its source files as user data: tests assert they are
+  unchanged unless a proposal was accepted.
+- `source_snapshot(project_dir)`: hashes of all source files; compare before
+  and after.
+- `jj_bin`: path to jj, or skip (local) / fail (CI, `ITERTHINK_REQUIRE_JJ=1`).
+- `fixed_clock`: deterministic timestamps for event tests.
+- LLM calls: use a fake router returning canned text. Never call Ollama or a
+  cloud model in tests.
+
+# Invariants that must always have tests
+1. Rebuild equals incremental: feeding the same logs in shuffled arrival order
+   gives the same index as a full rebuild.
+2. Hash chain: altering, removing or reordering any line makes verification
+   fail at that line; an untouched log verifies.
+3. Source files are untouched unless a proposal was accepted.
+4. Nothing is applied without a verdict event.
+5. Events are idempotent: replaying a log twice changes nothing.
+6. Egress `none`: no remote call is attempted (assert on the fake router).
+7. Projects never mix: queries for project A return nothing from project B.
+8. Conflicts are surfaced, never resolved silently.
+
+# Style
+- Arrange / act / assert, one behaviour per test, name says the behaviour:
+  `test_reject_keeps_candidate_commit`.
+- Golden files under `tests/v2/golden/` for HTML fragments and diffs; update
+  only with `--update-golden` and mention it in the slice.
+- No sleeps. Use events, fakes or `fixed_clock`.
+- A bug fix starts with a failing test that reproduces it.

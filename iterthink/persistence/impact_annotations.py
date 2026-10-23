@@ -1,0 +1,331 @@
+"""CRUD for ImpactAnnotation rows."""
+
+from __future__ import annotations
+
+import json
+import time
+from typing import Any
+
+from sqlalchemy import select
+from sqlalchemy.orm import Session
+
+from iterthink.db.models import ImpactAnnotation
+
+
+def parse_details_dict(row: ImpactAnnotation) -> dict | None:
+    raw = getattr(row, "details_json", None)
+    if not raw or not str(raw).strip():
+        return None
+    try:
+        obj = json.loads(str(raw))
+    except json.JSONDecodeError:
+        return None
+    return obj if isinstance(obj, dict) else None
+
+
+def merge_run_context(
+    details: dict | None,
+    run_context: dict[str, Any] | None,
+) -> dict | None:
+    """Attach ``_run_context`` (baseline/candidate version labels) without dropping findings."""
+    if not isinstance(run_context, dict):
+        return details if isinstance(details, dict) else None
+    out: dict[str, Any] = dict(details) if isinstance(details, dict) else {}
+    out["_run_context"] = {
+        "baseline_version_id": run_context.get("baseline_version_id"),
+        "candidate_version_id": run_context.get("candidate_version_id"),
+        "baseline_label": str(run_context.get("baseline_label") or "").strip(),
+        "candidate_label": str(run_context.get("candidate_label") or "").strip(),
+    }
+    return out
+
+
+def run_context_from_details(details: dict | None) -> dict[str, Any] | None:
+    if not isinstance(details, dict):
+        return None
+    ctx = details.get("_run_context")
+    return ctx if isinstance(ctx, dict) else None
+
+
+def format_details_for_export(details: dict | None) -> str:
+    if not details:
+        return ""
+    chunks: list[str] = []
+    findings = details.get("findings")
+    if isinstance(findings, list) and findings:
+        fb: list[str] = []
+        for fi, item in enumerate(findings):
+            if not isinstance(item, dict):
+                continue
+            fb.append(f"Finding {fi + 1}:")
+            for k, v in item.items():
+                if v is None or (isinstance(v, str) and not v.strip()):
+                    continue
+                fb.append(f"  {k}: {v}")
+        if fb:
+            chunks.append("\n".join(fb))
+    nar = details.get("not_applicable_reason")
+    if isinstance(nar, str) and nar.strip():
+        chunks.append(f"Not applicable: {nar.strip()}")
+    if details.get("low_confidence") is True:
+        chunks.append("Low confidence: context may be incomplete for this paragraph.")
+    ex = details.get("explanation")
+    if isinstance(ex, str) and ex.strip():
+        chunks.append(ex.strip())
+    refs = details.get("references")
+    if isinstance(refs, list) and refs:
+        lines: list[str] = []
+        for ref in refs:
+            if not isinstance(ref, dict):
+                continue
+            doc = ref.get("document")
+            para = ref.get("paragraph")
+            note = ref.get("note")
+            if isinstance(doc, str) and doc.strip():
+                line = f"- {doc.strip()}"
+                if isinstance(para, int):
+                    line += f" (paragraph {para})"
+                elif isinstance(para, float) and int(para) == para:
+                    line += f" (paragraph {int(para)})"
+                if isinstance(note, str) and note.strip():
+                    line += f": {note.strip()}"
+                lines.append(line)
+        if lines:
+            chunks.append("References:\n" + "\n".join(lines))
+    return "\n\n".join(chunks) if chunks else ""
+
+
+def upsert_model_result(
+    session: Session,
+    *,
+    content_version_id: int,
+    paragraph_index: int,
+    prompt_id: str,
+    status: str,
+    comment: str,
+    details: dict | None = None,
+) -> None:
+    now = time.time()
+    row = (
+        session.execute(
+            select(ImpactAnnotation).where(
+                ImpactAnnotation.content_version_id == content_version_id,
+                ImpactAnnotation.paragraph_index == paragraph_index,
+                ImpactAnnotation.prompt_id == prompt_id,
+            )
+        )
+        .scalars()
+        .first()
+    )
+    body = json.dumps(details, ensure_ascii=False) if isinstance(details, dict) else None
+    if row is None:
+        session.add(
+            ImpactAnnotation(
+                content_version_id=content_version_id,
+                paragraph_index=paragraph_index,
+                prompt_id=prompt_id,
+                status=status,
+                comment=comment,
+                details_json=body,
+                overridden=False,
+                override_comment=None,
+                created_at=now,
+                updated_at=now,
+            )
+        )
+        return
+    row.status = status
+    row.comment = comment
+    row.details_json = body
+    row.updated_at = now
+
+
+def set_override(
+    session: Session,
+    *,
+    content_version_id: int,
+    paragraph_index: int,
+    prompt_id: str,
+    status: str,
+    override_comment: str,
+) -> None:
+    now = time.time()
+    session.flush()
+    row = (
+        session.execute(
+            select(ImpactAnnotation).where(
+                ImpactAnnotation.content_version_id == content_version_id,
+                ImpactAnnotation.paragraph_index == paragraph_index,
+                ImpactAnnotation.prompt_id == prompt_id,
+            )
+        )
+        .scalars()
+        .first()
+    )
+    if row is None:
+        session.add(
+            ImpactAnnotation(
+                content_version_id=content_version_id,
+                paragraph_index=paragraph_index,
+                prompt_id=prompt_id,
+                status=status,
+                comment="",
+                details_json=None,
+                overridden=True,
+                override_comment=override_comment,
+                created_at=now,
+                updated_at=now,
+            )
+        )
+        return
+    if not row.overridden:
+        det = parse_details_dict(row) or {}
+        meta = det.get("_override_meta")
+        if not isinstance(meta, dict):
+            meta = {}
+        meta["model_status"] = str(row.status)
+        det["_override_meta"] = meta
+        row.details_json = json.dumps(det, ensure_ascii=False)
+    row.status = status
+    row.overridden = True
+    row.override_comment = override_comment
+    row.updated_at = now
+
+
+def clear_override(
+    session: Session,
+    *,
+    content_version_id: int,
+    paragraph_index: int,
+    prompt_id: str,
+) -> None:
+    now = time.time()
+    session.flush()
+    row = (
+        session.execute(
+            select(ImpactAnnotation).where(
+                ImpactAnnotation.content_version_id == content_version_id,
+                ImpactAnnotation.paragraph_index == paragraph_index,
+                ImpactAnnotation.prompt_id == prompt_id,
+            )
+        )
+        .scalars()
+        .first()
+    )
+    if row is None:
+        return
+    det = parse_details_dict(row)
+    if isinstance(det, dict):
+        meta = det.get("_override_meta")
+        if isinstance(meta, dict):
+            ms = meta.get("model_status")
+            if isinstance(ms, str) and ms.strip():
+                row.status = ms.strip()
+        det.pop("_override_meta", None)
+        row.details_json = json.dumps(det, ensure_ascii=False) if det else None
+    row.overridden = False
+    row.override_comment = None
+    row.updated_at = now
+
+
+def overridden_indices(
+    session: Session, *, content_version_id: int, prompt_id: str
+) -> set[int]:
+    rows = session.execute(
+        select(ImpactAnnotation.paragraph_index).where(
+            ImpactAnnotation.content_version_id == content_version_id,
+            ImpactAnnotation.prompt_id == prompt_id,
+            ImpactAnnotation.overridden.is_(True),
+        )
+    ).scalars()
+    return {int(i) for i in rows}
+
+
+def row_to_progress_payload(row: ImpactAnnotation) -> dict[str, Any]:
+    return {
+        "status": str(row.status),
+        "comment": effective_comment(row),
+        "details": parse_details_dict(row),
+        "overridden": bool(row.overridden),
+    }
+
+
+def list_for_version(
+    session: Session, *, content_version_id: int, prompt_id: str
+) -> dict[int, ImpactAnnotation]:
+    rows = session.execute(
+        select(ImpactAnnotation).where(
+            ImpactAnnotation.content_version_id == content_version_id,
+            ImpactAnnotation.prompt_id == prompt_id,
+        )
+    ).scalars()
+    return {r.paragraph_index: r for r in rows}
+
+
+def paragraph_comments_map_for_export(
+    session: Session, *, content_version_id: int
+) -> dict[int, str]:
+    rows = list(
+        session.execute(
+            select(ImpactAnnotation)
+            .where(ImpactAnnotation.content_version_id == content_version_id)
+            .order_by(ImpactAnnotation.paragraph_index, ImpactAnnotation.prompt_id)
+        ).scalars()
+    )
+    by_idx: dict[int, list[str]] = {}
+    for r in rows:
+        t = effective_comment(r).strip()
+        extra = format_details_for_export(parse_details_dict(r))
+        if extra:
+            block = f"{t}\n\n{extra}".strip() if t else extra
+        else:
+            block = t
+        if not block:
+            continue
+        by_idx.setdefault(int(r.paragraph_index), []).append(f"{r.prompt_id}: {block}")
+    return {i: "\n".join(parts) for i, parts in sorted(by_idx.items())}
+
+
+def list_all_prompts_for_version(session: Session, *, content_version_id: int) -> list[ImpactAnnotation]:
+    return list(
+        session.execute(
+            select(ImpactAnnotation)
+            .where(ImpactAnnotation.content_version_id == content_version_id)
+            .order_by(ImpactAnnotation.paragraph_index, ImpactAnnotation.prompt_id)
+        ).scalars()
+    )
+
+
+def effective_comment(row: ImpactAnnotation) -> str:
+    if row.overridden and (row.override_comment or "").strip():
+        return (row.override_comment or "").strip()
+    return (row.comment or "").strip()
+
+
+def model_status(row: ImpactAnnotation) -> str:
+    if not row.overridden:
+        return str(row.status)
+    det = parse_details_dict(row)
+    if isinstance(det, dict):
+        meta = det.get("_override_meta")
+        if isinstance(meta, dict):
+            ms = meta.get("model_status")
+            if isinstance(ms, str) and ms.strip():
+                return ms.strip()
+    return str(row.status)
+
+
+def snapshot_row_ui(row: ImpactAnnotation) -> dict[str, Any]:
+    snap: dict[str, Any] = {
+        "status": str(row.status),
+        "effective_comment": effective_comment(row),
+        "details": parse_details_dict(row),
+        "content_version_id": int(row.content_version_id),
+        "paragraph_index": int(row.paragraph_index),
+        "prompt_id": str(row.prompt_id),
+        "overridden": bool(row.overridden),
+    }
+    if row.overridden:
+        snap["model_comment"] = (row.comment or "").strip()
+        snap["model_status"] = model_status(row)
+    return snap

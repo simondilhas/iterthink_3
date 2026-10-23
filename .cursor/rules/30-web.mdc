@@ -1,0 +1,47 @@
+---
+description: Web UI — skeleton, ownership, Jinja + HTMX, no build step, plain vocabulary
+globs: iterthink/web/**,iterthink/desktop.py
+alwaysApply: false
+---
+
+# Skeleton (human-owned, don't edit)
+- `web/app.py`: `create_app(bridge=None, token=None, actor=...)`, token auth,
+  bridge errors → status + `partials/error.html`, auto-mounts every
+  `web/routes/*.py` that defines `router`.
+- Dependencies: `bridge_of(request)`, `actor_of(request)`; `templates`.
+- Template globals: `stylesheets()`, `has_route(request, name)`.
+- `base.html` blocks: `line`, `left`, `main`, `right`, `head`, `title`.
+  Left and right stay empty until the user opens a panel. The line and the
+  current surface are the screen. See iterthink-2.mdc, "The line".
+- `app.css` holds tokens only; your styles go in `static/css/<slice>-<area>.css`.
+  Token values come from `defaults/config.yaml` (`theme.dark` / `theme.light`),
+  not from colours written into the stylesheet.
+
+# Ownership
+- One route module per slice (see `web/routes/__init__.py`), templates in
+  `templates/<area>/`. Name every route; other slices link by name behind
+  `has_route`.
+- Surfaces import from `iterthink` only `services.bridge`, `web`, `mcp`
+  (architecture test).
+
+# Frontend
+- Server renders HTML with Jinja2; HTMX swaps fragments; the server holds state.
+- Refresh across panes with `HX-Trigger` events: `versions-changed`,
+  `proposals-changed`, `files-changed`.
+- JavaScript only as vanilla ES module custom elements in `static/js/`,
+  each file starting with `// @ts-check`, JSDoc types.
+- Third-party JS vendored in `static/vendor/` (human-owned); offline only.
+- No Node, npm, TypeScript compile, bundler, `package.json`, CSS framework.
+
+# Behaviour
+- The AI never acts while the user types. Enter (line) or Mod+Enter (inside a
+  document) runs it. Keyword search may update live.
+- UI words: version, change, proposal, accept, reject, restore, history.
+  Never commit, branch, rebase, bookmark, repository, jj, git.
+- Every route that changes data calls a bridge method. No route writes files.
+- English UI text, in templates.
+
+# Tests
+- `tests/v2/web/conftest.py` gives `client` (FakeBridge, token set),
+  `bridge`, `project_id`. Every route: status, key elements, resulting bridge state.
+- Fragments with stable output get a golden file in `tests/v2/golden/fragments/`.

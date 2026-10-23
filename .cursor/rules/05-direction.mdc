@@ -1,0 +1,40 @@
+---
+description: iterthink 2.0 direction — short rules that apply on every turn
+alwaysApply: true
+---
+
+# Direction
+Build iterthink 2.0 in this repo. The 1.x Flet app is the sibling
+`iterthink_local_v2` and is not edited from here.
+The spec is `.cursor/rules/iterthink-2.mdc`. Read the sections the current
+slice names. Do not treat the whole spec as something to reload every turn.
+How to work is `AGENTS.md`. The order is `docs/slices/README.md`.
+
+# Principles
+- Local-first. No account. Source files stay where they are. iterthink's own
+  data lives in `<project>/.iterthink/`.
+- Track decisions. AI, agents and apps propose. A verdict is a human decision
+  or an automatic one under a rule the user set in advance.
+- One core. UI, apps, MCP and CLI call `services/bridge.py`.
+- Files are the truth. SQLite is a machine-local index rebuilt from the log,
+  `.iterthink/versions/` and the files. No database inside a project folder.
+- Working files are CSV, Markdown, JSON. DOCX, XLSX and PDF are delivery or
+  input, never the source. Plans stay PDF. Models stay IFC.
+- The AI acts on Enter (the line, chat) or Mod+Enter (a document or an app).
+  Keyword search may update while typing.
+- UI words: version, change, proposal, accept, reject, restore, history.
+- The start screen is one line, full width. Other panels open on demand.
+- Core (`compare`, `services`, `persistence`, `db`, `contract`, `ai`) does not
+  import `web`, `mcp`, `desktop` or `flet`.
+
+# Prohibited
+- No Node, npm, bundler, TypeScript or frontend framework.
+- No business logic in routes, templates or JS.
+- No cloud call unless the user configured that tier, and then only through
+  `ai.llm_router` with the privacy shield.
+- No log line written outside `services/event_log.py`.
+- No jj. Version bytes are content-addressed snapshots (slice A3).
+- No new entity tables. Kinds come from `contract/`.
+- Do not edit `services/bridge.py`, `bridge_fake.py`, `tests/v2/contract/`,
+  `web/app.py`, `web/templates/base.html`, `web/static/app.css`,
+  `web/static/vendor/`, `pyproject.toml`, `AGENTS.md`, `docs/decisions.md`.

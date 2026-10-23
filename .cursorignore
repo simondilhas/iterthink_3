@@ -1,0 +1,15 @@
+.venv/
+.pytest_store/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+build/
+dist/
+packaging/
+old/
+iterthink/embedded_models/
+iterthink/assets/
+**/*.sqlite3
+**/*.gguf
+**/*.onnx
+uv.lock

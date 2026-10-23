@@ -1,0 +1,2 @@
+# 1.x tests that failed at baseline (slice S00). One pytest node id per line,
+# followed by "# reason". Shrink-only: remove a line when the test passes again.
