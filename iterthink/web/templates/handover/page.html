@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+{% block title %}Handover{% endblock %}
+{% block head %}{% include "home/head.html" %}{% endblock %}
+{% block line %}{% include "project/line.html" %}{% endblock %}
+{% block main %}
+<h1>Handover</h1>
+<form method="post" action="/p/{{ project_id }}/handover">
+  <label><input type="radio" name="mode" value="full" checked> Full</label>
+  <label><input type="radio" name="mode" value="client"> Client</label>
+  <label>Folder <input name="target" type="text" required></label>
+  <button type="submit">Hand over</button>
+</form>
+{% if handed %}
+<p>Handed over to {{ handed }}</p>
+{% endif %}
+{% endblock %}

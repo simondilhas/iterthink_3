@@ -6,6 +6,7 @@
 {% include "project/nav.html" %}
 {% endblock %}
 {% block main %}
+{% include "project/_log_broken.html" %}
 <ul class="counts">
   {% for kind, count in counts %}
   <li>{{ count }} {{ kind }}</li>

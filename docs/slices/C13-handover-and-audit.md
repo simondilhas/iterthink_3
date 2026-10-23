@@ -1,6 +1,6 @@
 ```
 id: C13
-status: ready
+status: done
 depends_on: [B1]
 ```
 # C13 · Handover and audit
@@ -16,6 +16,8 @@ Repository layout (`services/audit.py`); article §9.
 - `iterthink/services/audit.py`, `iterthink/services/handover.py`, `bridge_real.handover`
 - `iterthink/web/routes/handover.py`, `templates/handover/`, and a banner
   partial `templates/project/_log_broken.html` (new file)
+- `iterthink/web/templates/project/page.html` and `iterthink/web/routes/projects.py`
+  include that banner on the project overview
 - `tests/v2/services/test_audit.py`, `test_handover.py`
 - `scripts/strict_paths.d/C13.txt`
 
@@ -42,9 +44,9 @@ Repository layout (`services/audit.py`); article §9.
 - Wording: "tamper-evident" (architecture test).
 
 ## Acceptance
-- [ ] `test_break_found_on_open_shows_banner_and_logs`
-- [ ] `test_client_handover_excludes_internal_material`
-- [ ] `test_client_can_verify_with_stdlib_only` — run the bundled script in `-I` mode
-- [ ] `test_tampered_bundle_fails_verification`
-- [ ] `test_handover_event_records_head_hashes`
-- [ ] `test_audit_export_resolves_blobs_and_writes_report`
+- [x] `test_break_found_on_open_shows_banner_and_logs`
+- [x] `test_client_handover_excludes_internal_material`
+- [x] `test_client_can_verify_with_stdlib_only` — run the bundled script in `-I` mode
+- [x] `test_tampered_bundle_fails_verification`
+- [x] `test_handover_event_records_head_hashes`
+- [x] `test_audit_export_resolves_blobs_and_writes_report`
