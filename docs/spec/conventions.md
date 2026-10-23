@@ -20,9 +20,9 @@
 # File size
 Short files are easier for people and agents to read and change safely.
 
-- Limits for new code: a module, template, JS or CSS file ≤ 400 lines; a
-  function ≤ 60 lines; a test file ≤ 600 lines. Fixtures and golden data do not count.
-- Spec and docs files ≤ 200 lines; a slice file ≤ 150 lines. Longer → split by topic.
+- Applies to new Python files: every module a slice creates (the ones it lists
+  in `scripts/strict_paths.d/<slice>.txt`) and its new test files.
+- A module ≤ 400 lines, a function ≤ 60 lines, a test file ≤ 600 lines.
 - Over the limit → refactor before the slice is done: split by
   responsibility into modules in the same package, no behaviour change,
   tests green before and after, existing imports kept working (re-export).
