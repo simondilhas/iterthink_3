@@ -28,7 +28,7 @@ Where a slice disagrees with the spec, the spec wins.
 | `search.md` | Search |
 | `review.md` | Review screen |
 | `agents.md` | Agent rules · Agents (MCP) |
-| `conventions.md` | UI style · Logic rules |
+| `conventions.md` | UI style · Logic rules · File size |
 | `audit-and-security.md` | Audit trail · Security |
 
 

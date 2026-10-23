@@ -25,7 +25,9 @@ How to work is `AGENTS.md`. The order is `docs/slices/README.md`.
 - UI words: version, change, proposal, accept, reject, restore, history.
 - The start screen is one line, full width. Other panels open on demand.
 - Core (`compare`, `services`, `persistence`, `db`, `contract`, `ai`) does not
-  import `web`, `mcp`, `desktop` or `flet`.
+ import `web`, `mcp`, `desktop` or `flet`.
+- New files ≤ 400 lines, functions ≤ 60. Longer → refactor before the slice
+ is done (`docs/spec/conventions.md` → File size).
 
 # Prohibited
 - No Node, npm, bundler, TypeScript or frontend framework.

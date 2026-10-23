@@ -16,3 +16,19 @@
   cloud tiers; token usage is recorded for every remote call.
 - LLM and embedding work runs off the request thread (asyncio / worker threads);
   results stream via SSE. A request handler never blocks on a model.
+
+# File size
+Short files are easier for people and agents to read and change safely.
+
+- Limits for new code: a module, template, JS or CSS file ≤ 400 lines; a
+  function ≤ 60 lines; a test file ≤ 600 lines. Fixtures and golden data do not count.
+- Spec and docs files ≤ 200 lines; a slice file ≤ 150 lines. Longer → split by topic.
+- Over the limit → refactor before the slice is done: split by
+  responsibility into modules in the same package, no behaviour change,
+  tests green before and after, existing imports kept working (re-export).
+- Existing 1.x files over 400 lines (e.g. `document_import.py`,
+  `content_repo.py`, `store_db.py`, `llm_router.py`) are not split in bulk.
+  A slice that changes one substantially splits the part it touches, only if
+  the file is in its Scope. Otherwise it proposes the split in its run report.
+- Human-owned files (`bridge.py`, `bridge_fake.py`, contract tests) are exempt;
+  propose a split in the run report instead.
