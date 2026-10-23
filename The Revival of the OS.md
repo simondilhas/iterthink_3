@@ -92,7 +92,7 @@ I'm testing these ideas on iterthink. Disclosure: iterthink is built by my compa
 
 Nothing described here is built yet. What exists is the current iterthink, and a spec for the next version. Before writing the spec, Claude read through the existing code. A large part of it is interface code, and the logic underneath barely depends on it: change detection, impact checks, search, imports, the model router. If the analysis holds, the rebuild replaces the interface and keeps most of the logic. That would support the thesis that the value sits in the logic and the data. Whether it holds is what the build will show.
 
-The spec is the result of this discussion. Every thought in these notes ended up as a rule in one file that I hand to the coding agent. I'm publishing it alongside this article, in the [iterthink repository](https://github.com/simondilhas/iterthink) as `.cursor/rules/iterthink-2.mdc`. It is the plan, not the finished state, and it will change once it meets the code.
+The spec is the result of this discussion. Every thought in these notes ended up as a rule in one file that I hand to the coding agent, `.cursor/rules/iterthink-2.mdc`. The build runs in its own repository, private for now; I'm publishing the spec alongside this article. It is the plan, not the finished state, and it will change once it meets the code.
 
 Put together, the pieces map onto the classic operating system, layer by layer.
 
@@ -111,14 +111,26 @@ These are the ones I haven't settled. I'd like to hear where you disagree.
 - **Can several people share a project without a server?** Append-only logs per machine work in theory. Real offices with NAS drives and OneDrive will test it.
 - **Does dictation work on site?** Speech-to-text handles Standard German well. Swiss German from a site meeting is another matter.
 
-## 11. Pressed go
+## 11. The experiment
 
 The notes above are the background. Another chapter comes after I have watched this build and thought about what it did.
 
-The spec is one file, and it is long enough that an agent will wander if I only say "build this". So the work is cut into slices. Each slice is one part of the app and the tests that prove it. The agent writes the tests, watches them fail, and writes the code that makes them pass. Then it takes the next slice. It keeps going for as long as the next slice can start.
+**The setup.** The spec is one file, and it is long enough that an agent will wander if I only say "build this". So the work is cut into slices. Each slice is one part of the app and the tests that prove it. The agent writes the tests, watches them fail, and writes the code that makes them pass. Then it writes a short report, commits, and takes the next slice. It keeps going for as long as the next slice can start. Nobody answers its questions during the run. When something is unclear, it decides if the choice is small and reversible, writes it down, and moves on. When it's not, it stops that item and continues with the rest.
 
-Three things are already written, and the agent builds on them. The bridge: every function the window, an ad-hoc app, or another agent is allowed to call. A working stand-in for that bridge, so the window can be opened before the history exists. And the tests that say how the bridge must behave. The agent leaves those files alone. When one of them is wrong, it writes the case down and continues with the rest.
+Three things are written by me, and the agent builds on them. The bridge: every function the window, an ad-hoc app, or another agent is allowed to call. A working stand-in for that bridge, so the window can be opened before the history exists. And the tests that say how the bridge must behave. The agent may not touch those files. When one of them is wrong, it writes the case down and continues.
 
 Flet goes. The new window is plain HTML in a native shell, Python underneath, no build step. Change detection, impact checks, search, imports and the model router stay. Version history in this build is a snapshot per save, named by the hash of its contents, in the project folder. The log stays a hash chain, tamper-evident. Jujutsu, sync, and a connector for the accounting system stay written down for later.
 
-I pressed go. I'll keep you posted on what happens.
+**The plan, reviewed.** Before pressing go, I asked Claude to check the slices against the spec. The verdict: the order mostly held, but a third of the slices had drifted. I had decided against Jujutsu, yet half the plan still talked to it. One slice put a three-column layout on screen, the exact thing the white screen with one line was meant to replace. The task board had different columns than the spec. And the plan quietly assumed things nobody had written down: what happens when you save a file in Word instead of in iterthink, which files get tracked at all.
+
+It's the lesson from section 7 again, one level up. Defaults slip back in, and this time they slipped into my own plan. The spec says what I want. The slices are where the old habits hide.
+
+So the plan was rewritten. 36 slices, in one order, each gated by the ones it depends on. Nine are marked as drafts: some settle things a user would notice, others wait for a decision from me. The agent won't start a draft until I've read it. Plus a short list of things only I can change: places where the bridge itself is missing something the spec asks for. The agent will run into them and write them down. That list is my homework while it works.
+
+**Where it runs.** In the cloud, not on my laptop. The project went into a repository this morning. An agent clones it, installs everything with one script, and works through the slices for as long as it takes. I read the reports when I want to. The reports don't gate the next slice.
+
+**Is this vibe coding?** I've wondered about that. The term means: describe what you want, accept what the AI writes, don't read the code. By that measure, yes. I won't read most of this code, and this is the first time I let a build run from start to end without sitting next to it.
+
+But it doesn't feel like vibes. There are 900 lines of spec, a contract the agent can't change, tests before code, and a log of every decision it makes along the way. Maybe that's the honest answer: the coding is vibe coding, the deciding isn't. Which is the same split iterthink is built on. Agents propose, a human gives the verdict. I'm about to find out if that holds when the agent is building the tool that says so.
+
+Now I'm going to press go and see what happens.
