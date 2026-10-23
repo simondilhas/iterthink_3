@@ -1,7 +1,6 @@
-"""Import pipeline, remote model catalog fetches, and check runner."""
+"""Core services. Import submodules explicitly.
 
-from __future__ import annotations
-
-from . import checks_runner, document_import, remote_model_list
-
-__all__ = ("checks_runner", "document_import", "remote_model_list")
+Eager imports here pull NumPy (and the rest of the 1.x stack) while
+coverage resolves ``--cov=iterthink.services.*``. Coverage then restores
+``sys.modules`` and the extension cannot load a second time.
+"""
