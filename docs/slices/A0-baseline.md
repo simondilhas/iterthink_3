@@ -1,6 +1,6 @@
 ```
 id: A0
-status: ready
+status: done
 depends_on: []
 ```
 # A0 · Baseline
@@ -31,7 +31,7 @@ Record violations in the copied core. Do not copy `studio/` back in.
   `jj` are deselected; list them in the run report.
 
 ## Acceptance
-- [ ] `uv run python scripts/check.py --full` green without jj installed.
-- [ ] Run report: tests passing / deselected, with reasons grouped.
-- [ ] Every allowlist entry names its removing slice.
-- [ ] `test_allowlist_entries_are_still_needed` passes.
+- [x] `uv run python scripts/check.py --full` green without jj installed.
+- [x] Run report: tests passing / deselected, with reasons grouped.
+- [x] Every allowlist entry names its removing slice.
+- [x] `test_allowlist_entries_are_still_needed` passes.

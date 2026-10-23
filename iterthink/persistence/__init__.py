@@ -1,7 +1,5 @@
-"""SQLite store, encrypted vault, crypto helpers, and PBS content repository."""
+"""Persistence for the project folder.
 
-from __future__ import annotations
-
-from . import content_repo, crypto_vault, entity_settings, store_db, vault_store
-
-__all__ = ("content_repo", "crypto_vault", "entity_settings", "store_db", "vault_store")
+Import submodules explicitly. Eager imports load NumPy while coverage
+resolves ``--cov=iterthink.persistence.*`` and then restores ``sys.modules``.
+"""
