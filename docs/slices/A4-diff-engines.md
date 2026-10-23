@@ -1,6 +1,6 @@
 ```
 id: A4
-status: ready
+status: done
 depends_on: []
 ```
 # A4 · Diff engines
@@ -52,15 +52,15 @@ def diff(path: str, before: bytes | None, after: bytes | None) -> FileDiff: ...
 - Engines must not import `iterthink.services` except `bridge` (for the types).
 
 ## Acceptance
-- [ ] `test_registry_dispatches_by_kind` and `test_unknown_kind_is_binary`
-- [ ] `test_identical_is_none`, `test_new_file_is_all_added`, `test_deleted_file_is_all_removed`
-- [ ] text: `test_word_change_in_one_paragraph`, `test_paragraph_added_and_removed`,
+- [x] `test_registry_dispatches_by_kind` and `test_unknown_kind_is_binary`
+- [x] `test_identical_is_none`, `test_new_file_is_all_added`, `test_deleted_file_is_all_removed`
+- [x] text: `test_word_change_in_one_paragraph`, `test_paragraph_added_and_removed`,
       `test_moved_paragraph_is_not_add_and_remove` (if the aligner supports it),
       `test_umlauts_and_crlf`
-- [ ] table: `test_cell_change_by_key`, `test_row_added_removed`,
+- [x] table: `test_cell_change_by_key`, `test_row_added_removed`,
       `test_column_added`, `test_tsv_and_xlsx`
-- [ ] plan: `test_plan_text_change_has_page_and_bbox` (small PDF built in the test)
-- [ ] golden: `test_text_diff_golden` — fixture pairs in `tests/v2/golden/diffs/`
-- [ ] property: `test_text_diff_reconstructs_after` — joining non-removed blocks'
+- [x] plan: `test_plan_text_change_has_page_and_bbox` (small PDF built in the test)
+- [x] golden: `test_text_diff_golden` — fixture pairs in `tests/v2/golden/diffs/`
+- [x] property: `test_text_diff_reconstructs_after` — joining non-removed blocks'
       `after` (and segments) gives the new paragraphs
-- [ ] `test_summaries_have_no_vcs_words`
+- [x] `test_summaries_have_no_vcs_words`

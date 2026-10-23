@@ -1,0 +1,22 @@
+{
+  "path": "doors.md",
+  "kind": "text",
+  "summary": "1 paragraph changed",
+  "blocks": [
+    {
+      "kind": "refined",
+      "before": "Die Türen sind EI30.",
+      "after": "Die Türen sind EI90.",
+      "segments": [
+        {"op": "equal", "text": "Die Türen sind"},
+        {"op": "delete", "text": "EI30."},
+        {"op": "insert", "text": "EI90."}
+      ]
+    }
+  ],
+  "added_rows": [],
+  "removed_rows": [],
+  "cell_changes": [],
+  "columns": [],
+  "details": {}
+}
