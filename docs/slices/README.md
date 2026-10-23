@@ -13,6 +13,10 @@ status: draft | ready | in-progress | review | done | blocked | dropped
 depends_on: []
 ```
 
+A slice is named by its `id:`. `depends_on`, the order table and every
+reference elsewhere use that id. File names pad the number so they sort:
+`C01-index-and-search.md` is slice `C1`, `C09b-ifc-3d.md` is slice `C9b`.
+
 The agent sets `in-progress`, then `done` or `blocked`. `draft` means a human
 has not checked it yet: the agent never starts a draft. `dropped` means the
 spec no longer includes it.
