@@ -1,0 +1,5 @@
+<ul>
+  {% for hit in hits %}
+  <li><a href="{{ hit.href }}">{{ hit.path }} · {{ hit.line }} · {{ hit.snippet }}</a></li>
+  {% endfor %}
+</ul>

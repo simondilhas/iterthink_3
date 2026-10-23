@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+{% block title %}iterthink{% endblock %}
+{% block head %}{% include "home/head.html" %}{% endblock %}
+{% block line %}
+<div class="start">
+  <span class="dot" aria-hidden="true"></span>
+  <input id="line" placeholder="What do you want to do?" autocomplete="off">
+</div>
+{% endblock %}
+{% block main %}
+<form method="post" action="/open" hx-post="/open" hx-target="#folder-list" hx-swap="innerHTML">
+  <it-folder-picker>
+    <label>Open folder <input name="path" type="text" spellcheck="false"></label>
+    <button type="submit">Open folder</button>
+  </it-folder-picker>
+</form>
+<div id="folder-list"></div>
+<section>
+  <h1>Opened projects</h1>
+  <ul>
+    {% for project in projects %}
+    <li><a href="/p/{{ project.id }}">{{ project.name }}</a></li>
+    {% endfor %}
+  </ul>
+</section>
+{% endblock %}
