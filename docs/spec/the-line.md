@@ -50,7 +50,12 @@ Shift+Enter is a line break in line and chat.
   Clicking it opens the review queue.
 - Typing a project name, a file name or "continue" in the line reopens work.
 - The line needs a project. If none is active, the first answer places the
-  work in one or creates it (folder model applies).
+  work in one or creates it (folder model applies). A created project is a
+  new folder in the default workspace, named after the work; the quiet line
+  says where ("New project in ~/Documents/iterthink").
+- "new project <name>" / "neues Projekt <name>" on the start screen creates
+  that project in the default workspace and opens it (rule, no model).
+  Without a name, the line asks for one; the next Enter creates it.
 
 ## Voice input
 Voice is another way to type, not another mode. Same core rule: speech becomes

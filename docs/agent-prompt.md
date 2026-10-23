@@ -8,7 +8,8 @@ Rewrite iterthink as 2.0, following `AGENTS.md` and `docs/spec/`.
 
 Flet is removed when its replacement exists (slice C18). The Python core stays.
 Version history is content-addressed snapshots in `.iterthink/versions/`
-(slice A3). jj and connectors are not part of this version (C20 is dropped).
+(slice A3). jj is not part of this version. bexio (C20) is plain API access
+through egress.
 
 Start at the lowest-id slice in `docs/slices/` with `status: ready` whose
 `depends_on` are `done`. Nobody will answer questions. Use the slice's

@@ -1,6 +1,6 @@
 ```
 id: C25
-status: draft
+status: ready
 depends_on: [C1, C2]
 ```
 # C25 · Checks panel
@@ -12,8 +12,7 @@ see the results as symbols next to the content, with sources.
 (checks runner); View components (`<check-symbols>`); Ad-hoc apps →
 Building blocks (Judge: `runCheck`).
 
-**Why draft:** no slice describes the checks UI yet beyond the spec's one
-line; confirm the panel shape before `ready`.
+**Confirmed** by the human on 2026-10-23: *Decided for you* is settled.
 
 ## Scope
 - `iterthink/services/checks_review.py` — wraps the existing `checks_runner`
@@ -25,7 +24,7 @@ line; confirm the panel shape before `ready`.
 ## Out of scope
 - Impact checks on proposals (C11). Editing `checks.yaml` (C15).
 
-## Decided for you (to confirm)
+## Decided for you
 - A panel (Mod+Shift+C), closed by default, lists the checks from
   `checks.yaml` (inherited); "Run" on one or all, for the open file.
 - Runs off the request thread through `llm_router` with

@@ -1,7 +1,7 @@
 ```
 id: C3
 status: ready
-depends_on: [C1, C2, C4]
+depends_on: [C1, C2, C4, C23]
 ```
 # C3 · The line and intent
 
@@ -82,6 +82,11 @@ def interpret(project_dir: Path, line: str, context: LineContext, router: Router
   A5's panel on the Proposals tab.
 - Typing a project name, a file name or "continue" and pressing Enter reopens
   that work (rule, no model).
+- No project active (start screen) and the line is work, not a project name
+  or path: create a project in the default workspace via C23
+  (`make_project(Path(<name>))`), named from `Intent.title`, then open the
+  surface in it. The quiet line says "New project in <default workspace>".
+  C23's "new project <name>" rule stays and runs before `interpret`.
 - Shift+Enter is a line break.
 
 ## Acceptance
@@ -96,3 +101,4 @@ def interpret(project_dir: Path, line: str, context: LineContext, router: Router
 - [ ] `test_intent_is_logged_with_prompt_id`
 - [ ] `test_continue_and_file_name_reopen_work`
 - [ ] `test_dot_pulses_when_proposals_are_open`
+- [ ] `test_work_without_project_creates_one_in_default_workspace`

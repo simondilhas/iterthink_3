@@ -1,6 +1,6 @@
 ```
 id: C21
-status: draft
+status: ready
 depends_on: [B1]
 ```
 # C21 · Disk changes and tracked files
@@ -12,8 +12,7 @@ the file manager), it gets a version too, and you decide which files are tracked
 between projects, untracked files); Storage: files are the truth; Review
 screen (disk changes over SSE); Shared folders (watcher + rescan).
 
-**Why draft:** both points below are behaviour a user notices. A human should
-confirm the *Decided for you* section before this is set `ready`.
+**Confirmed** by the human on 2026-10-23: *Decided for you* is settled.
 
 ## Scope
 - `iterthink/services/disk_scan.py` — compare tracked files against `head()`, record versions
@@ -36,7 +35,7 @@ def tracked(project_dir: Path, settings: Settings) -> list[str]: ...
 def scan(project_dir: Path, snaps: Snapshots, *, machine: str, project: str) -> ScanResult: ...
 ```
 
-## Decided for you (to confirm)
+## Decided for you
 - A file changed on disk by someone other than iterthink is the user's own
   edit: one snapshot per scan, "changed on disk", `version` event with
   `kind: "disk_change"`, actor `user:<os user>`, input source `file`. It is

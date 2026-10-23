@@ -1,6 +1,6 @@
 ```
 id: C18
-status: draft
+status: ready
 depends_on: [B2, C9b, C16]
 ```
 # C18 · Package the app
@@ -16,9 +16,10 @@ dependency, no `compare/diff_card.py`; `compare/judge.py` holds the semantic
 tie-break. This slice packages the desktop window and guards against Flet
 coming back. It comes last so the build includes the `ifc` and `voice` extras.
 
-**Ready when** the human has added a packaging tool to `pyproject.toml`
-(e.g. a `package` dependency group with PyInstaller). It is not there today,
-and adding a dependency is a hard stop for the agent.
+**Set `ready`** by the human on 2026-10-23. PyInstaller is still not in
+`pyproject.toml`, and adding a dependency is a hard stop for the agent. Until
+it is there, do the `__main__` entry, the Flet guard and the `packaging/` spec
+files; record the build and the build tests under Blocked.
 
 ## Scope
 - `iterthink/__main__.py` → starts `desktop.py`; `iterthink --version`

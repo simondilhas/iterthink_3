@@ -1,6 +1,6 @@
 ```
 id: C27
-status: draft
+status: ready
 depends_on: [C6]
 ```
 # C27 · Table components
@@ -12,8 +12,7 @@ simple chart, or a form whose rows arrive as proposals.
 (`<data-table>`, `<simple-chart>`, `<form-fields>`); Ad-hoc apps → Building
 blocks (Table, Write).
 
-**Why draft:** confirm the component attributes before `ready`; they become
-part of the builder prompt.
+**Confirmed** by the human on 2026-10-23: *Decided for you* is settled.
 
 ## Scope
 - `static/js/data-table.js`, `simple-chart.js`, `form-fields.js`,
@@ -21,7 +20,7 @@ part of the builder prompt.
 - `tests/v2/web/test_c27_components.py`
 - `scripts/strict_paths.d/C27.txt`
 
-## Decided for you (to confirm)
+## Decided for you
 - `<data-table src=… changed=…>`: sort, filter, changed cells marked like A5's
   table diff. `<simple-chart src=… type="bar|line" x=… y=…>`: SVG, no library.
   `<form-fields target=… schema=…>`: on submit, one row via `propose` (CSV or JSON).

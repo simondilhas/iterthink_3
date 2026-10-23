@@ -38,7 +38,7 @@ One rule: **take the first slice in the list below that is `ready` and whose
 | 7 | A6 MCP server | — | Agents |
 | 8 | B1 Real bridge | A2, A3, A4 | 1 Foundation |
 | 9 | B2 Integration | A1, A5, A6, B1 | — |
-| 10 | C21 Disk changes & tracked files *(draft)* | B1 | 1 Foundation |
+| 10 | C21 Disk changes & tracked files | B1 | 1 Foundation |
 | 11 | C22 Claims | B1 | Shared folders |
 | 12 | C1 Index & search | B1 | 1 Foundation, 5 Panels |
 | 13 | C13 Handover & audit | B1 | 1 Foundation |
@@ -47,34 +47,39 @@ One rule: **take the first slice in the list below that is `ready` and whose
 | 16 | C15 Settings & seeds | B1, C2 | 11 Settings (service needed earlier) |
 | 17 | C4 Documents | B1, C2 | 3 Document |
 | 18 | C5 Chats | C1, C2, C4, C22 | 4 The line |
-| 19 | C3 Line & intent | C1, C2, C4 | 4 The line |
+| 19 | C3 Line & intent | C1, C2, C4, C23 | 4 The line |
 | 20 | C16 Dictation | C3, C15 | 4 The line |
-| 21 | C23 Workspaces & explorer *(draft)* | B1 | 5 Panels |
+| 21 | C23 Workspaces & explorer | B1 | 5 Panels |
 | 22 | C11 Impact checks | C1, C2 | 5 Panels |
-| 23 | C25 Checks panel *(draft)* | C1, C2 | 5 Panels |
-| 24 | C24 Import incoming files *(draft)* | B1 | Formats |
+| 23 | C25 Checks panel | C1, C2 | 5 Panels |
+| 24 | C24 Import incoming files | B1 | Formats |
 | 25 | C6 Ad-hoc apps | C3, C15 | 6 Apps |
 | 26 | C7 Rules & auto verdicts | B1, C15 | Agent rules |
-| 27 | C8 Tasks & agents *(draft)* | C2, C7, C15, C22 | 7 Tasks |
+| 27 | C8 Tasks & agents | C2, C7, C15, C22 | 7 Tasks |
 | 28 | C10 Plan PDFs | B1 | 8 Plans |
-| 29 | C26 Images *(draft)* | B1 | Format engines |
-| 30 | C27 Table components *(draft)* | C6 | 9 Tables |
+| 29 | C26 Images | B1 | Format engines |
+| 30 | C27 Table components | C6 | 9 Tables |
 | 31 | C9 IFC engine & change table | B1 | 10 IFC |
 | 32 | C9b IFC 3D diff | C9 | 10 IFC |
 | 33 | C12 Deliver closed | B1 | Formats |
 | 34 | C14 Shared folders | C1, C22 | Shared folders |
-| 35 | C19 Erase *(draft)* | C13 | needs a spec section |
-| 36 | C18 Package the app *(draft)* | B2, C9b, C16 | What changes |
-| — | C20 bexio | dropped | — |
+| 35 | C20 bexio (API access through egress) | C2, C6, C15 | needs a spec section |
+| 36 | C19 Erase | C13 | needs a spec section |
+| 37 | C18 Package the app | B2, C9b, C16 | What changes |
 
 ## Needs the human before the run reaches it
 These are contract, seed or spec changes. A slice that hits one records it
 under Blocked and finishes its other items.
 
 - **Contract `Mode`** has no `review` (spec: "Compare spec v6 and v7" → review). C3.
+- **`make_project`** docstring and `bridge_fake.py` do not say that a relative
+  path means "new folder in the default workspace" (spec Folder model). C23
+  implements it in `bridge_real` and tests against `RealBridge`; the human
+  updates the contract docstring, a contract test and the fake.
 - **Contract `TaskStatus`** is `todo|running|review|done|failed`; the spec has
   `backlog|ready|running|needs-input|review|done|rejected|cancelled`. No task
-  tools for `claim`, `update`, `ask`, `complete`. C8 stays draft until settled.
+  tools for `claim`, `update`, `ask`, `complete`. C8 builds the rest and
+  records these under Blocked.
 - **No per-change verdict** in the bridge (spec review: accept / reject / edit
   per change, `data-hash`, 409). A5 and C9 work per proposal until then.
 - **`search`** has no `kind`, `in_history` parameters (spec Search → Bridge). C1.
@@ -84,12 +89,11 @@ under Blocked and finishes its other items.
   `interpret`, `"slice C3"` for chats) use the old numbering.
 - **Seeds:** intent prompt in `defaults/prompts.yaml` (C3). Three.js in
   `static/vendor/` (C9b).
-- **Spec:** an Erase section (C19). An external timestamp service is not in
-  the spec (C13 leaves it out).
-- **Packaging tool:** PyInstaller is not in `pyproject.toml` (C18).
-- **Drafts to confirm:** C21 (disk changes, tracked files), C23 (workspaces),
-  C24 (incoming files), C25 (checks), C26 (images), C27 (table components).
-  Each says what to confirm under *Decided for you (to confirm)*.
+- **Spec:** an Erase section (C19) and a connector / API access section
+  (C20). Both slices are `ready` and propose the text in their run report.
+  An external timestamp service is not in the spec (C13 leaves it out).
+- **Packaging tool:** PyInstaller is not in `pyproject.toml` (C18 records the
+  build under Blocked).
 
 ## Definition of Ready — check before setting `ready`
 - [ ] Goal is one sentence a user would recognise.

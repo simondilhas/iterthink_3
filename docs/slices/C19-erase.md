@@ -1,6 +1,6 @@
 ```
 id: C19
-status: draft
+status: ready
 depends_on: [C13]
 ```
 # C19 · Erase
@@ -12,8 +12,10 @@ erased, by whom and why, without containing it.
 **Spec sections:** none yet. The spec (`docs/spec/`) has no Erase section; its Audit
 trail says "Logs are never rewritten. Corrections are new events." This slice
 does not rewrite the log, but deleting snapshot objects and blobs is a new
-rule the spec has to state first. **Ready when** the human adds an Erase
-section to the spec.
+rule. **Set `ready`** by the human on 2026-10-23: deleting the snapshot objects
+and blobs that only the erased version used is allowed; the log is never
+rewritten. The Erase section in the spec is still to be written: propose its
+text in the run report.
 
 ## Scope
 - `persistence/snapshots.py` — delete object files that the erased version alone referenced. Do not call jj.

@@ -1,6 +1,6 @@
 ```
 id: C24
-status: draft
+status: ready
 depends_on: [B1]
 ```
 # C24 · Import incoming files
@@ -12,8 +12,7 @@ on it iterthink makes an open working copy (Markdown or CSV) linked to the origi
 `imported_from`; The line ("file dropped on the screen" → review or import);
 What stays → services/ (document_import, ocr_import, plan_text_extract).
 
-**Why draft:** where the working copy goes and what dropping a file does are
-visible choices. Confirm before `ready`.
+**Confirmed** by the human on 2026-10-23: *Decided for you* is settled.
 
 ## Scope
 - `iterthink/services/incoming.py` — wraps the existing `document_import`,
@@ -26,7 +25,7 @@ visible choices. Confirm before `ready`.
 ## Out of scope
 - Returned deliverables (C12 turns them into proposals). Plans stay PDF (C10).
 
-## Decided for you (to confirm)
+## Decided for you
 - The original is kept as received: a normal tracked source file, compared as-is.
 - "Work on this" creates `<stem>.md` (DOCX, text PDF, OCR for scans) or
   `<stem>.csv` (XLSX, first sheet) next to the original, as the user's own

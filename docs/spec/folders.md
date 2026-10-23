@@ -1,7 +1,14 @@
 # Folder model
 - A workspace is any folder the user points iterthink at (local disk, external
   drive, network share). Several workspaces are allowed; the list of known
-  workspaces is machine state. No fixed `Documents/iterthink` location.
+  workspaces is machine state.
+- One of them is the default workspace: `documents_root` in
+  `defaults/config.yaml` (default `~/Documents/iterthink`), changeable in
+  Settings. It is created on first use and is always in the known list.
+  A project started without a place (from the line, with no project active
+  and no folder named) becomes a new first-level subfolder there. It is an
+  ordinary workspace: projects in it can be moved elsewhere by the user like
+  any project folder.
 - Each first-level subfolder is a project = one `Project` row. Deeper
   subfolders are plain folders inside the project. A user can also mark any
   single folder as a project without a workspace around it.

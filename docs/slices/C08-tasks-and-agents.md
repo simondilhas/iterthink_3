@@ -1,6 +1,6 @@
 ```
 id: C8
-status: draft
+status: ready
 depends_on: [C2, C7, C15, C22]
 ```
 # C8 · Tasks and agent runner
@@ -13,10 +13,13 @@ in review.
 **Spec sections:** Tasks and agents (board) — all subsections; Agents (MCP);
 Shared folders (claims); Agent rules; article §4.
 
-**Ready when** the human has settled the contract (see `README.md` → Needs the
-human): `TaskStatus` with the spec's eight statuses, and bridge methods for
-`claim_task`, `update_task`, `ask`, `answer`, `complete_task`, `cancel_task`.
-Until then this slice stays `draft`.
+**Set `ready`** by the human on 2026-10-23, before the contract is settled
+(see `README.md` → Needs the human). The contract still lacks the spec's eight
+`TaskStatus` values and bridge methods for `claim_task`, `update_task`, `ask`,
+`answer`, `complete_task`, `cancel_task`. Do not change the contract: build
+what works on today's `TaskStatus`, `task_create`, `task_start` and `tasks`,
+record every item that needs the missing parts under Blocked with the exact
+case, and leave the slice `in-progress` until the contract catches up.
 
 ## Scope
 - `iterthink/services/tasks.py`, `iterthink/services/agent_runner.py`, `bridge_real` task methods
