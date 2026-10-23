@@ -20,13 +20,14 @@
 # File size
 Short files are easier for people and agents to read and change safely.
 
-- Applies to new Python files: every module a slice creates (the ones it lists
-  in `scripts/strict_paths.d/<slice>.txt`) and its new test files.
-- A module ≤ 400 lines, a function ≤ 60 lines, a test file ≤ 600 lines.
+- Applies to every file: Python, templates, JS, CSS, tests, spec, docs, slices.
+- Limits: a file ≤ 400 lines (test files ≤ 600); a function ≤ 60 lines.
+  Fixtures, golden data, vendored files and lock files do not count.
 - Over the limit → refactor before the slice is done: split by
-  responsibility into modules in the same package, no behaviour change,
-  tests green before and after, existing imports kept working (re-export).
-- Existing 1.x files over 400 lines (e.g. `document_import.py`,
+  responsibility (code into modules in the same package, templates into
+  partials, docs by topic), no behaviour change, tests green before and
+  after, existing imports kept working (re-export).
+- Existing files over 400 lines (e.g. `document_import.py`,
   `content_repo.py`, `store_db.py`, `llm_router.py`) are not split in bulk.
   A slice that changes one substantially splits the part it touches, only if
   the file is in its Scope. Otherwise it proposes the split in its run report.
