@@ -324,20 +324,25 @@ class RealBridge(Later):
     def _compete(
         self, root: Path, project: str, proposal_id: str, paths: tuple[str, ...], actor: str
     ) -> None:
-        for item in load_all(root, Snapshots(root)):
+        """Mark another open proposal only when this accept changed its baseline."""
+        snaps = Snapshots(root)
+        for item in load_all(root, snaps):
             if item.id == proposal_id or item.status != "open":
                 continue
             if not set(item.paths) & set(paths):
                 continue
-            self._event(
-                root, project, actor, "conflict", {"paths": list(item.paths), "proposal": item.id}
-            )
+            stale = conflicts(item, snaps, root)
+            if not stale:
+                continue
+            self._event(root, project, actor, "conflict", {"paths": stale, "proposal": item.id})
 
     def reject(self, project: str, proposal_id: str, actor: str, reason: str) -> None:
         if not reason.strip():
             raise Invalid("rejecting needs a reason")
         root = self._root(project)
-        self._open(root, proposal_id)
+        found = require(root, Snapshots(root), proposal_id)
+        if found.status not in {"open", "conflict"}:
+            raise Conflict(f"proposal {proposal_id} is already {found.status}")
         self._event(
             root,
             project,
