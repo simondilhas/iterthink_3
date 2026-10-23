@@ -13,7 +13,9 @@
 - Semantic pipeline order: content hash → alignment → embedding cosine → LLM only
   in the uncertain band. Never call the LLM where hash or cosine decides.
 - All LLM calls go through `ai.llm_router`; privacy shield applies to company and
-  cloud tiers; token usage is recorded for every remote call.
+  cloud tiers; token usage is recorded for every remote call. A Cursor cloud
+  agent is not an LLM call: `ai/cursor_agent.py` talks to the Cloud Agents API
+  after egress allows it (Tasks and agents → Runners).
 - LLM and embedding work runs off the request thread (asyncio / worker threads);
   results stream via SSE. A request handler never blocks on a model.
 

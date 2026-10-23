@@ -18,8 +18,8 @@ exist first. Build bottom-up, ship the line as soon as it has places to go.
    opened on demand.
 6. **Ad-hoc apps** — bridge to apps, `<app-frame>`, builder, validation,
    keep / discard. First components: `<data-table>`, `<md-preview>`.
-7. **Tasks and agents** — task files, board, runner with built-in agent loop,
-   MCP task tools for external agents, competing-proposal handling in review.
+7. **Tasks and agents** — task files, board, local runner, Cursor cloud runner
+   (Cloud Agents API), Claude Code as an MCP claimant, competing proposals.
 8. **Plans** — plan compare in review, `<plan-viewer>`.
 9. **Tables** — `engine_table` (daff), `<simple-chart>`, `<form-fields>`.
 10. **IFC** — `engine_ifc`: element changes as `ContentChange` rows

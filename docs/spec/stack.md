@@ -74,7 +74,8 @@ iterthink/
   services/importer_1x.py # new: one-time 1.x store_db → events + snapshots
   services/search.py      # new: hybrid search (FTS5 + embeddings + RRF + rerank)
   services/tasks.py       # new: task files, status transitions, dependencies
-  services/agent_runner.py # new: worker pool, built-in agent loop, budgets
+  services/agent_runner.py # new: worker pool, local loop, Cursor and Claude dispatch
+  ai/cursor_agent.py      # new: Cloud Agents API client (launch, stream, follow-up, cancel)
   ai/local_stt.py         # new: faster-whisper
   defaults/app_builder.md # new seed: builder prompt
   defaults/app_examples/  # new seed: example apps, covered by tests
