@@ -31,6 +31,7 @@ from iterthink.services.bridge import (
 from iterthink.services.disk_scan import notice, scan, start_watching, subscribe
 from iterthink.services.event_log import LogCorrupt, append, checkpoint, read_all, store_blob
 from iterthink.services.event_log import utc_now as event_now
+from iterthink.services.indexer import schedule_index
 from iterthink.services.projects import (
     Registry,
     compare_file,
@@ -44,7 +45,6 @@ from iterthink.services.projects import (
     read_content,
     relative,
     restore_file,
-    search_hits,
     settings_of,
     shown,
     store_edit,
@@ -59,12 +59,12 @@ from iterthink.services.proposals import (
     Proposal,
     conflicts,
     create,
-    describe,
     diff_files,
     load_all,
     reason_text,
     require,
 )
+from iterthink.services.search import indexed_log, indexed_search
 from iterthink.services.verify_log import verify_all
 
 _TEXT = {"markdown", "table", "text"}
@@ -152,6 +152,7 @@ class RealBridge(Later):
             contract=CONTRACT,
             now=self._now,
         )
+        schedule_index(self.state_dir, project, root)
 
     def _adopt(self, folder: Path, project: str) -> str:
         place = self._registry.place(project, folder)
@@ -369,19 +370,7 @@ class RealBridge(Later):
 
     def log(self, project: str, limit: int = 200) -> list[LogEntry]:
         root = self._root(project)
-        entries = [
-            LogEntry(
-                seq=event.seq,
-                ts=event.ts,
-                machine=event.machine,
-                actor=event.actor,
-                type=event.type,
-                summary=describe(root, event.type, event.payload),
-                hash=event.hash,
-            )
-            for event in reversed(read_all(root))
-        ]
-        return entries[:limit]
+        return indexed_log(self.state_dir, root, project, limit)
 
     def verify(self, project: str) -> VerifyInfo:
         result = verify_all(self._root(project))
@@ -389,7 +378,8 @@ class RealBridge(Later):
         return VerifyInfo(ok=result.ok, lines=result.lines, error=error)
 
     def search(self, project: str, query: str, limit: int = 50) -> list[SearchHit]:
-        return search_hits(self._root(project), query, limit)
+        root = self._root(project)
+        return indexed_search(self.state_dir, root, project, query, limit)
 
     def disk_pull(self, project: str) -> Callable[[], str]:
         """The next disk-change sentence for this project."""
