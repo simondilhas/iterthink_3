@@ -47,6 +47,12 @@ def test_desktop_starts_server_and_window() -> None:
     assert api.choose_folder() == "/tmp/chosen"
 
 
+def test_folder_picker_waits_for_pywebview() -> None:
+    """pywebview injects `window.pywebview` after load and then fires `pywebviewready`."""
+    script = Path("iterthink/web/static/js/it-folder-picker.js").read_text(encoding="utf-8")
+    assert '"pywebviewready"' in script
+
+
 def test_js_files_are_ts_checked() -> None:
     folder = Path("iterthink/web/static/js")
     scripts = sorted(folder.glob("*.js"))

@@ -7,8 +7,17 @@
 class FolderPicker extends HTMLElement {
   connectedCallback() {
     const host = /** @type {HostWindow} */ (window);
-    if (!host.pywebview) return;
+    if (host.pywebview) {
+      this.addButton();
+    } else {
+      window.addEventListener("pywebviewready", () => this.addButton(), { once: true });
+    }
+  }
+
+  addButton() {
+    if (this.querySelector("button[data-choose]")) return;
     const button = document.createElement("button");
+    button.dataset.choose = "";
     button.type = "button";
     button.textContent = "Choose…";
     button.addEventListener("click", () => {
