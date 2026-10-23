@@ -50,6 +50,164 @@ input[name="path"] {
   50% { opacity: 0.35; }
 }
 
+/* Start screen: one centered question on a white page. Everything else waits in the menu. */
+
+body:has(.start) .line-bar {
+  flex: 1;
+  display: grid;
+  place-items: center;
+  border: 0;
+}
+
+body:has(.start) .workspace {
+  display: none;
+}
+
+.start {
+  flex-direction: column;
+  flex-wrap: nowrap;
+  width: min(36rem, 90vw);
+  margin-top: -8vh;
+}
+
+.start form {
+  width: 100%;
+}
+
+.start #line {
+  width: 100%;
+  text-align: center;
+  font-family: var(--mono);
+  font-size: 1.3rem;
+  font-weight: 600;
+  letter-spacing: 0.2em;
+  border-bottom: 2px solid var(--fg);
+  padding: 6px 0;
+  outline: none;
+}
+
+.start #line::placeholder {
+  color: var(--fg);
+  text-transform: uppercase;
+}
+
+.start #line:focus::placeholder {
+  color: var(--muted);
+}
+
+.start .dot {
+  margin-top: 4px;
+}
+
+.start #search-results {
+  width: 100%;
+  min-height: 6rem;
+  text-align: center;
+  font-family: var(--mono);
+  font-size: 0.9rem;
+  letter-spacing: 0.08em;
+}
+
+.start #search-results ul,
+.choices {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.start #search-results li {
+  padding: 4px 0;
+}
+
+.start #search-results a {
+  color: var(--fg);
+  text-decoration: none;
+}
+
+.start #search-results a:hover,
+.start #search-results a:focus {
+  text-decoration: underline;
+  outline: none;
+}
+
+.start #search-results form {
+  display: inline-flex;
+  gap: var(--gap);
+  width: auto;
+}
+
+.hint {
+  color: var(--muted);
+  margin: 0;
+}
+
+.menu {
+  position: fixed;
+  top: 14px;
+  right: 18px;
+}
+
+.menu summary {
+  list-style: none;
+  display: flex;
+  gap: 4px;
+  padding: 10px 6px;
+  cursor: pointer;
+}
+
+.menu summary::-webkit-details-marker {
+  display: none;
+}
+
+.menu summary span {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: var(--fg);
+}
+
+.menu-panel {
+  position: absolute;
+  top: 34px;
+  right: 0;
+  min-width: 20rem;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: var(--gap);
+  background: var(--bg);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  box-shadow: 0 8px 24px rgb(0 0 0 / 8%);
+}
+
+.menu-panel button {
+  color: var(--fg);
+  background: none;
+  border: 0;
+  padding: 4px 0;
+  cursor: pointer;
+  text-align: left;
+}
+
+.menu-panel button:hover {
+  text-decoration: underline;
+}
+
+.menu-panel it-folder-picker {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px var(--gap);
+}
+
+.menu-panel label {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  color: var(--muted);
+}
+
 .project-nav {
   display: flex;
   gap: var(--gap);

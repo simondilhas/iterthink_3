@@ -1,6 +1,6 @@
 <form id="line-form" method="post" action="/p/{{ project_id }}/line" hx-post="/p/{{ project_id }}/line" hx-target="#search-results" hx-swap="innerHTML">
   <span class="dot" aria-hidden="true"></span>
-  <input id="line" name="q" placeholder="What do you want to do?" autocomplete="off"
+  <input id="line" name="q" placeholder="What do you want to achieve?" autocomplete="off"
     hx-get="/p/{{ project_id }}/search" hx-trigger="input changed delay:150ms"
     hx-target="#search-results" hx-params="q">
 </form>

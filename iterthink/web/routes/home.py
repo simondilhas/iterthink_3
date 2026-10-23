@@ -1,4 +1,4 @@
-"""Start screen: the line, opened projects, and opening a folder."""
+"""Start screen: the line. Projects and folders open from the line or the menu."""
 
 from __future__ import annotations
 
@@ -6,15 +6,18 @@ import re
 from pathlib import Path
 
 import yaml
-from fastapi import APIRouter, Depends, Request
-from fastapi.responses import HTMLResponse
+from fastapi import APIRouter, Depends, Form, Request
+from fastapi.responses import HTMLResponse, RedirectResponse, Response
 
 from iterthink.services.bridge import Bridge, ProjectInfo
 from iterthink.web.app import bridge_of, templates
 
 router = APIRouter()
 _bridge = Depends(bridge_of)
+_query = Form("")
 
+_LIST_PROJECTS = re.compile(r"^(?:(?:open|show|list)\s+)?(?:(?:my|a|all)\s+)?projects?$|^open$")
+_PATH = re.compile(r"^(?:/|~|[A-Za-z]:[\\/])")
 _COLOR = re.compile(r"^#[0-9A-Fa-f]{3,8}$")
 _TOKEN = {
     "page_background": "--bg",
@@ -59,6 +62,38 @@ def render(request: Request, template: str, **context: object) -> HTMLResponse:
 
 
 @router.get("/", response_class=HTMLResponse, name="home")
-def home(request: Request, bridge: Bridge = _bridge) -> HTMLResponse:
-    projects: list[ProjectInfo] = bridge.projects()
-    return render(request, "home/index.html", projects=projects)
+def home(request: Request) -> HTMLResponse:
+    return render(request, "home/index.html")
+
+
+def matching_projects(projects: list[ProjectInfo], text: str) -> list[ProjectInfo]:
+    """Exact name first (case-insensitive), else every project whose name contains the text."""
+    wanted = text.casefold()
+    exact = [p for p in projects if p.name.casefold() == wanted]
+    if exact:
+        return exact[:1]
+    return [p for p in projects if wanted in p.name.casefold()]
+
+
+def _open(request: Request, href: str) -> Response:
+    if request.headers.get("HX-Request"):
+        return Response(status_code=200, headers={"HX-Redirect": href})
+    return RedirectResponse(href, status_code=303)
+
+
+@router.post("/line", name="home_line", response_model=None)
+def home_line(request: Request, q: str = _query, bridge: Bridge = _bridge) -> Response:
+    """Enter on the start screen. Fixed rules, no AI: list, open a project, or open a folder."""
+    text = " ".join(q.split())
+    if _PATH.match(text):
+        folders = bridge.open_folder(Path(text))
+        return render(request, "home/folders.html", folders=folders)
+    projects = bridge.projects()
+    if _LIST_PROJECTS.match(text.casefold()):
+        return render(request, "home/projects.html", projects=projects)
+    found = matching_projects(projects, text) if len(text) >= 3 else []
+    if len(found) == 1:
+        return _open(request, f"/p/{found[0].id}")
+    if found:
+        return render(request, "home/projects.html", projects=found)
+    return render(request, "home/hint.html")

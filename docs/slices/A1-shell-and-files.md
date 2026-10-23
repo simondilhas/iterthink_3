@@ -31,10 +31,15 @@ Run against `FakeBridge` (`ITERTHINK_BRIDGE=fake`); never import anything
 from `iterthink` except the bridge and `iterthink.web`.
 
 ## Pages and routes (names in brackets are route names)
-- `GET /` [home] — start screen: white, a pulsing dot, the line with
-  placeholder "What do you want to do?". Below: opened projects, and an
+- `GET /` [home] — start screen: white, the line centered with placeholder
+  "What do you want to achieve?", a pulsing dot under it. No project list on
+  screen. A three-dot menu top right holds "Open project" and an
   "Open folder" form (path field; in the desktop window also a "Choose…"
   button using the folder picker).
+- `POST /line` [home_line] — Enter on the start screen, fixed rules, no AI:
+  "open project" lists opened projects; a project name opens it; a path
+  lists its folders; anything else shows a quiet hint. (C3 later replaces
+  the rules with intent.)
 - `POST /open` [open_folder] — form `path` → fragment listing folders:
   projects link to `/p/{id}`, others get a "Make project" button.
 - `POST /projects` [make_project] — form `path` → redirect to `/p/{id}`.

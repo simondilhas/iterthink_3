@@ -30,11 +30,25 @@ function toggleFiles() {
   if (button instanceof HTMLElement) button.click();
 }
 
+function closeMenus() {
+  for (const menu of document.querySelectorAll("details.menu[open]")) {
+    if (menu instanceof HTMLDetailsElement) menu.open = false;
+  }
+}
+
 function closePanels() {
+  closeMenus();
   for (const id of ["#search-results", "#left", "#right"]) {
     const node = document.querySelector(id);
     if (node instanceof HTMLElement) node.replaceChildren();
   }
+}
+
+/**
+ * @param {SubmitEvent} event
+ */
+function onSubmit(event) {
+  if (event.target instanceof Element && event.target.closest("details.menu")) closeMenus();
 }
 
 /**
@@ -57,3 +71,4 @@ function onKey(event) {
 }
 
 document.addEventListener("keydown", onKey);
+document.addEventListener("submit", onSubmit);

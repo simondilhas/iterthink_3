@@ -3,24 +3,25 @@
 {% block head %}{% include "home/head.html" %}{% endblock %}
 {% block line %}
 <div class="start">
+  <form method="post" action="/line" hx-post="/line" hx-target="#search-results" hx-swap="innerHTML">
+    <input id="line" name="q" placeholder="What do you want to achieve?" autocomplete="off" autofocus>
+  </form>
   <span class="dot" aria-hidden="true"></span>
-  <input id="line" placeholder="What do you want to do?" autocomplete="off">
+  <div id="search-results"></div>
 </div>
-{% endblock %}
-{% block main %}
-<form method="post" action="/open" hx-post="/open" hx-target="#folder-list" hx-swap="innerHTML">
-  <it-folder-picker>
-    <label>Open folder <input name="path" type="text" spellcheck="false"></label>
-    <button type="submit">Open folder</button>
-  </it-folder-picker>
-</form>
-<div id="folder-list"></div>
-<section>
-  <h1>Opened projects</h1>
-  <ul>
-    {% for project in projects %}
-    <li><a href="/p/{{ project.id }}">{{ project.name }}</a></li>
-    {% endfor %}
-  </ul>
-</section>
+<details class="menu">
+  <summary aria-label="Menu"><span></span><span></span><span></span></summary>
+  <div class="menu-panel">
+    <form method="post" action="/line" hx-post="/line" hx-target="#search-results" hx-swap="innerHTML">
+      <input type="hidden" name="q" value="open project">
+      <button type="submit">Open project</button>
+    </form>
+    <form method="post" action="/open" hx-post="/open" hx-target="#search-results" hx-swap="innerHTML">
+      <it-folder-picker>
+        <label>Folder path <input name="path" type="text" spellcheck="false" placeholder="/path/to/folder"></label>
+        <button type="submit">Open folder</button>
+      </it-folder-picker>
+    </form>
+  </div>
+</details>
 {% endblock %}

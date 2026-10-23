@@ -1,0 +1,9 @@
+{% if projects %}
+<ul class="choices">
+  {% for project in projects %}
+  <li><a href="/p/{{ project.id }}">{{ project.name }}</a></li>
+  {% endfor %}
+</ul>
+{% else %}
+<p class="hint">No projects yet. Type the path of a folder and press Enter.</p>
+{% endif %}

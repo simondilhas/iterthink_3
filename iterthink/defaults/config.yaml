@@ -10,7 +10,7 @@ store_dir: ~/Documents/.iterthink
 default_ollama_model: llama3:8B
 ollama_host: null
 
-appearance: dark
+appearance: light
 
 theme:
   # Dark: near-black panels, muted lavender pills (dark text on fill), lavender accents.

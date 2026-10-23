@@ -1,5 +1,9 @@
 # The line (start screen and universal entry)
-White screen, one pulsing dot, one line: "What do you want to do?"
+White screen, one centered line: "What do you want to achieve?", a pulsing
+dot under it. Nothing else on screen: no project list, no folder form.
+A quiet three-dot menu in the top right holds Open project and Open folder;
+everything else happens through the line ("open project" lists projects to
+pick from, a project name opens it, a folder path lists its folders).
 The mode emerges from what the user does; the user never picks a mode first.
 
 ## Core rule
