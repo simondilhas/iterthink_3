@@ -8,6 +8,7 @@ from pathlib import Path
 
 import pytest
 
+from iterthink.services.bridge import Forbidden
 from iterthink.services.bridge_real import RealBridge
 
 MAX_BYTES = 200 * 1024 * 1024
@@ -73,6 +74,32 @@ def test_hidden_and_large_files_are_not_tracked(bridge: RealBridge, project_dir:
     assert "big.bin" not in paths
     assert all(".secret" not in item.paths for item in bridge.history(info.id))
     assert all("big.bin" not in item.paths for item in bridge.history(info.id))
+
+
+@pytest.mark.parametrize("which", ["home", "parent", "root"])
+def test_home_folder_and_above_are_refused(
+    bridge: RealBridge, tmp_path: Path, monkeypatch: pytest.MonkeyPatch, which: str
+) -> None:
+    home = tmp_path / "home" / "simon"
+    home.mkdir(parents=True)
+    monkeypatch.setenv("HOME", str(home))
+    folder = {"home": home, "parent": home.parent, "root": Path(home.anchor)}[which]
+    with pytest.raises(Forbidden, match="too broad"):
+        bridge.make_project(folder)
+    assert not (home / ".iterthink").exists()
+    assert not (home.parent / ".iterthink").exists()
+
+
+@pytest.mark.skipif(sys.platform == "win32", reason="POSIX permissions")
+def test_unwritable_folder_says_so(bridge: RealBridge, tmp_path: Path) -> None:
+    locked = tmp_path / "locked"
+    locked.mkdir()
+    locked.chmod(0o555)
+    try:
+        with pytest.raises(Forbidden, match=f"cannot write to {locked}"):
+            bridge.make_project(locked)
+    finally:
+        locked.chmod(0o755)
 
 
 @pytest.mark.skipif(sys.platform != "win32", reason="Windows file attribute")

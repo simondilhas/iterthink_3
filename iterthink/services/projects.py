@@ -175,12 +175,18 @@ def ensure_project(folder: Path) -> tuple[str, str | None]:
         return existing, None
     from secrets import token_hex
 
+    home = Path.home().resolve()
+    if folder == home or folder in home.parents:
+        raise Forbidden(f"{folder} is too broad for a project. Pick a folder inside it.")
     project = f"p-{token_hex(4)}"
-    write_yaml(project_file(folder), {"id": project, "egress": "shielded"})
-    hide_iterthink(folder)
-    snaps = Snapshots(folder)
-    snaps.init()
-    version = snaps.snapshot(tracked_files(folder), "started tracking", "user:local")
+    try:
+        write_yaml(project_file(folder), {"id": project, "egress": "shielded"})
+        hide_iterthink(folder)
+        snaps = Snapshots(folder)
+        snaps.init()
+        version = snaps.snapshot(tracked_files(folder), "started tracking", "user:local")
+    except PermissionError as exc:
+        raise Forbidden(f"iterthink cannot write to {folder}.") from exc
     vid = version.id if version is not None else snaps.head().id
     return project, vid
 
