@@ -1,0 +1,18 @@
+{% macro listing(node) %}
+{% for name, child in node.dirs.items() %}
+<details>
+  <summary>{{ name }}</summary>
+  {{ listing(child) }}
+</details>
+{% endfor %}
+<ul>
+  {% for entry in node.files %}
+  <li>
+    <a href="{{ entry.href }}">{{ entry.name }}</a>
+    <span class="kind">{{ entry.kind }}</span>
+    {% if entry.open_proposals > 0 %}<span class="badge">{{ entry.open_proposals }}</span>{% endif %}
+  </li>
+  {% endfor %}
+</ul>
+{% endmacro %}
+{{ listing(tree) }}

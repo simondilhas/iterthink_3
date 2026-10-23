@@ -1,0 +1,30 @@
+.change {
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: var(--gap);
+  margin: var(--gap) 0;
+}
+
+.change.active {
+  border-color: var(--accent);
+}
+
+tr.added td {
+  background: var(--ins-bg);
+}
+
+tr.removed td {
+  background: var(--del-bg);
+}
+
+.broken {
+  color: var(--del-fg);
+  background: var(--del-bg);
+  padding: 4px 8px;
+  border-radius: var(--radius);
+}
+
+#panel nav {
+  display: flex;
+  gap: var(--gap);
+}

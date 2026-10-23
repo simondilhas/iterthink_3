@@ -1,0 +1,22 @@
+{% for change in view.changes %}
+<section class="change" data-change="{{ change.index }}">
+  <p>{{ change.kind }}</p>
+  <p>
+    {% if change.segments %}
+      {% for segment in change.segments %}
+        {% if segment.op == "delete" %}<del>{{ segment.text }}</del>
+        {% elif segment.op == "insert" %}<ins>{{ segment.text }}</ins>
+        {% else %}{{ segment.text }}{% endif %}
+      {% endfor %}
+    {% elif change.kind == "added" %}<ins>{{ change.after }}</ins>
+    {% elif change.kind == "removed" %}<del>{{ change.before }}</del>
+    {% else %}{{ change.before }} {{ change.after }}{% endif %}
+  </p>
+</section>
+{% endfor %}
+{% if view.stable %}
+<details>
+  <summary>{{ view.stable|length }} unchanged paragraph{% if view.stable|length != 1 %}s{% endif %}</summary>
+  {% for text in view.stable %}<p>{{ text }}</p>{% endfor %}
+</details>
+{% endif %}

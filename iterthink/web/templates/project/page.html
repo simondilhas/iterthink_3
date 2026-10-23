@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+{% block title %}iterthink{% endblock %}
+{% block head %}{% include "home/head.html" %}{% endblock %}
+{% block line %}
+{% include "project/line.html" %}
+{% include "project/nav.html" %}
+{% endblock %}
+{% block main %}
+<ul class="counts">
+  {% for kind, count in counts %}
+  <li>{{ count }} {{ kind }}</li>
+  {% endfor %}
+</ul>
+{% endblock %}

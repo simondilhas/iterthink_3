@@ -1,6 +1,6 @@
 ```
 id: A1
-status: ready
+status: done
 depends_on: []
 ```
 # A1 · Shell, projects and files
@@ -79,21 +79,21 @@ from `iterthink` except the bridge and `iterthink.web`.
   shortcuts and the folder picker.
 
 ## Acceptance (TestClient + FakeBridge, `project_dir` fixture)
-- [ ] `test_home_shows_line_and_open_folder`
-- [ ] `test_open_folder_lists_folders_with_make_project`
-- [ ] `test_make_project_redirects_to_project`
-- [ ] `test_project_page_is_line_and_overview_only` — no file list, no panel loaded on page load
-- [ ] `test_explorer_lists_files_with_kinds_and_proposal_badge`
-- [ ] `test_markdown_is_rendered_and_editable`
-- [ ] `test_save_writes_file_returns_toast_and_trigger`
-- [ ] `test_save_without_changes_says_no_changes`
-- [ ] `test_csv_renders_as_table_with_umlaut_headers`
-- [ ] `test_file_url_with_spaces_and_umlauts` — `Pläne/Notiz Grundriss EG.md`
-- [ ] `test_path_outside_project_is_403`
-- [ ] `test_search_returns_hits_with_links_to_line`
-- [ ] `test_line_enter_opens_top_hit` and `test_line_enter_without_hits_toasts`
-- [ ] `test_history_button_only_if_panel_route_exists` — and it loads on click, not on load
-- [ ] `test_desktop_starts_server_and_window` — pywebview replaced by a fake
+- [x] `test_home_shows_line_and_open_folder`
+- [x] `test_open_folder_lists_folders_with_make_project`
+- [x] `test_make_project_redirects_to_project`
+- [x] `test_project_page_is_line_and_overview_only` — no file list, no panel loaded on page load
+- [x] `test_explorer_lists_files_with_kinds_and_proposal_badge`
+- [x] `test_markdown_is_rendered_and_editable`
+- [x] `test_save_writes_file_returns_toast_and_trigger`
+- [x] `test_save_without_changes_says_no_changes`
+- [x] `test_csv_renders_as_table_with_umlaut_headers`
+- [x] `test_file_url_with_spaces_and_umlauts` — `Pläne/Notiz Grundriss EG.md`
+- [x] `test_path_outside_project_is_403`
+- [x] `test_search_returns_hits_with_links_to_line`
+- [x] `test_line_enter_opens_top_hit` and `test_line_enter_without_hits_toasts`
+- [x] `test_history_button_only_if_panel_route_exists` — and it loads on click, not on load
+- [x] `test_desktop_starts_server_and_window` — pywebview replaced by a fake
       module; asserts URL contains the token and `choose_folder` is exposed.
-- [ ] `test_js_files_are_ts_checked` — every file in `static/js/` starts with `// @ts-check`.
-- [ ] Manual check list in the run report: 5 steps you can click through tonight.
+- [x] `test_js_files_are_ts_checked` — every file in `static/js/` starts with `// @ts-check`.
+- [x] Manual check list in the run report: 5 steps you can click through tonight.

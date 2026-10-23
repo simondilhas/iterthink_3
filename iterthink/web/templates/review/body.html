@@ -1,0 +1,19 @@
+<article>
+  <p>{{ proposal.reason }}</p>
+  <p>{{ who(proposal.actor) }}</p>
+  <p>{{ when(proposal.created) }}</p>
+  <p>{{ proposal.status }}</p>
+  {% if notice %}<p>{{ notice }}</p>{% endif %}
+  {% for view in views %}{% include "history/diff.html" %}{% endfor %}
+  {% if proposal.status == "open" %}
+  <form id="accept" method="post" action="/p/{{ project_id }}/proposals/{{ proposal.id }}/accept" hx-post="/p/{{ project_id }}/proposals/{{ proposal.id }}/accept" hx-target="#main" hx-swap="innerHTML">
+    <input name="reason" value="">
+    <button type="submit">Accept</button>
+  </form>
+  <form id="reject" method="post" action="/p/{{ project_id }}/proposals/{{ proposal.id }}/reject" hx-post="/p/{{ project_id }}/proposals/{{ proposal.id }}/reject" hx-target="#main" hx-swap="innerHTML">
+    <input id="reject-reason" name="reason" required>
+    <button type="submit">Reject</button>
+  </form>
+  {% endif %}
+  {% if toast %}<div id="toast" hx-swap-oob="true">{{ toast }}</div>{% endif %}
+</article>

@@ -1,0 +1,12 @@
+<table>
+  <tr>{% for column in view.columns %}<th>{{ column }}</th>{% endfor %}</tr>
+  {% for row in view.rows %}
+  <tr class="{{ row.css }}">
+    {% for cell in row.cells %}
+    <td {% if cell.title %}title="{{ cell.title }}"{% endif %}>
+      {% if row.css == "removed" %}<del>{{ cell.text }}</del>{% else %}{{ cell.text }}{% endif %}
+    </td>
+    {% endfor %}
+  </tr>
+  {% endfor %}
+</table>

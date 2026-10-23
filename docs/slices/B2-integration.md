@@ -1,6 +1,6 @@
 ```
 id: B2
-status: ready
+status: done
 depends_on: [A1, A5, A6, B1]
 ```
 # B2 · Integration: the app on real folders
@@ -33,15 +33,15 @@ Work on the current branch. A1, A5, A6 and B1 must be `done`.
   `scripts/setup-agent-env.sh`.
 
 ## Acceptance
-- [ ] `test_open_make_project_browse_edit_history` — through the web routes
-- [ ] `test_agent_proposes_user_accepts_file_changes_log_intact` — MCP propose,
+- [x] `test_open_make_project_browse_edit_history` — through the web routes
+- [x] `test_agent_proposes_user_accepts_file_changes_log_intact` — MCP propose,
       web accept, file on disk changed, log verifies
-- [ ] `test_agent_proposes_user_rejects_file_unchanged`
-- [ ] `test_conflict_shown_in_review_after_user_edit`
-- [ ] `test_restore_through_ui`
-- [ ] `test_restart_keeps_everything` — new app + bridge on the same folders
-- [ ] `test_mcp_refuses_content_until_egress_allowed`
-- [ ] `test_sources_untouched_except_by_save_accept_restore` — `source_snapshot`
+- [x] `test_agent_proposes_user_rejects_file_unchanged`
+- [x] `test_conflict_shown_in_review_after_user_edit`
+- [x] `test_restore_through_ui`
+- [x] `test_restart_keeps_everything` — new app + bridge on the same folders
+- [x] `test_mcp_refuses_content_until_egress_allowed`
+- [x] `test_sources_untouched_except_by_save_accept_restore` — `source_snapshot`
       across the whole flow
-- [ ] Run report contains a 10-step manual script for tonight, including the
+- [x] Run report contains a 10-step manual script for tonight, including the
       MCP config line for Claude.

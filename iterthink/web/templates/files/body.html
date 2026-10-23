@@ -1,0 +1,30 @@
+{% if marked %}<p id="line-{{ line }}" class="line-hit">{{ marked }}</p>{% endif %}
+{% if mode == "markdown" and not editing %}
+{{ html | safe }}
+<p><a href="?edit=1">Edit</a></p>
+{% elif mode == "table" and not editing %}
+<table>
+  {% for row in rows %}
+  <tr>
+    {% if loop.first %}
+    {% for cell in row %}<th>{{ cell }}</th>{% endfor %}
+    {% else %}
+    {% for cell in row %}<td>{{ cell }}</td>{% endfor %}
+    {% endif %}
+  </tr>
+  {% endfor %}
+</table>
+<p><a href="?edit=1">Edit as text</a></p>
+{% elif editing %}
+{% if html %}{{ html | safe }}{% endif %}
+<form id="editor" method="post" action="{{ action }}" hx-post="{{ action }}" hx-target="#main" hx-swap="innerHTML">
+  <textarea name="text">{{ content.text }}</textarea>
+  <button type="submit">Save</button>
+</form>
+{% else %}
+<p>{{ content.path }}</p>
+<p>{{ content.kind }}</p>
+<p>{{ content.size }}</p>
+<p>Preview arrives later</p>
+{% endif %}
+{% if toast %}<div id="toast" hx-swap-oob="true">{{ toast }}</div>{% endif %}

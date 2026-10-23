@@ -1,0 +1,9 @@
+<ul>
+  {% for item in proposals %}
+  <li>
+    <a href="/p/{{ project_id }}/proposals/{{ item.id }}">{{ item.reason }}</a>
+    {{ who(item.actor) }} {{ when(item.created) }} {{ item.status }}
+    {% for path in item.paths %}<span>{{ path }}</span>{% endfor %}
+  </li>
+  {% endfor %}
+</ul>

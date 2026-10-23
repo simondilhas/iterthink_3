@@ -1,0 +1,8 @@
+<ol>
+  {% for item in versions %}
+  <li>
+    <a href="/p/{{ project_id }}/versions/{{ item.id }}?path={{ path_q }}">{{ item.message }}</a>
+    {{ item.when }} {{ item.who }}
+  </li>
+  {% endfor %}
+</ol>

@@ -1,6 +1,6 @@
 ```
 id: C22
-status: ready
+status: done
 depends_on: [B1]
 ```
 # C22 · Claims
@@ -54,9 +54,9 @@ STALE_AFTER = timedelta(minutes=2)
   `.iterthink/apps/`; anything else raises `ValueError`.
 
 ## Acceptance
-- [ ] `test_second_acquire_raises_claimed_with_holder`
-- [ ] `test_release_frees_and_only_own_claim_is_released`
-- [ ] `test_stale_claim_is_free_for_holder_check`
-- [ ] `test_take_over_logs_event_with_old_holder`
-- [ ] `test_claims_only_for_chat_task_app_files`
-- [ ] `test_two_bridges_one_folder_one_writer` — two machine ids, one project
+- [x] `test_second_acquire_raises_claimed_with_holder`
+- [x] `test_release_frees_and_only_own_claim_is_released`
+- [x] `test_stale_claim_is_free_for_holder_check`
+- [x] `test_take_over_logs_event_with_old_holder`
+- [x] `test_claims_only_for_chat_task_app_files`
+- [x] `test_two_bridges_one_folder_one_writer` — two machine ids, one project

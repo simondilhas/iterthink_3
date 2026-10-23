@@ -1,0 +1,107 @@
+/* Shell: the line is full width. Side panels take space only once they have content. */
+
+.workspace {
+  grid-template-columns: 1fr;
+}
+
+.workspace:has(#left:not(:empty)) {
+  grid-template-columns: var(--pane-left) 1fr;
+}
+
+.workspace:has(#right:not(:empty)) {
+  grid-template-columns: 1fr var(--pane-right);
+}
+
+.workspace:has(#left:not(:empty)):has(#right:not(:empty)) {
+  grid-template-columns: var(--pane-left) 1fr var(--pane-right);
+}
+
+.start,
+#line-form {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--gap);
+}
+
+#line,
+input[name="path"] {
+  flex: 1;
+  min-width: 12rem;
+  font: inherit;
+  color: inherit;
+  background: transparent;
+  border: 0;
+  border-bottom: 1px solid var(--line);
+  padding: 8px 0;
+}
+
+.dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: var(--accent);
+  display: inline-block;
+  flex: none;
+  animation: pulse 1.4s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  50% { opacity: 0.35; }
+}
+
+.project-nav {
+  display: flex;
+  gap: var(--gap);
+}
+
+button,
+.kind,
+.badge {
+  font: inherit;
+}
+
+.kind {
+  color: var(--muted);
+}
+
+.badge {
+  background: var(--accent);
+  color: var(--bg);
+  border-radius: var(--radius);
+  padding: 0 6px;
+}
+
+textarea {
+  width: 100%;
+  min-height: 50vh;
+  font-family: var(--mono);
+  color: inherit;
+  background: var(--bg);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+}
+
+table {
+  border-collapse: collapse;
+}
+
+th,
+td {
+  border-bottom: 1px solid var(--line);
+  padding: 4px 8px;
+  text-align: left;
+}
+
+.line-hit {
+  background: var(--ins-bg);
+}
+
+@media (max-width: 900px) {
+  .workspace,
+  .workspace:has(#left:not(:empty)),
+  .workspace:has(#right:not(:empty)),
+  .workspace:has(#left:not(:empty)):has(#right:not(:empty)) {
+    grid-template-columns: 1fr;
+  }
+}

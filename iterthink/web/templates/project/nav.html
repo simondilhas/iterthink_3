@@ -1,0 +1,6 @@
+<nav class="project-nav">
+  <button id="files-button" type="button" hx-get="/p/{{ project_id }}/explorer" hx-target="#left" hx-swap="innerHTML" hx-trigger="click">Files</button>
+  {% if has_route(request, "panel") %}
+  <button type="button" hx-get="/p/{{ project_id }}/panel" hx-target="#right" hx-swap="innerHTML" hx-trigger="click">History</button>
+  {% endif %}
+</nav>
