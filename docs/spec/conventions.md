@@ -22,7 +22,9 @@ Short files are easier for people and agents to read and change safely.
 
 - Applies to every file: Python, templates, JS, CSS, tests, spec, docs, slices.
 - Limits: a file ≤ 400 lines (test files ≤ 600); a function ≤ 60 lines.
-  Fixtures, golden data, vendored files and lock files do not count.
+  Fixtures, golden data, vendored files, lock files, generated files
+  (`THIRD_PARTY_NOTICES.md`), data files (`contract/data/`) and seed files in
+  `defaults/` do not count.
 - Over the limit → refactor before the slice is done: split by
   responsibility (code into modules in the same package, templates into
   partials, docs by topic), no behaviour change, tests green before and
