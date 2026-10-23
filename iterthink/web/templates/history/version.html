@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+{% block title %}Version{% endblock %}
+{% block head %}
+{% include "home/head.html" %}
+<script type="module" src="/static/js/review-keys.js"></script>
+{% endblock %}
+{% block line %}{% include "project/line.html" %}{% endblock %}
+{% block main %}
+<article>
+  <p>{{ version.who }}</p>
+  <p>{{ version.when }}</p>
+  <p>{{ version.message }}</p>
+  <ul>{% for item in version.paths %}<li>{{ item }}</li>{% endfor %}</ul>
+  {% for item in files %}
+  {% with view=item.view %}{% include "history/diff.html" %}{% endwith %}
+  <form method="post" action="/p/{{ project_id }}/restore" hx-post="/p/{{ project_id }}/restore" hx-target="#main" hx-swap="innerHTML"
+    hx-confirm="Restore this version of {{ item.path }}? The current one stays in history.">
+    <input type="hidden" name="path" value="{{ item.path }}">
+    <input type="hidden" name="version" value="{{ version.id }}">
+    <button type="submit">Restore</button>
+  </form>
+  {% endfor %}
+  {% if toast %}<div id="toast" hx-swap-oob="true">{{ toast }}</div>{% endif %}
+</article>
+{% endblock %}

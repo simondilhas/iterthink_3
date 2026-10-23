@@ -1,6 +1,6 @@
 ```
 id: A5
-status: ready
+status: done
 depends_on: []
 ```
 # A5 · History, review and log UI
@@ -75,17 +75,17 @@ verdict, plain vocabulary); article §4, §9.
   without JS through the forms.
 
 ## Acceptance (TestClient + FakeBridge)
-- [ ] `test_panel_has_three_tabs_and_open_count`
-- [ ] `test_panel_is_not_loaded_on_page_load` — no `hx-trigger="load"` pointing at the panel
-- [ ] `test_history_lists_versions_newest_first_for_path`
-- [ ] `test_version_page_shows_text_diff_with_ins_del`
-- [ ] `test_table_diff_highlights_cells_and_rows`
-- [ ] `test_restore_confirms_restores_and_triggers_refresh`
-- [ ] `test_proposals_list_and_detail_show_reason_actor_diff`
-- [ ] `test_accept_applies_and_triggers_refresh`
-- [ ] `test_reject_requires_reason` (422 fragment) and `test_reject_with_reason`
-- [ ] `test_accept_after_conflicting_edit_shows_conflict_message`
-- [ ] `test_log_shows_entries_and_intact_badge`
-- [ ] `test_log_shows_broken_badge` — fake bridge with a tampered entry
-- [ ] golden: `test_diff_text_fragment_golden`, `test_diff_table_fragment_golden`
-- [ ] Manual check list in the run report.
+- [x] `test_panel_has_three_tabs_and_open_count`
+- [x] `test_panel_is_not_loaded_on_page_load` — no `hx-trigger="load"` pointing at the panel
+- [x] `test_history_lists_versions_newest_first_for_path`
+- [x] `test_version_page_shows_text_diff_with_ins_del`
+- [x] `test_table_diff_highlights_cells_and_rows`
+- [x] `test_restore_confirms_restores_and_triggers_refresh`
+- [x] `test_proposals_list_and_detail_show_reason_actor_diff`
+- [x] `test_accept_applies_and_triggers_refresh`
+- [x] `test_reject_requires_reason` (422 fragment) and `test_reject_with_reason`
+- [x] `test_accept_after_conflicting_edit_shows_conflict_message`
+- [x] `test_log_shows_entries_and_intact_badge`
+- [x] `test_log_shows_broken_badge` — fake bridge with a tampered entry
+- [x] golden: `test_diff_text_fragment_golden`, `test_diff_table_fragment_golden`
+- [x] Manual check list in the run report.

@@ -1,0 +1,14 @@
+<div id="panel"
+  hx-get="/p/{{ project_id }}/panel?path={{ path_q }}&tab={{ tab }}"
+  hx-trigger="versions-changed from:body, proposals-changed from:body"
+  hx-target="#right" hx-swap="innerHTML">
+  <nav>
+    <a href="/p/{{ project_id }}/panel?tab=history&path={{ path_q }}">History</a>
+    <a href="/p/{{ project_id }}/panel?tab=proposals&path={{ path_q }}">Proposals ({{ open_count }})</a>
+    <a href="/p/{{ project_id }}/panel?tab=log&path={{ path_q }}">Log</a>
+  </nav>
+  {% if tab == "history" %}{% include "history/list.html" %}
+  {% elif tab == "proposals" %}{% include "review/list.html" %}
+  {% else %}{% include "log/table.html" %}
+  {% endif %}
+</div>

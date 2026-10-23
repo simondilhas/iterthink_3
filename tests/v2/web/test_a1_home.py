@@ -4,8 +4,6 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from fastapi import APIRouter
-from fastapi.responses import HTMLResponse
 from fastapi.testclient import TestClient
 
 
@@ -44,18 +42,9 @@ def test_project_page_is_line_and_overview_only(client: TestClient, project_id: 
 
 
 def test_history_button_only_if_panel_route_exists(client: TestClient, project_id: str) -> None:
-    before = client.get(f"/p/{project_id}")
-    assert "History" not in before.text
-    router = APIRouter()
-
-    @router.get("/panel-probe", name="panel")
-    def panel() -> HTMLResponse:
-        return HTMLResponse("history")
-
-    client.app.include_router(router)  # type: ignore[attr-defined]
-    after = client.get(f"/p/{project_id}")
-    assert "History" in after.text
-    assert 'hx-get="/p/' in after.text
-    assert "/panel" in after.text
-    assert 'hx-trigger="click"' in after.text
-    assert 'hx-trigger="load"' not in after.text
+    page = client.get(f"/p/{project_id}")
+    assert "History" in page.text
+    assert f'hx-get="/p/{project_id}/panel"' in page.text
+    assert 'hx-trigger="click"' in page.text
+    assert 'hx-trigger="load"' not in page.text
+    assert "Proposals (" not in page.text

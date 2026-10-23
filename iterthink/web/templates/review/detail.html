@@ -1,0 +1,10 @@
+{% extends "base.html" %}
+{% block title %}Proposal{% endblock %}
+{% block head %}
+{% include "home/head.html" %}
+<script type="module" src="/static/js/review-keys.js"></script>
+{% endblock %}
+{% block line %}{% include "project/line.html" %}{% endblock %}
+{% block main %}
+{% include "review/body.html" %}
+{% endblock %}

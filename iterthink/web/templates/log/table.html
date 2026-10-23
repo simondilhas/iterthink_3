@@ -1,0 +1,15 @@
+{% if verify.ok %}
+<p>Log intact · {{ verify.lines }} entries</p>
+{% else %}
+<p class="broken">{{ verify.error }}</p>
+{% endif %}
+<table>
+  <tr><th>Time</th><th>Who</th><th>What</th></tr>
+  {% for entry in entries %}
+  <tr>
+    <td>{{ when(entry.ts) }}</td>
+    <td>{{ who(entry.actor) }}</td>
+    <td>{{ entry.summary }}</td>
+  </tr>
+  {% endfor %}
+</table>

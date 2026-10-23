@@ -1,0 +1,6 @@
+<div id="diff">
+{% if view.kind == "text" %}{% include "partials/diff_text.html" %}
+{% elif view.kind == "table" %}{% include "partials/diff_table.html" %}
+{% else %}{% include "partials/diff_other.html" %}
+{% endif %}
+</div>
