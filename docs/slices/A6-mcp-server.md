@@ -1,6 +1,6 @@
 ```
 id: A6
-status: ready
+status: done
 depends_on: []
 ```
 # A6 · MCP server
@@ -50,14 +50,14 @@ No tool accepts, rejects, saves or restores. Verdicts are human.
   must accept, and that files are not changed.
 
 ## Acceptance (call the tool functions with FakeBridge; no subprocess needed)
-- [ ] `test_tool_list_is_exactly_the_eight_tools` — no accept/reject/save/restore
-- [ ] `test_list_projects_and_files`
-- [ ] `test_read_file_allowed_when_egress_allowed`
-- [ ] `test_content_tools_refused_when_egress_shielded_or_none` (parametrised)
-- [ ] `test_metadata_tools_work_under_egress_none`
-- [ ] `test_propose_creates_open_proposal_and_leaves_files` — `source_snapshot` equal
-- [ ] `test_actor_comes_from_client_name`
-- [ ] `test_bridge_error_becomes_tool_error`
-- [ ] `test_server_starts_over_stdio` (marker `integration`) — spawn
+- [x] `test_tool_list_is_exactly_the_eight_tools` — no accept/reject/save/restore
+- [x] `test_list_projects_and_files`
+- [x] `test_read_file_allowed_when_egress_allowed`
+- [x] `test_content_tools_refused_when_egress_shielded_or_none` (parametrised)
+- [x] `test_metadata_tools_work_under_egress_none`
+- [x] `test_propose_creates_open_proposal_and_leaves_files` — `source_snapshot` equal
+- [x] `test_actor_comes_from_client_name`
+- [x] `test_bridge_error_becomes_tool_error`
+- [x] `test_server_starts_over_stdio` (marker `integration`) — spawn
       `python -m iterthink.mcp`, initialize, list tools, exit cleanly.
-- [ ] `docs/mcp.md` contains working config for Claude Desktop, Claude Code and Cursor.
+- [x] `docs/mcp.md` contains working config for Claude Desktop, Claude Code and Cursor.
