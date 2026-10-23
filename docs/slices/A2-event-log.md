@@ -1,6 +1,6 @@
 ```
 id: A2
-status: ready
+status: done
 depends_on: []
 ```
 # A2 · Event log with hash chain
@@ -70,19 +70,19 @@ def main(argv: list[str]) -> int: ...
   `verify_log.py`, still standard library only.
 
 ## Acceptance
-- [ ] `test_append_writes_one_canonical_line`
-- [ ] `test_seq_increments_per_machine_log`
-- [ ] `test_prev_hash_links_to_previous_line`, `test_first_prev_hash_is_zeros`
-- [ ] `test_store_blob_is_content_addressed`
-- [ ] `test_only_own_machine_log_is_written`
-- [ ] `test_read_all_merges_machines_in_order`
-- [ ] `test_float_in_payload_raises`
-- [ ] `test_append_after_incomplete_last_line_raises`
-- [ ] `test_verify_detects_edit` / `_removed_line` / `_reordered_lines` /
+- [x] `test_append_writes_one_canonical_line`
+- [x] `test_seq_increments_per_machine_log`
+- [x] `test_prev_hash_links_to_previous_line`, `test_first_prev_hash_is_zeros`
+- [x] `test_store_blob_is_content_addressed`
+- [x] `test_only_own_machine_log_is_written`
+- [x] `test_read_all_merges_machines_in_order`
+- [x] `test_float_in_payload_raises`
+- [x] `test_append_after_incomplete_last_line_raises`
+- [x] `test_verify_detects_edit` / `_removed_line` / `_reordered_lines` /
       `_incomplete_last_line`, each with the right `error_line`
-- [ ] property: `test_any_single_byte_change_breaks_verification`
-- [ ] property: `test_untouched_log_always_verifies`
-- [ ] `test_verify_script_runs_with_stdlib_only` — `python -I verify_log.py`, empty PYTHONPATH
-- [ ] `test_checkpoint_every_100_events_records_other_heads`
-- [ ] `test_verify_all_detects_edit_in_other_log_via_checkpoint`
-- [ ] `test_source_files_untouched`
+- [x] property: `test_any_single_byte_change_breaks_verification`
+- [x] property: `test_untouched_log_always_verifies`
+- [x] `test_verify_script_runs_with_stdlib_only` — `python -I verify_log.py`, empty PYTHONPATH
+- [x] `test_checkpoint_every_100_events_records_other_heads`
+- [x] `test_verify_all_detects_edit_in_other_log_via_checkpoint`
+- [x] `test_source_files_untouched`
