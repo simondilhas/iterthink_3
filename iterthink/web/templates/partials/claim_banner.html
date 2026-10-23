@@ -1,0 +1,8 @@
+<p class="claim" role="status">
+  {{ holder.user }} is writing this.
+  {% if stale %}
+  Their last sign of life is old. You can take over.
+  {% else %}
+  This window can read it.
+  {% endif %}
+</p>
