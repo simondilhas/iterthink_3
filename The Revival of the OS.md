@@ -6,7 +6,7 @@ Oct 23, 2026 · @Simon
 
 This is not a finished argument. I had a hunch about where software is going, and one night I asked Claude whether it holds. The answers pushed back, I pushed back on some of them, and the idea changed shape along the way. What follows are the thoughts in the order they came up, including the wrong turns.
 
-I think best when I build. So every thought here was tested by turning it into a rule for iterthink, the tool my company is rebuilding right now. Where a thought didn't survive a look at the existing code, I say so. Where it is still open, I'd like to hear what you think.
+I think through doing. So I decided to run an experiment: take the existing iterthink logic, apply the ideas below, and let agents build the complete setup from start to finish. This is iterthink 3, our third attempt at the tool.
 
 ## 1. The starting thesis
 
@@ -16,21 +16,21 @@ With AI, the OS has a chance to become the main part again. My first sketch of t
 
 Claude's first reply: the direction holds, but two claims won't survive. The AI in that stack mostly runs in the cloud. And "OS" was doing double duty: the classic OS returning, or AI becoming the new OS? Those are different articles.
 
-## 2. The cloud doesn't go away, it changes role
+## 2. The cloud stays, for AI only
 
-So I adjusted: AI as a synergy of local and cloud. Local orchestration, cloud power.
+So I adjusted: the work runs on the local machine, and it calls cloud models when it needs more power.
 
 In SaaS, the vendor holds your data and you rent the interface. Here the machine holds the data, the files and the decisions, and rents intelligence by the call.
 
 The objection that stays: renting intelligence is still a dependency. Local models are getting better, but they don't match the frontier yet. And if the OS becomes central again, Apple, Microsoft and Google are best placed to own that layer. A revival of the OS could also mean a new centralisation.
 
-## 3. Linux, quietly
+## 3. Agents run on Linux
 
 My next thought: this is a chance for Linux. Claude agreed, with a twist I liked. Agents work best in a shell, text in and text out, everything scriptable. Most coding agents already run in Linux containers.
 
 So Linux may win as the environment agents live in, whatever the human sees on screen. iterthink runs on Fedora, Windows and macOS.
 
-## 4. Files alone don't collaborate
+## 4. Sharing files needs history and review
 
 The strongest objection to "just files": the cloud solved real problems. Sharing, permissions, backup, sync. Files don't. Claude suggested a thin cloud that only syncs, built on the model of Git. That clicked, especially once agents and humans work on the same files. An agent changes fifty files in a minute. Keeping track of those changes becomes the main work.
 
@@ -40,15 +40,19 @@ While writing the spec, review turned out to matter more than version control. I
 
 I'll have several agents working in parallel, so the spec includes a board to hand out tasks. Each task is a plain Markdown file any agent can read. Conflicts between agents are detected and shown in review, never resolved silently.
 
-## 5. Chat isn't the interface. A line is.
+## 5. One input line instead of a chat
 
 Some argue chat becomes the main interface. I think it's fine for some tasks, not for all. Nobody wants to rotate a building model or check 200 rows by typing. Claude put it this way: chat is the new command line, and the command line never replaced the graphical interface.
 
-Then I described the dream I had when I started iterthink. A white screen, one pulsing dot, one line: what do you want to do? Start typing and it begins. If you write, it becomes a document. If it goes back and forth, it's a chat. If you ask for a door schedule, a small app appears.
+Imagine opening iterthink. The screen contains one line: **What do you want to do?**
+
+I type a title and press Enter. The screen becomes a text editor. I type "Create a new invoice for this project." An invoice form opens with the project data filled in. I ask it to compare two versions of an IFC model, a PDF plan or a Word document. It opens the right comparison: a 3D model, an overlay or a text diff. I ask what impact a change has. It checks the rest of the project and shows the affected files with sources. I ask it to access Libal and tell me the HNF of building X. It calls Libal and gives me the answer.
+
+The line is only the starting point. The result is a document, a form, a table, a model, a comparison or a chat—whatever fits the task.
 
 Claude asked the key design question: should the screen ever react while you type? My answer: no. Nothing until Enter. In a document, Enter is a new paragraph, so the AI waits for Mod+Enter. Voice works the same way; it's just another way to type.&#32;
 
-## 6. Ad-hoc apps, and who sees the data
+## 6. Ad-hoc apps: the AI sees the structure, not the data
 
 AI makes software cheap to produce. A small tool to clean a CSV or compare two model versions can be built in minutes, used once and thrown away. Many SaaS products start to look like expensive wrappers around a file or database and a few functions.
 
@@ -56,7 +60,7 @@ When I asked which building blocks I already had, the answer surprised me: most 
 
 The best idea of the night came from asking how the app builder works. It's a prompt with the guidelines, handed to the model. But the model only needs to know the task and what the data looks like: file names, column headers, the property sets in a model. It writes the app; the app reads the actual data locally. A cloud model can build a door schedule without a single door leaving the machine. The dependency on the cloud model remains. The project data stays on the machine.
 
-## 7. Work open, deliver closed
+## 7. Open formats inside, Word and PDF only for delivery
 
 A small moment that taught me something. Claude's example for a door schedule app ended with "export to Word". I asked: why DOCX and not CSV? A door schedule is a table, and the whole thesis is open formats.
 
@@ -78,19 +82,19 @@ Underneath all of it sits one idea from our pragmaticBIM work: one table for con
 
 Systems of record are different. Accounting and ERP won't move into CSV files, and they don't need to. They will stay, but they have to open up and become accessible through APIs, so their data can be used where the work happens. For us that means connecting bexio, our accounting software, to iterthink through its API.
 
-## 9. Trust: a hash, not a blockchain
+## 9. A hash chain, not a blockchain
 
 iterthink promises a sealed log of who decided what. Looking at the code, Claude found that the seal wasn't actually implemented yet. So we specced a hash chain: each log line carries the hash of the previous one.
 
-Then I asked: is this a blockchain? No. A hash chain is what Git commits use. A blockchain adds consensus between parties who don't trust each other; we don't need that.
+I asked whether a blockchain would solve any problem here. It wouldn't. We need to detect if someone changed the record after the fact; a hash chain does that. A blockchain would add consensus between independent parties, but there are no such parties in this setup.
 
 There's a limit: a hash chain is tamper-evident, not tamper-proof. Editing one line breaks the chain. But whoever controls all copies can rewrite everything and recompute the hashes. Real protection only comes from anchoring the chain somewhere the writer doesn't control: another machine, the client at handover, or a timestamp service. "Tamper-proof" was the wrong word on our own website.
 
-## 10. Thinking by doing: iterthink
+## 10. Testing it on iterthink
 
 I'm testing these ideas on iterthink. Disclosure: iterthink is built by my company, abstract. It started as a tool that shows every change to a document, human or AI, and whether it matters.
 
-Nothing described here is built yet. What exists is the current iterthink, and a spec for the next version. Before writing the spec, Claude read through the existing code. A large part of it is interface code, and the logic underneath barely depends on it: change detection, impact checks, search, imports, the model router. If the analysis holds, the rebuild replaces the interface and keeps most of the logic. That would support the thesis that the value sits in the logic and the data. Whether it holds is what the build will show.
+Nothing described here is built yet. What exists is the current iterthink, and a spec for iterthink 3. Before writing the spec, Claude read through the existing code. A large part of it is interface code, and the logic underneath barely depends on it: change detection, impact checks, search, imports, the model router. If the analysis holds, the rebuild replaces the interface and keeps most of the logic. That would support the thesis that the value sits in the logic and the data. Whether it holds is what the build will show.
 
 The spec is the result of this discussion. Every thought in these notes ended up as a rule in one file that I hand to the coding agent, `.cursor/rules/iterthink-2.mdc`. The build runs in its own repository, private for now; I'm publishing the spec alongside this article. It is the plan, not the finished state, and it will change once it meets the code.
 
@@ -100,18 +104,7 @@ Put together, the pieces map onto the classic operating system, layer by layer.
 
 The planned stack follows its own argument: plain HTML in a native window, Python underneath, no build step, files as the truth. Writing a spec for an AI agent is itself part of the experiment.
 
-## Open questions
-
-These are the ones I haven't settled. I'd like to hear where you disagree.
-
-- **Who owns the layer?** If the OS becomes central again, do Apple, Microsoft and Google simply take it, or do open formats and Linux keep it open?
-- **How local can it get?** Is separating code generation from data access enough, or does real independence need local models that match the cloud?
-- **Does a decision record need a standard?** Provenance standards and BCF in BIM exist, but nothing covers who decided what on project documents. Should it be one?
-- **Is "wait for Enter" too strict?** Silence makes the AI predictable. Does it also make it less useful?
-- **Can several people share a project without a server?** Append-only logs per machine work in theory. Real offices with NAS drives and OneDrive will test it.
-- **Does dictation work on site?** Speech-to-text handles Standard German well. Swiss German from a site meeting is another matter.
-
-## 11. The experiment
+## 11. Building iterthink 3 with an agent
 
 The notes above are the background. Another chapter comes after I have watched this build and thought about what it did.
 
@@ -123,14 +116,14 @@ Flet goes. The new window is plain HTML in a native shell, Python underneath, no
 
 **The plan, reviewed.** Before pressing go, I asked Claude to check the slices against the spec. The verdict: the order mostly held, but a third of the slices had drifted. I had decided against Jujutsu, yet half the plan still talked to it. One slice put a three-column layout on screen, the exact thing the white screen with one line was meant to replace. The task board had different columns than the spec. And the plan quietly assumed things nobody had written down: what happens when you save a file in Word instead of in iterthink, which files get tracked at all.
 
-It's the lesson from section 7 again, one level up. Defaults slip back in, and this time they slipped into my own plan. The spec says what I want. The slices are where the old habits hide.
+Same problem as in section 7: the conventional default comes back unless someone checks. This time it was in my own plan. The spec was right; the slices had drifted from it.
 
 So the plan was rewritten. 36 slices, in one order, each gated by the ones it depends on. Nine are marked as drafts: some settle things a user would notice, others wait for a decision from me. The agent won't start a draft until I've read it. Plus a short list of things only I can change: places where the bridge itself is missing something the spec asks for. The agent will run into them and write them down. That list is my homework while it works.
 
-**Where it runs.** In the cloud, not on my laptop. The project went into a repository this morning. An agent clones it, installs everything with one script, and works through the slices for as long as it takes. I read the reports when I want to. The reports don't gate the next slice.
+**Where it runs.** In the cloud, not on my laptop. The project went into a repository this morning. An agent clones it, installs everything with one script, and works through the slices for as long as it takes. I read the reports when I want to. The agent doesn't wait for me.
 
 **Is this vibe coding?** I've wondered about that. The term means: describe what you want, accept what the AI writes, don't read the code. By that measure, yes. I won't read most of this code, and this is the first time I let a build run from start to end without sitting next to it.
 
-But it doesn't feel like vibes. There are 900 lines of spec, a contract the agent can't change, tests before code, and a log of every decision it makes along the way. Maybe that's the honest answer: the coding is vibe coding, the deciding isn't. Which is the same split iterthink is built on. Agents propose, a human gives the verdict. I'm about to find out if that holds when the agent is building the tool that says so.
+But it doesn't feel like vibes. There are 900 lines of spec, a contract the agent can't change, tests before code, and a log of every decision it makes along the way. So my answer: writing the code is vibe coding, the decisions are not. That is the same split iterthink is built on: agents propose, a human decides. This build tests whether it works for building iterthink itself.
 
 Now I'm going to press go and see what happens.
