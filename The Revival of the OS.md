@@ -108,7 +108,7 @@ The planned stack follows its own argument: plain HTML in a native window, Pytho
 
 The notes above are the background. Another chapter comes after I have watched this build and thought about what it did.
 
-**The setup.** The spec is one file, and it is long enough that an agent will wander if I only say "build this". So the work is cut into slices. Each slice is one part of the app and the tests that prove it. The agent writes the tests, watches them fail, and writes the code that makes them pass. Then it writes a short report, commits, and takes the next slice. It keeps going for as long as the next slice can start. Nobody answers its questions during the run. When something is unclear, it decides if the choice is small and reversible, writes it down, and moves on. When it's not, it stops that item and continues with the rest.
+**The setup.** The spec and the slices were written the same way as these notes: in rounds with Claude, me pushing back where it slipped into defaults. The spec is one file, and it is long enough that an agent will wander if I only say "build this". So the work is cut into slices. Each slice is one part of the app and the tests that prove it. The agent writes the tests, watches them fail, and writes the code that makes them pass. Then it writes a short report, commits, and takes the next slice. It keeps going for as long as the next slice can start. Nobody answers its questions during the run. When something is unclear, it decides if the choice is small and reversible, writes it down, and moves on. When it's not, it stops that item and continues with the rest.
 
 Three things are written by me, and the agent builds on them. The bridge: every function the window, an ad-hoc app, or another agent is allowed to call. A working stand-in for that bridge, so the window can be opened before the history exists. And the tests that say how the bridge must behave. The agent may not touch those files. When one of them is wrong, it writes the case down and continues.
 
@@ -118,7 +118,7 @@ Flet goes. The new window is plain HTML in a native shell, Python underneath, no
 
 Same problem as in section 7: the conventional default comes back unless someone checks. This time it was in my own plan. The spec was right; the slices had drifted from it.
 
-So the plan was rewritten. 36 slices, in one order, each gated by the ones it depends on. Nine are marked as drafts: some settle things a user would notice, others wait for a decision from me. The agent won't start a draft until I've read it. Plus a short list of things only I can change: places where the bridge itself is missing something the spec asks for. The agent will run into them and write them down. That list is my homework while it works.
+So the plan was rewritten, again together with Claude: it drafted, I questioned, it revised. 36 slices, in one order, each gated by the ones it depends on. Nine are marked as drafts: some settle things a user would notice, others wait for a decision from me. The agent won't start a draft until I've read it. Plus a short list of things only I can change: places where the bridge itself is missing something the spec asks for. The agent will run into them and write them down. That list is my homework while it works.
 
 **Where it runs.** In the cloud, not on my laptop. The project went into a repository this morning. An agent clones it, installs everything with one script, and works through the slices for as long as it takes. I read the reports when I want to. The agent doesn't wait for me.
 

@@ -111,6 +111,7 @@ warn_unused_configs = true
 warn_redundant_casts = true
 warn_unused_ignores = true
 ignore_missing_imports = true
+follow_imports = "silent"
 disallow_untyped_defs = true
 disallow_incomplete_defs = true
 check_untyped_defs = true
