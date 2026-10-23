@@ -28,8 +28,10 @@ from iterthink.services.bridge import (
     VersionInfo,
     kind_of,
 )
+from iterthink.services.disk_scan import notice, scan, start_watching, subscribe
 from iterthink.services.event_log import LogCorrupt, append, checkpoint, read_all, store_blob
 from iterthink.services.event_log import utc_now as event_now
+from iterthink.services.indexer import schedule_index
 from iterthink.services.projects import (
     Registry,
     compare_file,
@@ -43,7 +45,6 @@ from iterthink.services.projects import (
     read_content,
     relative,
     restore_file,
-    search_hits,
     settings_of,
     shown,
     store_edit,
@@ -58,12 +59,12 @@ from iterthink.services.proposals import (
     Proposal,
     conflicts,
     create,
-    describe,
     diff_files,
     load_all,
     reason_text,
     require,
 )
+from iterthink.services.search import indexed_log, indexed_search
 from iterthink.services.verify_log import verify_all
 
 _TEXT = {"markdown", "table", "text"}
@@ -96,6 +97,7 @@ class RealBridge(Later):
         self._now = now
         self._registry = Registry(self.state_dir)
         self._closed = False
+        self._stop_watch = start_watching(self._opened, self._scan_one)
         atexit.register(self.close)
 
     def close(self) -> None:
@@ -103,6 +105,7 @@ class RealBridge(Later):
         if self._closed:
             return
         self._closed = True
+        self._stop_watch()
         for project, folder in self._registry.opened:
             self._checkpoint(folder, project)
 
@@ -119,6 +122,15 @@ class RealBridge(Later):
                 now=self._now,
             )
         except (OSError, LogCorrupt, BridgeError):
+            return
+
+    def _opened(self) -> list[tuple[str, Path]]:
+        return list(self._registry.opened)
+
+    def _scan_one(self, folder: Path, project: str) -> None:
+        try:
+            scan(folder, Snapshots(folder), machine=self.machine, project=project)
+        except (OSError, SnapshotError, BridgeError):
             return
 
     def _root(self, project: str) -> Path:
@@ -140,6 +152,7 @@ class RealBridge(Later):
             contract=CONTRACT,
             now=self._now,
         )
+        schedule_index(self.state_dir, project, root)
 
     def _adopt(self, folder: Path, project: str) -> str:
         place = self._registry.place(project, folder)
@@ -172,6 +185,7 @@ class RealBridge(Later):
         for folder, project in folder_entries(path):
             if project:
                 self._adopt(folder, project)
+                self._scan_one(folder, project)
             found.append(FolderInfo(path=str(folder), name=folder.name, project_id=project))
         return found
 
@@ -188,7 +202,10 @@ class RealBridge(Later):
             )
         if self._adopt(folder, project) == "copy":
             kept = self._registry.path_of(project)
-            return self._info(kept if kept is not None else folder)
+            target = kept if kept is not None else folder
+            self._scan_one(target, project)
+            return self._info(target)
+        self._scan_one(folder, project)
         return self._info(folder)
 
     def projects(self) -> list[ProjectInfo]:
@@ -353,19 +370,7 @@ class RealBridge(Later):
 
     def log(self, project: str, limit: int = 200) -> list[LogEntry]:
         root = self._root(project)
-        entries = [
-            LogEntry(
-                seq=event.seq,
-                ts=event.ts,
-                machine=event.machine,
-                actor=event.actor,
-                type=event.type,
-                summary=describe(root, event.type, event.payload),
-                hash=event.hash,
-            )
-            for event in reversed(read_all(root))
-        ]
-        return entries[:limit]
+        return indexed_log(self.state_dir, root, project, limit)
 
     def verify(self, project: str) -> VerifyInfo:
         result = verify_all(self._root(project))
@@ -373,4 +378,11 @@ class RealBridge(Later):
         return VerifyInfo(ok=result.ok, lines=result.lines, error=error)
 
     def search(self, project: str, query: str, limit: int = 50) -> list[SearchHit]:
-        return search_hits(self._root(project), query, limit)
+        root = self._root(project)
+        return indexed_search(self.state_dir, root, project, query, limit)
+
+    def disk_pull(self, project: str) -> Callable[[], str]:
+        """The next disk-change sentence for this project."""
+        self._root(project)
+        pending = subscribe(project)
+        return lambda: notice(pending.get())

@@ -176,7 +176,7 @@ async def test_restart_keeps_everything(
     client.post(f"/p/{project_id}/f/{DOC}", data={"text": EI60})
     await _propose(bridge, project_id, EI90, "doors are EI90")
     again = _client(RealBridge(state_dir=tmp_path / "state"))
-    home = again.get("/")
+    home = again.post("/line", data={"q": "open project"})
     assert "P-101 Schulhaus" in home.text
     page = again.get(f"/p/{project_id}/f/{DOC}")
     assert "EI60" in page.text
