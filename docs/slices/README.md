@@ -20,8 +20,8 @@ spec no longer includes it.
 ## Order
 
 One rule: **take the first slice in the list below that is `ready` and whose
-`depends_on` are all `done`.** The list follows `.cursor/rules/iterthink-2.mdc`
-→ Build order; `depends_on` is the gate.
+`depends_on` are all `done`.** The list follows
+`docs/spec/build-order.md`; `depends_on` is the gate.
 
 | # | slice | depends on | spec build step |
 |---|---|---|---|
@@ -95,7 +95,7 @@ under Blocked and finishes its other items.
 - [ ] *Decided for you* answers the questions a careful engineer would ask.
 - [ ] No open *Blocked* question from an earlier run.
 - [ ] All `depends_on` slices are `done`.
-- [ ] The spec sections it names match `.cursor/rules/iterthink-2.mdc`. Where they disagree, the spec wins.
+- [ ] The spec sections it names match `docs/spec/`. Where they disagree, the spec wins.
 
 ## Ownership (keeps parallel runs from colliding)
 - Web routes: one module per slice in `iterthink/web/routes/` (see its `__init__.py`).

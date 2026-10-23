@@ -7,7 +7,7 @@ This repo has the Python core copied from 1.x (`compare`, `services`, `persisten
 | File | Role |
 |---|---|
 | `.cursor/rules/05-direction.mdc` | Always on. Short. |
-| `.cursor/rules/iterthink-2.mdc` | The spec. Read the sections the current slice names. |
+| `docs/spec/` | The spec. Read the sections the current slice names. |
 | `AGENTS.md` | How a run proceeds. |
 | `docs/slices/` | The work, in order. |
 | `docs/agent-prompt.md` | Paste this to start a run. |

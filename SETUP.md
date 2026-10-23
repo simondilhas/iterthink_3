@@ -1,7 +1,7 @@
 # iterthink 2.0 — this tree
 
 This is the new tree. The 1.x Flet app stays in `../iterthink_local_v2`.
-The plan is `.cursor/rules/iterthink-2.mdc` (read the sections a slice names).
+The plan is `docs/spec/` (read the sections a slice names).
 The short always-on rule is `.cursor/rules/05-direction.mdc`.
 The agent builds `docs/slices/README.md` as far as it can, in one run.
 `AGENTS.md` is how it works. `docs/decisions.md` is what is already settled.
@@ -10,7 +10,7 @@ Start a run with `docs/agent-prompt.md`.
 ## Already in the repo
 | File | What it is |
 |---|---|
-| `.cursor/rules/iterthink-2.mdc` | The product. Wins where a slice disagrees. |
+| `docs/spec/` | The product. Wins where a slice disagrees. |
 | `iterthink/services/bridge.py` | The contract: every function the UI, MCP, apps and CLI may call. |
 | `iterthink/services/bridge_fake.py` | Real source files, history in memory, so the window can start before B1. |
 | `tests/v2/contract/` | Behaviour tests every bridge implementation must pass. |

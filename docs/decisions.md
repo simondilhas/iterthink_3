@@ -70,7 +70,7 @@ report for each. Allowlists in architecture tests only shrink. A human reads
 the reports when they want to. Review does not gate the next slice.
 
 **D-016 · One continuous run · accepted · 2026-10-23**
-Flet is replaced by the local web UI in `.cursor/rules/iterthink-2.mdc`.
+Flet is replaced by the local web UI in `docs/spec/`.
 The agent keeps going through the slice order as far as it can. A blocked
 slice does not stop slices that do not depend on it. Connectors (C20) are
 out of this version.

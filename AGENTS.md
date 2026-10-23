@@ -1,11 +1,11 @@
 # AGENTS.md — how to work on iterthink
 
 Entry point for every coding agent (Cursor, Claude Code, others).
-The architecture spec is `.cursor/rules/iterthink-2.mdc`. This file says how
+The architecture spec is `docs/spec/`. This file says how
 to work; the spec says what to build; the slice says exactly what to do now.
 
 **The spec wins.** Where a slice, this file, or `docs/decisions.md` disagrees
-with `.cursor/rules/iterthink-2.mdc`, follow the spec. Record the disagreement
+with `docs/spec/`, follow the spec. Record the disagreement
 under Blocked and continue with work that does not depend on it. The open
 disagreements are listed in `docs/decisions.md` under Conflicts.
 

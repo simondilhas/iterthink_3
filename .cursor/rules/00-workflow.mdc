@@ -7,7 +7,7 @@ alwaysApply: true
 - Follow `AGENTS.md`. Runs are unattended: nobody answers during a run.
 - A slice is scope and tests, not a day. Take the next `docs/slices/` entry
   with `status: ready` whose dependencies are `done`, then the next.
-- Where a slice disagrees with `.cursor/rules/iterthink-2.mdc`, follow the
+- Where a slice disagrees with `docs/spec/`, follow the
   spec, record the disagreement, and continue with work that does not depend
   on it. Open disagreements are in `docs/decisions.md` under Conflicts.
 - Tests first: write the slice's acceptance tests, watch them fail, implement.

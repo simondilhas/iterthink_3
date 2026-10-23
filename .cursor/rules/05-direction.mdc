@@ -6,7 +6,7 @@ alwaysApply: true
 # Direction
 Build iterthink 2.0 in this repo. The 1.x Flet app is the sibling
 `iterthink_local_v2` and is not edited from here.
-The spec is `.cursor/rules/iterthink-2.mdc`. Read the sections the current
+The spec is `docs/spec/`. Read the sections the current
 slice names. Do not treat the whole spec as something to reload every turn.
 How to work is `AGENTS.md`. The order is `docs/slices/README.md`.
 

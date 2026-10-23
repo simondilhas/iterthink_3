@@ -6,7 +6,7 @@ alwaysApply: false
 
 2.0 stores versions in `.iterthink/versions/` via `persistence/snapshots.py`
 (slice A3). Do not add `persistence/vcs.py`. The notes below apply only if a
-later version adopts jj (`iterthink-2.mdc`, "Later").
+later version adopts jj (`docs/spec/README.md`, "Later").
 
 - Call jj via subprocess with `--no-pager`, `--color never`, `-T` templates,
   list args, timeout. Parse template output, never human output.

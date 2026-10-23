@@ -5,7 +5,7 @@ depends_on: [C2]
 ```
 # C20 · bexio connector
 
-**Dropped for this version.** `.cursor/rules/iterthink-2.mdc` does not include connectors. Leave this slice. Do not start it.
+**Dropped for this version.** `docs/spec/` does not include connectors. Leave this slice. Do not start it.
 
 **Goal:** accounting data from bexio is readable where the work happens
 (apps, search, the line), without moving into project files.

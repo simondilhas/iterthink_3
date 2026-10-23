@@ -4,7 +4,7 @@ Paste into the agent. It builds iterthink 2.0 until no slice can start.
 
 ---
 
-Rewrite iterthink as 2.0, following `AGENTS.md` and `.cursor/rules/iterthink-2.mdc`.
+Rewrite iterthink as 2.0, following `AGENTS.md` and `docs/spec/`.
 
 Flet is removed when its replacement exists (slice C18). The Python core stays.
 Version history is content-addressed snapshots in `.iterthink/versions/`

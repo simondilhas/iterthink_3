@@ -12,7 +12,7 @@ alwaysApply: false
 - Template globals: `stylesheets()`, `has_route(request, name)`.
 - `base.html` blocks: `line`, `left`, `main`, `right`, `head`, `title`.
   Left and right stay empty until the user opens a panel. The line and the
-  current surface are the screen. See iterthink-2.mdc, "The line".
+  current surface are the screen. See `docs/spec/the-line.md`.
 - `app.css` holds tokens only; your styles go in `static/css/<slice>-<area>.css`.
   Token values come from `defaults/config.yaml` (`theme.dark` / `theme.light`),
   not from colours written into the stylesheet.

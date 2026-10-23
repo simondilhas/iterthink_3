@@ -7,7 +7,7 @@ depends_on: []
 
 **Goal:** <one sentence a user would recognise>
 
-**Spec sections:** <headings in iterthink-2.mdc to read>
+**Spec sections:** <headings to read; `docs/spec/README.md` maps each to its file>
 
 ## Scope
 - `iterthink/...` — <what>

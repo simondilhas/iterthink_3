@@ -1,0 +1,9 @@
+---
+description: iterthink spec — where it lives and how to read it
+alwaysApply: false
+---
+
+The spec is `docs/spec/`, one file per topic. Start with
+`docs/spec/README.md` (overview, principles, prohibited, and a table mapping
+every section heading to its file), then read only the files the current
+slice names. Where a slice disagrees with the spec, the spec wins.

@@ -9,7 +9,7 @@ depends_on: [C13]
 upload), it disappears from history, and the log says that something was
 erased, by whom and why, without containing it.
 
-**Spec sections:** none yet. `iterthink-2.mdc` has no Erase section; its Audit
+**Spec sections:** none yet. The spec (`docs/spec/`) has no Erase section; its Audit
 trail says "Logs are never rewritten. Corrections are new events." This slice
 does not rewrite the log, but deleting snapshot objects and blobs is a new
 rule the spec has to state first. **Ready when** the human adds an Erase
