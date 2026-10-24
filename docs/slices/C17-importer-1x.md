@@ -1,6 +1,6 @@
 ```
 id: C17
-status: ready
+status: done
 depends_on: [B1]
 ```
 # C17 · 1.x importer
@@ -14,6 +14,9 @@ layout (`services/importer_1x.py`).
 ## Scope
 - `iterthink/services/importer_1x.py`, CLI entry `python -m iterthink.services.importer_1x`
 - `iterthink/web/routes/importer.py` (one page: pick store, preview, run)
+- `iterthink/web/templates/import/page.html`
+- `iterthink/services/bridge_real.py` (`import_preview`, `import_run`) and
+  `iterthink/services/proposals.py` (`compete`, moved so the bridge file stays within the line limit)
 - `tests/v2/services/test_importer_1x.py` (builds a small 1.x store with existing fixtures)
 - `scripts/strict_paths.d/C17.txt`
 
@@ -31,7 +34,7 @@ layout (`services/importer_1x.py`).
 - Preview shows counts per project before running.
 
 ## Acceptance
-- [ ] `test_versions_imported_in_order_with_authors`
-- [ ] `test_verdicts_become_events_and_log_verifies`
-- [ ] `test_import_is_idempotent`
-- [ ] `test_store_unchanged_after_import`
+- [x] `test_versions_imported_in_order_with_authors`
+- [x] `test_verdicts_become_events_and_log_verifies`
+- [x] `test_import_is_idempotent`
+- [x] `test_store_unchanged_after_import`
