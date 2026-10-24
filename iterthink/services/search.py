@@ -77,7 +77,9 @@ def _ensure(conn: sqlite3.Connection) -> None:
     )
     import sqlite_vec
 
+    conn.enable_load_extension(True)
     sqlite_vec.load(conn)
+    conn.enable_load_extension(False)
     conn.execute(f"CREATE VIRTUAL TABLE IF NOT EXISTS ix_vec USING vec0(embedding float[{_DIM}])")
 
 
