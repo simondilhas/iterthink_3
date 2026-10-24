@@ -34,6 +34,8 @@ from iterthink.services.disk_scan import notice, scan, start_watching, subscribe
 from iterthink.services.event_log import LogCorrupt, append, checkpoint, read_all, store_blob
 from iterthink.services.event_log import utc_now as event_now
 from iterthink.services.handover import hand_over
+from iterthink.services.importer_1x import preview as preview_store
+from iterthink.services.importer_1x import run_import
 from iterthink.services.indexer import schedule_index
 from iterthink.services.projects import (
     Registry,
@@ -60,6 +62,7 @@ from iterthink.services.proposals import (
     CONTRACT,
     Later,
     Proposal,
+    compete,
     conflicts,
     create,
     diff_files,
@@ -347,17 +350,7 @@ class RealBridge(Later):
     def _compete(
         self, root: Path, project: str, proposal_id: str, paths: tuple[str, ...], actor: str
     ) -> None:
-        """Mark another open proposal only when this accept changed its baseline."""
-        snaps = Snapshots(root)
-        for item in load_all(root, snaps):
-            if item.id == proposal_id or item.status != "open":
-                continue
-            if not set(item.paths) & set(paths):
-                continue
-            stale = conflicts(item, snaps, root)
-            if not stale:
-                continue
-            self._event(root, project, actor, "conflict", {"paths": stale, "proposal": item.id})
+        compete(root, Snapshots(root), project, proposal_id, paths, actor, self._event)
 
     def reject(self, project: str, proposal_id: str, actor: str, reason: str) -> None:
         if not reason.strip():
@@ -383,6 +376,12 @@ class RealBridge(Later):
 
     def handover(self, project: str, mode: HandoverMode, target: Path) -> Path:
         return hand_over(self._root(project), mode, target, self.machine, project, self._event)
+
+    def import_preview(self, store: Path) -> list[dict[str, object]]:
+        return preview_store(store)
+
+    def import_run(self, store: Path, target: Path | None = None) -> list[str]:
+        return run_import(store, self, target)
 
     def verify(self, project: str) -> VerifyInfo:
         result = verify_all(self._root(project))
