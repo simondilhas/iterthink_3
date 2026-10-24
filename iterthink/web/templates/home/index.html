@@ -2,11 +2,12 @@
 {% block title %}iterthink{% endblock %}
 {% block head %}{% include "home/head.html" %}{% endblock %}
 {% block line %}
+<script type="module" src="/static/js/the-line.js"></script>
 <div class="start">
   <form method="post" action="/line" hx-post="/line" hx-target="#search-results" hx-swap="innerHTML">
     <input id="line" name="q" placeholder="What do you want to achieve?" autocomplete="off" autofocus>
   </form>
-  <span class="dot" aria-hidden="true"></span>
+  <span class="dot" data-state="idle" aria-hidden="true"></span>
   <div id="search-results"></div>
 </div>
 <details class="menu">
