@@ -38,6 +38,7 @@ from iterthink.services.egress import shield_text as shield_outbound
 from iterthink.services.event_log import LogCorrupt, append, checkpoint, read_all, store_blob
 from iterthink.services.event_log import utc_now as event_now
 from iterthink.services.handover import hand_over
+from iterthink.services.impact_review import ImpactBridge as Advice
 from iterthink.services.importer_1x import preview as preview_store
 from iterthink.services.importer_1x import run_import
 from iterthink.services.indexer import schedule_index
@@ -90,7 +91,16 @@ def _info_of(root: Path, item: Proposal) -> ProposalInfo:
     )
 
 
-class RealBridge(Work, Voice, IntentBridge, SettingsBridge, DocumentsBridge, ChatsBridge, Later):
+class RealBridge(
+    Work,
+    Voice,
+    IntentBridge,
+    SettingsBridge,
+    DocumentsBridge,
+    ChatsBridge,
+    Advice,
+    Later,
+):
     def __init__(
         self,
         state_dir: Path | None = None,
