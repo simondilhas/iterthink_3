@@ -31,6 +31,7 @@ from iterthink.services.bridge import (
     kind_of,
 )
 from iterthink.services.disk_scan import notice, scan, start_watching, subscribe
+from iterthink.services.documents import DocumentsBridge
 from iterthink.services.egress import apply_setting
 from iterthink.services.egress import shield_text as shield_outbound
 from iterthink.services.event_log import LogCorrupt, append, checkpoint, read_all, store_blob
@@ -75,8 +76,6 @@ from iterthink.services.search import indexed_log, indexed_search
 from iterthink.services.settings import SettingsBridge
 from iterthink.services.verify_log import verify_all
 
-_TEXT = {"markdown", "table", "text"}
-
 
 def _info_of(root: Path, item: Proposal) -> ProposalInfo:
     return ProposalInfo(
@@ -91,7 +90,7 @@ def _info_of(root: Path, item: Proposal) -> ProposalInfo:
     )
 
 
-class RealBridge(IntentBridge, SettingsBridge, Later):
+class RealBridge(IntentBridge, SettingsBridge, DocumentsBridge, Later):
     def __init__(
         self,
         state_dir: Path | None = None,
@@ -290,7 +289,7 @@ class RealBridge(IntentBridge, SettingsBridge, Later):
         root = self._root(project)
         rels = {relative(path): text for path, text in changes.items()}
         for rel in rels:
-            if kind_of(rel) not in _TEXT:
+            if kind_of(rel) not in {"markdown", "table", "text"}:
                 raise Invalid(f"{rel} is not a text file")
             inside(root, rel)
         try:

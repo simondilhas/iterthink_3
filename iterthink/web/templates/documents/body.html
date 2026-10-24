@@ -1,0 +1,47 @@
+<md-editor data-path="{{ path }}">
+  <form id="editor" method="post" action="{{ href }}" hx-post="{{ href }}" hx-target="#main" hx-swap="innerHTML">
+    <textarea name="text">{{ text }}</textarea>
+    <button type="submit">Save</button>
+  </form>
+  <button type="button" id="preview-toggle">Preview</button>
+  <md-preview hidden>{{ html | safe }}</md-preview>
+  <form id="margin" method="post" action="{{ href }}" hx-post="{{ href }}" hx-target="#margin-panel" hx-swap="outerHTML">
+    <input type="hidden" name="op" value="margin">
+    <input type="hidden" name="offset" value="-1">
+    <input type="hidden" name="paragraph" value="-1">
+    <input type="hidden" name="selection" value="">
+    <input type="hidden" name="draft" value="">
+    <details id="margin-menu">
+      <summary>Margin</summary>
+      {% for group in groups %}
+      <fieldset>
+        <legend>{{ group.title }}</legend>
+        {% for item in group.actions %}
+        <button type="submit" name="action_id" value="{{ item.id }}">{{ item.label }}</button>
+        {% endfor %}
+      </fieldset>
+      {% endfor %}
+      <label>Instruction <input name="instruction"></label>
+      <button type="submit" name="action_id" value="">Ask</button>
+    </details>
+  </form>
+  <div id="margin-panel"></div>
+  {% if change %}
+  <aside id="inline-change">
+    <p>{{ change.reason }}</p>
+    {% if view %}{% include "history/diff.html" %}{% endif %}
+    <form method="post" action="{{ href }}" hx-post="{{ href }}" hx-target="#main" hx-swap="innerHTML">
+      <input type="hidden" name="op" value="accept">
+      <input type="hidden" name="proposal" value="{{ change.id }}">
+      <button type="submit">Accept</button>
+    </form>
+    <form method="post" action="{{ href }}" hx-post="{{ href }}" hx-target="#main" hx-swap="innerHTML">
+      <input type="hidden" name="op" value="reject">
+      <input type="hidden" name="proposal" value="{{ change.id }}">
+      <input name="reason" required>
+      <button type="submit">Reject</button>
+    </form>
+  </aside>
+  {% endif %}
+</md-editor>
+{% if toast %}<div id="toast" hx-swap-oob="true">{{ toast }}</div>{% endif %}
