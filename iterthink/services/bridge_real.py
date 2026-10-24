@@ -30,6 +30,7 @@ from iterthink.services.bridge import (
     VersionInfo,
     kind_of,
 )
+from iterthink.services.chats import ChatsBridge
 from iterthink.services.disk_scan import notice, scan, start_watching, subscribe
 from iterthink.services.documents import DocumentsBridge
 from iterthink.services.egress import apply_setting
@@ -87,7 +88,7 @@ def _info_of(root: Path, item: Proposal) -> ProposalInfo:
     )
 
 
-class RealBridge(DocumentsBridge, Later):
+class RealBridge(DocumentsBridge, ChatsBridge, Later):
     def __init__(
         self,
         state_dir: Path | None = None,
@@ -181,9 +182,8 @@ class RealBridge(DocumentsBridge, Later):
     def _info(self, folder: Path) -> ProjectInfo:
         data = settings_of(folder)
         raw = data.get("egress", "shielded")
-        if raw not in {"none", "shielded", "allowed"}:
-            raw = "shielded"
-        egress = cast(Egress, raw)
+        chosen = raw if raw in {"none", "shielded", "allowed"} else "shielded"
+        egress = cast(Egress, chosen)
         return ProjectInfo(id=str(data["id"]), name=folder.name, path=str(folder), egress=egress)
 
     def open_folder(self, path: Path) -> list[FolderInfo]:
