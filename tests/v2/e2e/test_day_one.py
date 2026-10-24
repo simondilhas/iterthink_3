@@ -196,12 +196,20 @@ async def test_mcp_refuses_content_until_egress_allowed(
     files = await _data(app.mcp, "list_files", {"project": project_id})
     assert isinstance(files, list)
     assert any(item["path"] == DOC for item in files)
-    with pytest.raises(ToolError, match=r"egress: shielded"):
+    secret = "ada@example.com"
+    document = project_dir / DOC
+    document.write_text(document.read_text(encoding="utf-8") + secret + "\n", encoding="utf-8")
+    shielded = await _data(app.mcp, "read_file", {"project": project_id, "path": DOC})
+    assert isinstance(shielded, dict)
+    assert secret not in str(shielded.get("text"))
+    assert "EMAIL" in str(shielded.get("text"))
+    bridge.set_egress(project_id, "none", "user:simon")
+    with pytest.raises(ToolError, match=r"egress: none"):
         await app.mcp.call_tool("read_file", {"project": project_id, "path": DOC})
     bridge.set_egress(project_id, "allowed", "user:simon")
     content = await _data(app.mcp, "read_file", {"project": project_id, "path": DOC})
     assert isinstance(content, dict)
-    assert "EI30" in str(content["text"])
+    assert secret in str(content["text"])
 
 
 async def test_sources_untouched_except_by_save_accept_restore(

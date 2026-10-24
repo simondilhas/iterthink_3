@@ -8,6 +8,8 @@ from collections.abc import AsyncIterator, Callable
 from dataclasses import dataclass
 from typing import Any
 
+from pathlib import Path
+
 import httpx
 
 from iterthink.ai.privacy_shield import privacy_shield_enabled_for_tier, redact_messages, reinject_response
@@ -532,6 +534,8 @@ class LlmChatBackend:
         secrets: dict[str, str],
         privacy_shield_reinject: bool = True,
         on_usage_recorded: UsageRecordedCb | None = None,
+        project_dir: Path | None = None,
+        purpose: str = "chat",
     ) -> None:
         self._ollama = ollama
         self._tier = tier
@@ -545,6 +549,8 @@ class LlmChatBackend:
         self._secrets = secrets
         self._privacy_shield_reinject = bool(privacy_shield_reinject)
         self._on_usage_recorded = on_usage_recorded
+        self.project_dir = project_dir
+        self.purpose = purpose
 
     def _privacy_shield_applies(self) -> bool:
         return privacy_shield_enabled_for_tier(self._tier)
@@ -612,6 +618,18 @@ class LlmChatBackend:
             raise ValueError(f"Missing API key for {key}. Unlock or save credentials in Settings → Models.")
         return v
 
+    def _cleared(self, messages: list[dict[str, str]]) -> tuple[list[dict[str, str]], bool]:
+        """Apply the project egress rule before a company or cloud call."""
+        project_dir = getattr(self, "project_dir", None)
+        if not isinstance(project_dir, Path) or self._tier not in {"company", "cloud"}:
+            return messages, False
+        from iterthink.services.egress import release
+
+        purpose = getattr(self, "purpose", "chat")
+        if not isinstance(purpose, str):
+            purpose = "chat"
+        return release(project_dir, messages, purpose, self._tier)
+
     async def chat(
         self,
         *,
@@ -622,6 +640,9 @@ class LlmChatBackend:
         skip_privacy_redaction: bool = False,
     ) -> Any:
         messages = messages or []
+        messages, unchanged = self._cleared(messages)
+        if unchanged:
+            skip_privacy_redaction = True
         m = self.effective_model(model or None)
         json_mode = format == "json"
         rmap = None
