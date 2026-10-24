@@ -17,7 +17,6 @@ from iterthink.services.bridge import (
     FileContent,
     FileDiff,
     FileEntry,
-    FolderInfo,
     HandoverMode,
     Invalid,
     LogEntry,
@@ -47,9 +46,7 @@ from iterthink.services.projects import (
     Registry,
     compare_file,
     default_state_dir,
-    ensure_project,
     file_entries,
-    folder_entries,
     inside,
     machine_id,
     read_content,
@@ -77,6 +74,7 @@ from iterthink.services.proposals import (
 from iterthink.services.search import indexed_log, indexed_search
 from iterthink.services.settings import SettingsBridge
 from iterthink.services.verify_log import verify_all
+from iterthink.services.workspaces import WorkspacesBridge as Work
 
 
 def _info_of(root: Path, item: Proposal) -> ProposalInfo:
@@ -92,7 +90,7 @@ def _info_of(root: Path, item: Proposal) -> ProposalInfo:
     )
 
 
-class RealBridge(Voice, IntentBridge, SettingsBridge, DocumentsBridge, ChatsBridge, Later):
+class RealBridge(Work, Voice, IntentBridge, SettingsBridge, DocumentsBridge, ChatsBridge, Later):
     def __init__(
         self,
         state_dir: Path | None = None,
@@ -189,35 +187,6 @@ class RealBridge(Voice, IntentBridge, SettingsBridge, DocumentsBridge, ChatsBrid
         chosen = raw if raw in {"none", "shielded", "allowed"} else "shielded"
         egress = cast(Egress, chosen)
         return ProjectInfo(id=str(data["id"]), name=folder.name, path=str(folder), egress=egress)
-
-    def open_folder(self, path: Path) -> list[FolderInfo]:
-        found: list[FolderInfo] = []
-        for folder, project in folder_entries(path):
-            if project:
-                self._adopt(folder, project)
-                self._scan_one(folder, project)
-                self._check(folder, project, background=True)
-            found.append(FolderInfo(path=str(folder), name=folder.name, project_id=project))
-        return found
-
-    def make_project(self, path: Path) -> ProjectInfo:
-        folder = path.expanduser().resolve()
-        project, version = ensure_project(folder)
-        if version is not None:
-            self._event(
-                folder,
-                project,
-                "user:local",
-                "project_created",
-                {"name": folder.name, "version": version},
-            )
-        if self._adopt(folder, project) == "copy":
-            kept = self._registry.path_of(project)
-            target = kept if kept is not None else folder
-            self._scan_one(target, project)
-            return self._info(target)
-        self._scan_one(folder, project)
-        return self._info(folder)
 
     def projects(self) -> list[ProjectInfo]:
         return [self._info(folder) for _, folder in self._registry.opened if folder.is_dir()]
