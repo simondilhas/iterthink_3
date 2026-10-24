@@ -1,0 +1,5 @@
+<section id="impact">
+  <form method="post" action="/p/{{ project_id }}/proposals/{{ proposal.id }}/impact" hx-post="/p/{{ project_id }}/proposals/{{ proposal.id }}/impact" hx-target="#impact" hx-swap="innerHTML"{% if impact_auto %} hx-trigger="load"{% endif %}>
+    <button type="submit">Check impact</button>
+  </form>
+</section>
