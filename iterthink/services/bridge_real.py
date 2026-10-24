@@ -31,6 +31,8 @@ from iterthink.services.bridge import (
     kind_of,
 )
 from iterthink.services.disk_scan import notice, scan, start_watching, subscribe
+from iterthink.services.egress import apply_setting
+from iterthink.services.egress import shield_text as shield_outbound
 from iterthink.services.event_log import LogCorrupt, append, checkpoint, read_all, store_blob
 from iterthink.services.event_log import utc_now as event_now
 from iterthink.services.handover import hand_over
@@ -44,7 +46,6 @@ from iterthink.services.projects import (
     folder_entries,
     inside,
     machine_id,
-    project_file,
     read_content,
     relative,
     restore_file,
@@ -54,7 +55,6 @@ from iterthink.services.projects import (
     tracked_files,
     version_history,
     write_bytes,
-    write_yaml,
 )
 from iterthink.services.proposals import (
     CONTRACT,
@@ -221,11 +221,11 @@ class RealBridge(Later):
         if egress not in {"none", "shielded", "allowed"}:
             raise Invalid(f"unknown egress setting {egress!r}")
         root = self._root(project)
-        data = settings_of(root)
-        data["egress"] = egress
-        write_yaml(project_file(root), data)
-        self._event(root, project, actor, "settings", {"egress": egress})
+        apply_setting(root, project, egress, actor, self._event)
         return self._info(root)
+
+    def shield_text(self, project: str, text: str, purpose: str = "mcp") -> str:
+        return shield_outbound(self._root(project), text, purpose)
 
     def files(self, project: str) -> list[FileEntry]:
         return file_entries(self._root(project))
@@ -394,7 +394,6 @@ class RealBridge(Later):
         return indexed_search(self.state_dir, root, project, query, limit)
 
     def disk_pull(self, project: str) -> Callable[[], str]:
-        """The next disk-change sentence for this project."""
         self._root(project)
         pending = subscribe(project)
         return lambda: notice(pending.get())

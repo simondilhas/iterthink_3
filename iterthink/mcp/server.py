@@ -18,6 +18,7 @@ _EGRESS = (
     "Change it in iterthink's settings to allow agents to read files."
 )
 _PROPOSE = "Create a proposal. The user must accept it in iterthink. Files are not changed."
+_CONTENT = "Redacted when egress is shielded. Refused when it is none."
 
 
 def plain(value: Any) -> Any:
@@ -50,10 +51,41 @@ class App:
         return f"agent:{self.client_name or 'mcp'}"
 
 
-def _content_allowed(bridge: Bridge, project: str) -> None:
+def _mode(bridge: Bridge, project: str) -> str | None:
     matches = [item for item in bridge.projects() if item.id == project]
-    if matches and matches[0].egress != "allowed":
-        raise ToolError(_EGRESS.format(value=matches[0].egress))
+    if not matches:
+        return None
+    return matches[0].egress
+
+
+def _guard(bridge: Bridge, project: str) -> str | None:
+    mode = _mode(bridge, project)
+    shield = getattr(bridge, "shield_text", None)
+    if mode in {None, "allowed"} or (mode == "shielded" and callable(shield)):
+        return mode
+    raise ToolError(_EGRESS.format(value=mode))
+
+
+def _redact(shield: object, project: str, value: object, key: str = "") -> object:
+    if isinstance(value, str):
+        if key in {"path", "kind", "id"} or value == "":
+            return value
+        return shield(project, value)  # type: ignore[operator]
+    if isinstance(value, dict):
+        redacted = {
+            str(name): _redact(shield, project, item, str(name)) for name, item in value.items()
+        }
+        return redacted
+    if isinstance(value, list):
+        return [_redact(shield, project, item) for item in value]
+    return value
+
+
+def _release(bridge: Bridge, project: str, value: object) -> object:
+    mode = _guard(bridge, project)
+    if mode != "shielded":
+        return value
+    return _redact(getattr(bridge, "shield_text", None), project, value)
 
 
 def _handshake_name(ctx: Context) -> str | None:
@@ -97,22 +129,22 @@ def build(bridge: Bridge) -> App:
         kind = cast(ProposalStatus, status)
         return cast(list[dict[str, Any]], _run(lambda: bridge.proposals(project, kind)))
 
-    @app.mcp.tool(description="Read one file. Refused unless egress is allowed.")
+    @app.mcp.tool(description=f"Read one file. {_CONTENT}")
     def read_file(project: str, path: str) -> dict[str, Any]:
-        _content_allowed(bridge, project)
-        return cast(dict[str, Any], _run(lambda: bridge.read(project, path)))
+        body = _run(lambda: bridge.read(project, path))
+        return cast(dict[str, Any], _release(bridge, project, body))
 
-    @app.mcp.tool(description="Keyword search. Refused unless egress is allowed.")
+    @app.mcp.tool(description=f"Keyword search. {_CONTENT}")
     def search(project: str, query: str) -> list[dict[str, Any]]:
-        _content_allowed(bridge, project)
-        return cast(list[dict[str, Any]], _run(lambda: bridge.search(project, query)))
+        body = _run(lambda: bridge.search(project, query))
+        return cast(list[dict[str, Any]], _release(bridge, project, body))
 
-    @app.mcp.tool(description="Diff two states of a file. Refused unless egress is allowed.")
+    @app.mcp.tool(description=f"Diff two states of a file. {_CONTENT}")
     def diff(
         project: str, path: str, base: str | None = None, target: str | None = None
     ) -> dict[str, Any]:
-        _content_allowed(bridge, project)
-        return cast(dict[str, Any], _run(lambda: bridge.diff(project, path, base, target)))
+        body = _run(lambda: bridge.diff(project, path, base, target))
+        return cast(dict[str, Any], _release(bridge, project, body))
 
     @app.mcp.tool(description=_PROPOSE)
     def propose(
