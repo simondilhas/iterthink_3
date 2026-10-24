@@ -1,6 +1,6 @@
 ```
 id: C11
-status: ready
+status: done
 depends_on: [C1, C2]
 ```
 # C11 · Impact checks in review
@@ -30,7 +30,7 @@ runner); article §6 ("impact analysis is now one block among many").
 - Results cached per (proposal, check version).
 
 ## Acceptance
-- [ ] `test_impact_runs_on_proposal_and_lists_affected_files`
-- [ ] `test_impact_never_decides`
-- [ ] `test_impact_respects_egress_none`
-- [ ] `test_cached_result_reused`
+- [x] `test_impact_runs_on_proposal_and_lists_affected_files`
+- [x] `test_impact_never_decides`
+- [x] `test_impact_respects_egress_none`
+- [x] `test_cached_result_reused`
