@@ -38,8 +38,12 @@ def _check_path(path: str) -> str:
     if not path or path.startswith(("/", "\\")) or "\\" in path:
         raise SnapshotError("path escapes the project")
     parts = path.split("/")
-    if any(part in {"", ".", "..", ".iterthink"} for part in parts):
+    if any(part in {"", ".", ".."} for part in parts):
         raise SnapshotError("path escapes the project")
+    if ".iterthink" in parts:
+        chat = parts[:2] == [".iterthink", "chats"] and len(parts) == 3
+        if not chat or not parts[2].endswith(".md"):
+            raise SnapshotError("path escapes the project")
     return path
 
 
