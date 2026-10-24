@@ -193,10 +193,17 @@ def _log(
         "mode": "review" if found.review else found.intent.mode,
         "confidence": f"{found.confidence:.2f}",
         "line": store_blob(root, line),
+        "source": _input_source(root),
     }
     if correction:
         payload["correction"] = correction
     host._event(root, project, actor, "intent", payload)
+
+
+def _input_source(root: Path) -> str:
+    from iterthink.services.dictation import take_source
+
+    return take_source(root)
 
 
 def _slug(title: str) -> str:

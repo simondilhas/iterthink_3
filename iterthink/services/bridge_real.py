@@ -31,6 +31,7 @@ from iterthink.services.bridge import (
     kind_of,
 )
 from iterthink.services.chats import ChatsBridge
+from iterthink.services.dictation import DictationBridge as Voice
 from iterthink.services.disk_scan import notice, scan, start_watching, subscribe
 from iterthink.services.documents import DocumentsBridge
 from iterthink.services.egress import apply_setting
@@ -91,7 +92,7 @@ def _info_of(root: Path, item: Proposal) -> ProposalInfo:
     )
 
 
-class RealBridge(IntentBridge, SettingsBridge, DocumentsBridge, ChatsBridge, Later):
+class RealBridge(Voice, IntentBridge, SettingsBridge, DocumentsBridge, ChatsBridge, Later):
     def __init__(
         self,
         state_dir: Path | None = None,
