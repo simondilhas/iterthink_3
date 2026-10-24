@@ -13,5 +13,42 @@
   </label>
   <button type="submit">Save</button>
 </form>
+{% if questions %}
+<h2>Defaults changed</h2>
+{% for item in questions %}
+<form method="post" action="/p/{{ project_id }}/settings">
+  <input type="hidden" name="file" value="{{ item.file }}">
+  <input type="hidden" name="key" value="{{ item.key }}">
+  <label>{{ item.file }} {{ item.key }}</label>
+  <button type="submit" name="choice" value="keep" title="Keep mine">Keep mine</button>
+  <button type="submit" name="choice" value="take" title="Take the new default">Take new</button>
+  <button type="submit" name="choice" value="merge" title="Merge the two mappings">Merge</button>
+</form>
+{% endfor %}
+{% endif %}
+<h2>Values</h2>
+<table>
+  <tr><th>Setting</th><th>Value</th><th>From</th></tr>
+  {% for row in rows %}
+  <tr>
+    <td>{{ row.key }}</td>
+    <td>{{ row.value }}</td>
+    <td>{{ row.source }}</td>
+  </tr>
+  {% endfor %}
+</table>
+<form method="post" action="/p/{{ project_id }}/settings">
+  <label>Setting <input name="key" type="text" title="Dotted name, such as dictation.language"></label>
+  <label>Value <input name="value" type="text"></label>
+  <label>Level
+    <select name="level">
+      <option value="project">project</option>
+      <option value="workspace">workspace</option>
+    </select>
+  </label>
+  <button type="submit">Save setting</button>
+</form>
+<p>Privacy shield: names and keys are redacted on this machine before a company or cloud call.</p>
+<p>Search index: the index is a cache rebuilt from the project files.</p>
 {% if notice %}<p>{{ notice }}</p>{% endif %}
 {% endblock %}

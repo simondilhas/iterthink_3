@@ -72,6 +72,7 @@ from iterthink.services.proposals import (
     require,
 )
 from iterthink.services.search import indexed_log, indexed_search
+from iterthink.services.settings import SettingsBridge
 from iterthink.services.verify_log import verify_all
 
 _TEXT = {"markdown", "table", "text"}
@@ -90,7 +91,7 @@ def _info_of(root: Path, item: Proposal) -> ProposalInfo:
     )
 
 
-class RealBridge(IntentBridge, Later):
+class RealBridge(IntentBridge, SettingsBridge, Later):
     def __init__(
         self,
         state_dir: Path | None = None,
