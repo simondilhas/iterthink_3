@@ -1,0 +1,18 @@
+.dot {
+  animation: none;
+}
+
+.dot.pulsing {
+  animation: it-pulse 1s ease-in-out infinite;
+}
+
+@keyframes it-pulse {
+  50% {
+    opacity: 0.15;
+    transform: scale(1.6);
+  }
+}
+
+.quiet {
+  color: var(--muted);
+}

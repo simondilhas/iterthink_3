@@ -118,4 +118,10 @@ def home_line(
         return _open(request, f"/p/{found[0].id}")
     if found:
         return render(request, "home/projects.html", projects=found)
+    starter = getattr(bridge, "start_work", None)
+    if callable(starter) and text:
+        actor = getattr(request.app.state, "actor", "user:local")
+        href = starter(text, actor if isinstance(actor, str) else "user:local")
+        if isinstance(href, str):
+            return _open(request, href)
     return render(request, "home/hint.html")

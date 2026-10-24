@@ -30,12 +30,15 @@ def _context(
 ) -> dict[str, object]:
     proposal = _proposal(bridge, project_id, proposal_id)
     views = [diff_view(item) for item in bridge.proposal_diff(project_id, proposal_id)]
+    auto = getattr(bridge, "impact_auto", None)
+    impact_auto = bool(auto(project_id, proposal_id)) if callable(auto) else False
     return {
         "project_id": project_id,
         "proposal": proposal,
         "views": views,
         "toast": toast,
         "notice": notice,
+        "impact_auto": impact_auto,
         "who": who,
         "when": when,
     }
