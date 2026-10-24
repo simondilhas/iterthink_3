@@ -39,6 +39,7 @@ from iterthink.services.handover import hand_over
 from iterthink.services.importer_1x import preview as preview_store
 from iterthink.services.importer_1x import run_import
 from iterthink.services.indexer import schedule_index
+from iterthink.services.intent import IntentBridge
 from iterthink.services.projects import (
     Registry,
     compare_file,
@@ -89,7 +90,7 @@ def _info_of(root: Path, item: Proposal) -> ProposalInfo:
     )
 
 
-class RealBridge(Later):
+class RealBridge(IntentBridge, Later):
     def __init__(
         self,
         state_dir: Path | None = None,
