@@ -9,6 +9,7 @@ from pathlib import Path
 from typing import cast
 
 from iterthink.persistence.snapshots import SnapshotError, Snapshots
+from iterthink.services.audit import publish_break
 from iterthink.services.bridge import (
     BridgeError,
     Conflict,
@@ -17,6 +18,7 @@ from iterthink.services.bridge import (
     FileDiff,
     FileEntry,
     FolderInfo,
+    HandoverMode,
     Invalid,
     LogEntry,
     NotFound,
@@ -31,6 +33,7 @@ from iterthink.services.bridge import (
 from iterthink.services.disk_scan import notice, scan, start_watching, subscribe
 from iterthink.services.event_log import LogCorrupt, append, checkpoint, read_all, store_blob
 from iterthink.services.event_log import utc_now as event_now
+from iterthink.services.handover import hand_over
 from iterthink.services.indexer import schedule_index
 from iterthink.services.projects import (
     Registry,
@@ -84,8 +87,6 @@ def _info_of(root: Path, item: Proposal) -> ProposalInfo:
 
 
 class RealBridge(Later):
-    """Bridge over snapshots and the hash-chained log."""
-
     def __init__(
         self,
         state_dir: Path | None = None,
@@ -101,7 +102,6 @@ class RealBridge(Later):
         atexit.register(self.close)
 
     def close(self) -> None:
-        """Write a checkpoint for every open project. Safe to call twice."""
         if self._closed:
             return
         self._closed = True
@@ -132,6 +132,11 @@ class RealBridge(Later):
             scan(folder, Snapshots(folder), machine=self.machine, project=project)
         except (OSError, SnapshotError, BridgeError):
             return
+
+    def _check(self, folder: Path, project: str, *, background: bool = False) -> str:
+        return publish_break(
+            folder, project, self.machine, "user:local", self._event, background=background
+        )
 
     def _root(self, project: str) -> Path:
         folder = self._registry.path_of(project)
@@ -186,6 +191,7 @@ class RealBridge(Later):
             if project:
                 self._adopt(folder, project)
                 self._scan_one(folder, project)
+                self._check(folder, project, background=True)
             found.append(FolderInfo(path=str(folder), name=folder.name, project_id=project))
         return found
 
@@ -371,6 +377,12 @@ class RealBridge(Later):
     def log(self, project: str, limit: int = 200) -> list[LogEntry]:
         root = self._root(project)
         return indexed_log(self.state_dir, root, project, limit)
+
+    def log_break(self, project: str) -> str:
+        return self._check(self._root(project), project)
+
+    def handover(self, project: str, mode: HandoverMode, target: Path) -> Path:
+        return hand_over(self._root(project), mode, target, self.machine, project, self._event)
 
     def verify(self, project: str) -> VerifyInfo:
         result = verify_all(self._root(project))

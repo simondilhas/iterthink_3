@@ -34,7 +34,18 @@ def _counts(entries: list[FileEntry]) -> list[tuple[str, int]]:
     return sorted(counts.items())
 
 
+def _log_break(bridge: Bridge, project_id: str) -> str:
+    notice = getattr(bridge, "log_break", None)
+    if not callable(notice):
+        return ""
+    text = notice(project_id)
+    return text if isinstance(text, str) else ""
+
+
 @router.get("/p/{project_id}", response_class=HTMLResponse, name="project")
 def project(request: Request, project_id: str, bridge: Bridge = _bridge) -> HTMLResponse:
+    message = _log_break(bridge, project_id)
     counts = _counts(bridge.files(project_id))
-    return render(request, "project/page.html", project_id=project_id, counts=counts)
+    return render(
+        request, "project/page.html", project_id=project_id, counts=counts, log_break=message
+    )
