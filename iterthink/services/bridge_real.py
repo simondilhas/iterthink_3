@@ -31,8 +31,8 @@ from iterthink.services.bridge import (
     kind_of,
 )
 from iterthink.services.disk_scan import notice, scan, start_watching, subscribe
-from iterthink.services.egress import apply_setting
-from iterthink.services.egress import shield_text as shield_outbound
+from iterthink.services.documents import DocumentsBridge
+from iterthink.services.egress import apply_setting, shield_text as shield_outbound
 from iterthink.services.event_log import LogCorrupt, append, checkpoint, read_all, store_blob
 from iterthink.services.event_log import utc_now as event_now
 from iterthink.services.handover import hand_over
@@ -91,7 +91,7 @@ def _info_of(root: Path, item: Proposal) -> ProposalInfo:
     )
 
 
-class RealBridge(IntentBridge, SettingsBridge, Later):
+class RealBridge(IntentBridge, SettingsBridge, DocumentsBridge, Later):
     def __init__(
         self,
         state_dir: Path | None = None,
