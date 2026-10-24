@@ -1,6 +1,6 @@
 ```
 id: C15
-status: ready
+status: done
 depends_on: [B1, C2]
 ```
 # C15 · Settings and seeds
@@ -16,7 +16,8 @@ The settings *service* is needed early: C6, C7, C8 and C16 read inherited
 values through it. The page can stay simple; later slices add their keys.
 
 ## Scope
-- `iterthink/services/settings.py`, `bridge_real.settings`
+- `iterthink/services/settings.py` (`SettingsBridge` is mixed into `RealBridge` so
+  `bridge_real.py` stays within the line limit)
 - `iterthink/web/routes/settings.py` (extends C2's egress switch), `templates/settings/`
 - `tests/v2/services/test_settings.py`, `tests/v2/web/test_c15_settings.py`
 - `scripts/strict_paths.d/C15.txt`
@@ -55,10 +56,10 @@ def load_yaml(project_dir: Path, name: str) -> dict[str, Any]: ...  # merged fil
   except the Privacy Shield and RAG disclaimers (spec UI style).
 
 ## Acceptance
-- [ ] `test_inheritance_default_workspace_project`
-- [ ] `test_source_shown_for_each_value`
-- [ ] `test_load_yaml_merges_mappings_replaces_lists`
-- [ ] `test_upgrade_merges_new_keys_and_asks_for_changed`
-- [ ] `test_changes_logged`
-- [ ] `test_secrets_never_written_to_yaml`
-- [ ] `test_storage_growth_reported`
+- [x] `test_inheritance_default_workspace_project`
+- [x] `test_source_shown_for_each_value`
+- [x] `test_load_yaml_merges_mappings_replaces_lists`
+- [x] `test_upgrade_merges_new_keys_and_asks_for_changed`
+- [x] `test_changes_logged`
+- [x] `test_secrets_never_written_to_yaml`
+- [x] `test_storage_growth_reported`
