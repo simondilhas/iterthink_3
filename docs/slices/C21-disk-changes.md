@@ -1,6 +1,6 @@
 ```
 id: C21
-status: ready
+status: done
 depends_on: [B1]
 ```
 # C21 · Disk changes and tracked files
@@ -53,10 +53,10 @@ def scan(project_dir: Path, snaps: Snapshots, *, machine: str, project: str) -> 
   several steps makes one version.
 
 ## Acceptance
-- [ ] `test_external_edit_becomes_version_with_disk_change_kind`
-- [ ] `test_external_edit_puts_open_proposal_in_conflict`
-- [ ] `test_removed_and_added_files_recorded`
-- [ ] `test_move_between_projects_references_source`
-- [ ] `test_excluded_and_oversized_files_not_tracked`
-- [ ] `test_burst_of_writes_makes_one_version`
-- [ ] `test_scan_twice_without_changes_is_noop`
+- [x] `test_external_edit_becomes_version_with_disk_change_kind`
+- [x] `test_external_edit_puts_open_proposal_in_conflict`
+- [x] `test_removed_and_added_files_recorded`
+- [x] `test_move_between_projects_references_source`
+- [x] `test_excluded_and_oversized_files_not_tracked`
+- [x] `test_burst_of_writes_makes_one_version`
+- [x] `test_scan_twice_without_changes_is_noop`

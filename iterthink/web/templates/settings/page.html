@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+{% block title %}Settings{% endblock %}
+{% block head %}{% include "home/head.html" %}{% endblock %}
+{% block main %}
+<h1>Settings</h1>
+<form method="post" action="/p/{{ project_id }}/settings">
+  <label>Content may leave this machine
+    <select name="egress">
+      <option value="none" {% if egress == "none" %}selected{% endif %}>only on this machine</option>
+      <option value="shielded" {% if egress == "shielded" %}selected{% endif %}>redacted</option>
+      <option value="allowed" {% if egress == "allowed" %}selected{% endif %}>allowed</option>
+    </select>
+  </label>
+  <button type="submit">Save</button>
+</form>
+{% if notice %}<p>{{ notice }}</p>{% endif %}
+{% endblock %}

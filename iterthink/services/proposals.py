@@ -295,6 +295,26 @@ class Later:
         raise NotImplementedError("slice C15")
 
 
+def compete(
+    root: Path,
+    snaps: Snapshots,
+    project: str,
+    proposal_id: str,
+    paths: tuple[str, ...],
+    actor: str,
+    emit: Callable[[Path, str, str, str, dict[str, object]], None],
+) -> None:
+    """Mark another open proposal only when this accept changed its baseline."""
+    for item in load_all(root, snaps):
+        if item.id == proposal_id or item.status != "open":
+            continue
+        if not set(item.paths) & set(paths):
+            continue
+        stale = conflicts(item, snaps, root)
+        if stale:
+            emit(root, project, actor, "conflict", {"paths": stale, "proposal": item.id})
+
+
 def conflicts(proposal: Proposal, snaps: Snapshots, project_dir: Path) -> list[str]:
     """Paths whose bytes on disk differ from the proposal's baseline."""
     stale: list[str] = []

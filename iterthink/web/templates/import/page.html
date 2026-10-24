@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+{% block title %}Import{% endblock %}
+{% block head %}{% include "home/head.html" %}{% endblock %}
+{% block main %}
+<h1>Import a 1.x store</h1>
+<form method="post" action="/import">
+  <label>Store <input name="store" type="text" value="{{ store | default('') }}" required></label>
+  <label>Folder, if the old one is gone <input name="target" type="text" value="{{ target | default('') }}"></label>
+  <button type="submit" name="action" value="preview">Preview</button>
+  <button type="submit" name="action" value="run">Import</button>
+</form>
+{% if notice %}<p>{{ notice }}</p>{% endif %}
+{% if rows %}
+<table>
+  <tr><th>Project</th><th>Versions</th><th>Verdicts</th><th>Annotations</th><th>Folder</th></tr>
+  {% for row in rows %}
+  <tr>
+    <td>{{ row.name }}</td>
+    <td>{{ row.versions }}</td>
+    <td>{{ row.verdicts }}</td>
+    <td>{{ row.annotations }}</td>
+    <td>{% if row.ready %}on disk{% else %}pick a folder{% endif %}</td>
+  </tr>
+  {% endfor %}
+</table>
+{% endif %}
+{% endblock %}

@@ -1,6 +1,6 @@
 ```
 id: C1
-status: ready
+status: done
 depends_on: [B1]
 ```
 # C1 · Index and search
@@ -13,6 +13,7 @@ Tables (index projection); RAG scope (`services/rag/project_scope.py`).
 
 ## Scope
 - `iterthink/services/indexer.py` — projection from logs, `.iterthink/versions/` and files
+- `iterthink/services/index_store.py` — content rows (kept separate so each file stays within the size limit)
 - `iterthink/services/search.py` — FTS5 keyword + embeddings + RRF + rerank
 - `bridge_real.py` — `search` and `log` read from the index
 - `tests/v2/services/test_indexer.py`, `test_search.py`, `tests/v2/invariants/test_rebuild.py`
@@ -62,14 +63,14 @@ def hybrid(index: Index, project: str, query: str, limit: int) -> list[SearchHit
 - Indexing runs in a background thread after each event; the UI never waits.
 
 ## Acceptance
-- [ ] property: `test_shuffled_arrival_equals_full_rebuild`
-- [ ] property: `test_update_twice_is_noop`
-- [ ] `test_two_projects_never_mix`
-- [ ] `test_deleting_db_and_rebuilding_gives_same_digest`
-- [ ] `test_conflicting_accepts_surface_as_conflict`
-- [ ] `test_keyword_search_ranks_exact_word_first` and `test_search_under_50ms_for_2000_files` (slow)
-- [ ] `test_semantic_search_makes_no_network_calls`
-- [ ] `test_partial_code_matches_via_trigram` — "EI 9" finds "EI 90"
-- [ ] `test_query_syntax_kind_and_in_history`
-- [ ] `test_proposal_is_candidate_row_with_proposes_relation`
-- [ ] contract tests still pass for `real`
+- [x] property: `test_shuffled_arrival_equals_full_rebuild`
+- [x] property: `test_update_twice_is_noop`
+- [x] `test_two_projects_never_mix`
+- [x] `test_deleting_db_and_rebuilding_gives_same_digest`
+- [x] `test_conflicting_accepts_surface_as_conflict`
+- [x] `test_keyword_search_ranks_exact_word_first` and `test_search_under_50ms_for_2000_files` (slow)
+- [x] `test_semantic_search_makes_no_network_calls`
+- [x] `test_partial_code_matches_via_trigram` — "EI 9" finds "EI 90"
+- [x] `test_query_syntax_kind_and_in_history`
+- [x] `test_proposal_is_candidate_row_with_proposes_relation`
+- [x] contract tests still pass for `real`

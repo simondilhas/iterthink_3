@@ -9,6 +9,7 @@ from pathlib import Path
 from typing import cast
 
 from iterthink.persistence.snapshots import SnapshotError, Snapshots
+from iterthink.services.audit import publish_break
 from iterthink.services.bridge import (
     BridgeError,
     Conflict,
@@ -17,6 +18,7 @@ from iterthink.services.bridge import (
     FileDiff,
     FileEntry,
     FolderInfo,
+    HandoverMode,
     Invalid,
     LogEntry,
     NotFound,
@@ -28,8 +30,15 @@ from iterthink.services.bridge import (
     VersionInfo,
     kind_of,
 )
+from iterthink.services.disk_scan import notice, scan, start_watching, subscribe
+from iterthink.services.egress import apply_setting
+from iterthink.services.egress import shield_text as shield_outbound
 from iterthink.services.event_log import LogCorrupt, append, checkpoint, read_all, store_blob
 from iterthink.services.event_log import utc_now as event_now
+from iterthink.services.handover import hand_over
+from iterthink.services.importer_1x import preview as preview_store
+from iterthink.services.importer_1x import run_import
+from iterthink.services.indexer import schedule_index
 from iterthink.services.projects import (
     Registry,
     compare_file,
@@ -39,31 +48,29 @@ from iterthink.services.projects import (
     folder_entries,
     inside,
     machine_id,
-    project_file,
     read_content,
     relative,
     restore_file,
-    search_hits,
     settings_of,
     shown,
     store_edit,
     tracked_files,
     version_history,
     write_bytes,
-    write_yaml,
 )
 from iterthink.services.proposals import (
     CONTRACT,
     Later,
     Proposal,
+    compete,
     conflicts,
     create,
-    describe,
     diff_files,
     load_all,
     reason_text,
     require,
 )
+from iterthink.services.search import indexed_log, indexed_search
 from iterthink.services.verify_log import verify_all
 
 _TEXT = {"markdown", "table", "text"}
@@ -83,8 +90,6 @@ def _info_of(root: Path, item: Proposal) -> ProposalInfo:
 
 
 class RealBridge(Later):
-    """Bridge over snapshots and the hash-chained log."""
-
     def __init__(
         self,
         state_dir: Path | None = None,
@@ -96,13 +101,14 @@ class RealBridge(Later):
         self._now = now
         self._registry = Registry(self.state_dir)
         self._closed = False
+        self._stop_watch = start_watching(self._opened, self._scan_one)
         atexit.register(self.close)
 
     def close(self) -> None:
-        """Write a checkpoint for every open project. Safe to call twice."""
         if self._closed:
             return
         self._closed = True
+        self._stop_watch()
         for project, folder in self._registry.opened:
             self._checkpoint(folder, project)
 
@@ -120,6 +126,20 @@ class RealBridge(Later):
             )
         except (OSError, LogCorrupt, BridgeError):
             return
+
+    def _opened(self) -> list[tuple[str, Path]]:
+        return list(self._registry.opened)
+
+    def _scan_one(self, folder: Path, project: str) -> None:
+        try:
+            scan(folder, Snapshots(folder), machine=self.machine, project=project)
+        except (OSError, SnapshotError, BridgeError):
+            return
+
+    def _check(self, folder: Path, project: str, *, background: bool = False) -> str:
+        return publish_break(
+            folder, project, self.machine, "user:local", self._event, background=background
+        )
 
     def _root(self, project: str) -> Path:
         folder = self._registry.path_of(project)
@@ -140,6 +160,7 @@ class RealBridge(Later):
             contract=CONTRACT,
             now=self._now,
         )
+        schedule_index(self.state_dir, project, root)
 
     def _adopt(self, folder: Path, project: str) -> str:
         place = self._registry.place(project, folder)
@@ -172,6 +193,8 @@ class RealBridge(Later):
         for folder, project in folder_entries(path):
             if project:
                 self._adopt(folder, project)
+                self._scan_one(folder, project)
+                self._check(folder, project, background=True)
             found.append(FolderInfo(path=str(folder), name=folder.name, project_id=project))
         return found
 
@@ -188,7 +211,10 @@ class RealBridge(Later):
             )
         if self._adopt(folder, project) == "copy":
             kept = self._registry.path_of(project)
-            return self._info(kept if kept is not None else folder)
+            target = kept if kept is not None else folder
+            self._scan_one(target, project)
+            return self._info(target)
+        self._scan_one(folder, project)
         return self._info(folder)
 
     def projects(self) -> list[ProjectInfo]:
@@ -198,11 +224,11 @@ class RealBridge(Later):
         if egress not in {"none", "shielded", "allowed"}:
             raise Invalid(f"unknown egress setting {egress!r}")
         root = self._root(project)
-        data = settings_of(root)
-        data["egress"] = egress
-        write_yaml(project_file(root), data)
-        self._event(root, project, actor, "settings", {"egress": egress})
+        apply_setting(root, project, egress, actor, self._event)
         return self._info(root)
+
+    def shield_text(self, project: str, text: str, purpose: str = "mcp") -> str:
+        return shield_outbound(self._root(project), text, purpose)
 
     def files(self, project: str) -> list[FileEntry]:
         return file_entries(self._root(project))
@@ -324,17 +350,7 @@ class RealBridge(Later):
     def _compete(
         self, root: Path, project: str, proposal_id: str, paths: tuple[str, ...], actor: str
     ) -> None:
-        """Mark another open proposal only when this accept changed its baseline."""
-        snaps = Snapshots(root)
-        for item in load_all(root, snaps):
-            if item.id == proposal_id or item.status != "open":
-                continue
-            if not set(item.paths) & set(paths):
-                continue
-            stale = conflicts(item, snaps, root)
-            if not stale:
-                continue
-            self._event(root, project, actor, "conflict", {"paths": stale, "proposal": item.id})
+        compete(root, Snapshots(root), project, proposal_id, paths, actor, self._event)
 
     def reject(self, project: str, proposal_id: str, actor: str, reason: str) -> None:
         if not reason.strip():
@@ -353,19 +369,19 @@ class RealBridge(Later):
 
     def log(self, project: str, limit: int = 200) -> list[LogEntry]:
         root = self._root(project)
-        entries = [
-            LogEntry(
-                seq=event.seq,
-                ts=event.ts,
-                machine=event.machine,
-                actor=event.actor,
-                type=event.type,
-                summary=describe(root, event.type, event.payload),
-                hash=event.hash,
-            )
-            for event in reversed(read_all(root))
-        ]
-        return entries[:limit]
+        return indexed_log(self.state_dir, root, project, limit)
+
+    def log_break(self, project: str) -> str:
+        return self._check(self._root(project), project)
+
+    def handover(self, project: str, mode: HandoverMode, target: Path) -> Path:
+        return hand_over(self._root(project), mode, target, self.machine, project, self._event)
+
+    def import_preview(self, store: Path) -> list[dict[str, object]]:
+        return preview_store(store)
+
+    def import_run(self, store: Path, target: Path | None = None) -> list[str]:
+        return run_import(store, self, target)
 
     def verify(self, project: str) -> VerifyInfo:
         result = verify_all(self._root(project))
@@ -373,4 +389,10 @@ class RealBridge(Later):
         return VerifyInfo(ok=result.ok, lines=result.lines, error=error)
 
     def search(self, project: str, query: str, limit: int = 50) -> list[SearchHit]:
-        return search_hits(self._root(project), query, limit)
+        root = self._root(project)
+        return indexed_search(self.state_dir, root, project, query, limit)
+
+    def disk_pull(self, project: str) -> Callable[[], str]:
+        self._root(project)
+        pending = subscribe(project)
+        return lambda: notice(pending.get())
