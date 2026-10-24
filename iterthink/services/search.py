@@ -60,6 +60,21 @@ def _parse(query: str) -> _Query:
     )
 
 
+def _load_vec(conn: sqlite3.Connection) -> None:
+    import sqlite_vec
+
+    try:
+        conn.execute("SELECT vec_version()")
+        return
+    except sqlite3.OperationalError:
+        pass
+    conn.enable_load_extension(True)
+    try:
+        sqlite_vec.load(conn)
+    finally:
+        conn.enable_load_extension(False)
+
+
 def _ensure(conn: sqlite3.Connection) -> None:
     conn.execute(
         "CREATE VIRTUAL TABLE IF NOT EXISTS ix_fts USING fts5("
@@ -75,9 +90,7 @@ def _ensure(conn: sqlite3.Connection) -> None:
         "CREATE TABLE IF NOT EXISTS ix_chunk ("
         "id INTEGER PRIMARY KEY, path TEXT NOT NULL, line INTEGER NOT NULL, snippet TEXT NOT NULL)"
     )
-    import sqlite_vec
-
-    sqlite_vec.load(conn)
+    _load_vec(conn)
     conn.execute(f"CREATE VIRTUAL TABLE IF NOT EXISTS ix_vec USING vec0(embedding float[{_DIM}])")
 
 
