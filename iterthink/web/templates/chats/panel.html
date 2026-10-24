@@ -1,0 +1,3 @@
+<div id="chat-panel" hx-ext="sse" sse-connect="{{ stream }}" sse-swap="message" sse-close="done">
+  <pre id="chat-text" sse-swap="message" hx-swap="beforeend"></pre>
+</div>
