@@ -1,6 +1,6 @@
 ```
 id: C3
-status: ready
+status: in-progress
 depends_on: [C1, C2, C4, C23]
 ```
 # C3 · The line and intent
@@ -106,20 +106,20 @@ def interpret(project_dir: Path, line: str, context: LineContext, router: Router
 - Shift+Enter is a line break.
 
 ## Acceptance
-- [ ] `test_typing_never_calls_the_model` — router fake records zero calls during search requests
-- [ ] `test_enter_opens_surface_with_quiet_switch_line`
-- [ ] `test_switch_reopens_line_in_other_mode_and_logs_correction`
-- [ ] `test_mod_enter_is_same_as_enter_in_line`
-- [ ] `test_rule_based_modes` (parametrised examples in German and English)
-- [ ] `test_review_intent_routes_to_version_diff`
-- [ ] `test_model_fallback_respects_egress_none`
-- [ ] `test_unbuilt_mode_falls_back_to_search`
-- [ ] `test_intent_is_logged_with_prompt_id`
-- [ ] `test_continue_and_file_name_reopen_work`
+- [x] `test_typing_never_calls_the_model` — router fake records zero calls during search requests
+- [x] `test_enter_opens_surface_with_quiet_switch_line`
+- [x] `test_switch_reopens_line_in_other_mode_and_logs_correction`
+- [x] `test_mod_enter_is_same_as_enter_in_line`
+- [x] `test_rule_based_modes` (parametrised examples in German and English)
+- [x] `test_review_intent_routes_to_version_diff`
+- [x] `test_model_fallback_respects_egress_none`
+- [x] `test_unbuilt_mode_falls_back_to_search`
+- [x] `test_intent_is_logged_with_prompt_id`
+- [x] `test_continue_and_file_name_reopen_work`
 - [ ] `test_dot_is_idle_with_slow_pulse_by_default`
 - [ ] `test_dot_is_still_while_typing_and_the_model_is_not_called`
 - [ ] `test_dot_pulses_faster_while_working_after_enter`
 - [ ] `test_dot_is_orange_when_a_verdict_waits` (open proposal, task in Needs input)
 - [ ] `test_dot_is_red_on_error_or_blocked_task`
 - [ ] `test_dot_state_precedence_and_reduced_motion`
-- [ ] `test_work_without_project_creates_one_in_default_workspace`
+- [x] `test_work_without_project_creates_one_in_default_workspace`

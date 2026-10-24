@@ -1,0 +1,17 @@
+/* Chat: the thread is the page. Side panels stay closed. */
+
+#chat {
+  display: block;
+  width: 100%;
+}
+
+#chat textarea {
+  width: 100%;
+  min-height: 6rem;
+  box-sizing: border-box;
+  font: inherit;
+}
+
+#chat-text {
+  white-space: pre-wrap;
+}

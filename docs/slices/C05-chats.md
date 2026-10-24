@@ -1,6 +1,6 @@
 ```
 id: C5
-status: ready
+status: done
 depends_on: [C1, C2, C4, C22]
 ```
 # C5 · Chats
@@ -40,11 +40,11 @@ Tech stack → Live updates (SSE).
 - Chats are excluded from client handover (C13).
 
 ## Acceptance
-- [ ] `test_chat_file_is_plain_markdown_and_roundtrips`
-- [ ] `test_each_message_is_a_version`
-- [ ] `test_answer_streams_over_sse`
-- [ ] `test_references_link_to_project_files`
-- [ ] `test_chat_cannot_change_files` and `test_turn_answer_into_proposal`
-- [ ] `test_turn_chat_into_document`
-- [ ] `test_second_writer_gets_read_only`
-- [ ] `test_context_never_crosses_projects`
+- [x] `test_chat_file_is_plain_markdown_and_roundtrips`
+- [x] `test_each_message_is_a_version`
+- [x] `test_answer_streams_over_sse`
+- [x] `test_references_link_to_project_files`
+- [x] `test_chat_cannot_change_files` and `test_turn_answer_into_proposal`
+- [x] `test_turn_chat_into_document`
+- [x] `test_second_writer_gets_read_only`
+- [x] `test_context_never_crosses_projects`

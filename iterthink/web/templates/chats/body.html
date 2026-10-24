@@ -1,0 +1,23 @@
+<article id="chat" data-path="{{ chat.path }}">
+  <h1>{{ chat.title }}</h1>
+  {% if locked %}<p>Read-only</p><p>{{ locked }} is writing this chat</p>{% endif %}
+  {% for ref in references %}
+  <p><a href="{{ ref.href }}">{{ ref.path }}</a></p>
+  {% endfor %}
+  <div id="chat-log">
+  {% for message in messages %}
+  <section>
+    <p>{{ message.role }}</p>
+    <p>{{ message.text }}</p>
+  </section>
+  {% endfor %}
+  </div>
+  <div id="chat-panel"></div>
+  {% if not locked %}
+  <form id="chat-form" method="post" action="{{ href }}" hx-post="{{ href }}" hx-target="#chat-panel" hx-swap="outerHTML">
+    <textarea name="text"></textarea>
+    <button type="submit">Send</button>
+  </form>
+  {% endif %}
+</article>
+{% if toast %}<div id="toast" hx-swap-oob="true">{{ toast }}</div>{% endif %}

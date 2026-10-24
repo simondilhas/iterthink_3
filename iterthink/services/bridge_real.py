@@ -17,7 +17,6 @@ from iterthink.services.bridge import (
     FileContent,
     FileDiff,
     FileEntry,
-    FolderInfo,
     HandoverMode,
     Invalid,
     LogEntry,
@@ -30,22 +29,24 @@ from iterthink.services.bridge import (
     VersionInfo,
     kind_of,
 )
+from iterthink.services.chats import ChatsBridge
 from iterthink.services.disk_scan import notice, scan, start_watching, subscribe
+from iterthink.services.documents import DocumentsBridge
 from iterthink.services.egress import apply_setting
 from iterthink.services.egress import shield_text as shield_outbound
 from iterthink.services.event_log import LogCorrupt, append, checkpoint, read_all, store_blob
 from iterthink.services.event_log import utc_now as event_now
 from iterthink.services.handover import hand_over
+from iterthink.services.impact_review import ImpactBridge
 from iterthink.services.importer_1x import preview as preview_store
 from iterthink.services.importer_1x import run_import
 from iterthink.services.indexer import schedule_index
+from iterthink.services.intent import IntentBridge
 from iterthink.services.projects import (
     Registry,
     compare_file,
     default_state_dir,
-    ensure_project,
     file_entries,
-    folder_entries,
     inside,
     machine_id,
     read_content,
@@ -73,6 +74,7 @@ from iterthink.services.proposals import (
 from iterthink.services.search import indexed_log, indexed_search
 from iterthink.services.settings import SettingsBridge
 from iterthink.services.verify_log import verify_all
+from iterthink.services.workspaces import WorkspacesBridge
 
 _TEXT = {"markdown", "table", "text"}
 
@@ -90,7 +92,15 @@ def _info_of(root: Path, item: Proposal) -> ProposalInfo:
     )
 
 
-class RealBridge(SettingsBridge, Later):
+class RealBridge(
+    SettingsBridge,
+    IntentBridge,
+    WorkspacesBridge,
+    DocumentsBridge,
+    ChatsBridge,
+    ImpactBridge,
+    Later,
+):
     def __init__(
         self,
         state_dir: Path | None = None,
@@ -184,39 +194,9 @@ class RealBridge(SettingsBridge, Later):
     def _info(self, folder: Path) -> ProjectInfo:
         data = settings_of(folder)
         raw = data.get("egress", "shielded")
-        if raw not in {"none", "shielded", "allowed"}:
-            raw = "shielded"
-        egress = cast(Egress, raw)
+        chosen = raw if raw in {"none", "shielded", "allowed"} else "shielded"
+        egress = cast(Egress, chosen)
         return ProjectInfo(id=str(data["id"]), name=folder.name, path=str(folder), egress=egress)
-
-    def open_folder(self, path: Path) -> list[FolderInfo]:
-        found: list[FolderInfo] = []
-        for folder, project in folder_entries(path):
-            if project:
-                self._adopt(folder, project)
-                self._scan_one(folder, project)
-                self._check(folder, project, background=True)
-            found.append(FolderInfo(path=str(folder), name=folder.name, project_id=project))
-        return found
-
-    def make_project(self, path: Path) -> ProjectInfo:
-        folder = path.expanduser().resolve()
-        project, version = ensure_project(folder)
-        if version is not None:
-            self._event(
-                folder,
-                project,
-                "user:local",
-                "project_created",
-                {"name": folder.name, "version": version},
-            )
-        if self._adopt(folder, project) == "copy":
-            kept = self._registry.path_of(project)
-            target = kept if kept is not None else folder
-            self._scan_one(target, project)
-            return self._info(target)
-        self._scan_one(folder, project)
-        return self._info(folder)
 
     def projects(self) -> list[ProjectInfo]:
         return [self._info(folder) for _, folder in self._registry.opened if folder.is_dir()]

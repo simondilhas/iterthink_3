@@ -15,9 +15,14 @@ from iterthink.web.app import bridge_of, templates
 router = APIRouter()
 _bridge = Depends(bridge_of)
 _query = Form("")
+_create = Form("")
 
 _LIST_PROJECTS = re.compile(r"^(?:(?:open|show|list)\s+)?(?:(?:my|a|all)\s+)?projects?$|^open$")
 _PATH = re.compile(r"^(?:/|~|[A-Za-z]:[\\/])")
+_NEW_PROJECT = re.compile(
+    r"^(?:new project|create(?: a)?(?: new)? project|neues projekt)(?: (?P<name>.+))?$",
+    re.IGNORECASE,
+)
 _COLOR = re.compile(r"^#[0-9A-Fa-f]{3,8}$")
 _TOKEN = {
     "page_background": "--bg",
@@ -94,12 +99,29 @@ def _open(request: Request, href: str) -> Response:
     return RedirectResponse(href, status_code=303)
 
 
+def _create_named(request: Request, name: str, bridge: Bridge) -> Response:
+    info = bridge.make_project(Path(name))
+    return _open(request, f"/p/{info.id}")
+
+
 @router.post("/line", name="home_line", response_model=None)
-def home_line(request: Request, q: str = _query, bridge: Bridge = _bridge) -> Response:
+def home_line(
+    request: Request, q: str = _query, create: str = _create, bridge: Bridge = _bridge
+) -> Response:
     """Enter on the start screen. Fixed rules, no AI: list, open a project, or open a folder."""
     text = " ".join(q.split())
+    if create == "1":
+        if not text:
+            return render(request, "home/name.html")
+        return _create_named(request, text, bridge)
     if _PATH.match(text):
         return folder_page(request, bridge, text)
+    match = _NEW_PROJECT.match(text)
+    if match:
+        name = match.group("name")
+        if name:
+            return _create_named(request, name, bridge)
+        return render(request, "home/name.html")
     projects = bridge.projects()
     if _LIST_PROJECTS.match(text.casefold()):
         return render(request, "home/projects.html", projects=projects)
@@ -108,4 +130,10 @@ def home_line(request: Request, q: str = _query, bridge: Bridge = _bridge) -> Re
         return _open(request, f"/p/{found[0].id}")
     if found:
         return render(request, "home/projects.html", projects=found)
+    starter = getattr(bridge, "start_work", None)
+    if callable(starter) and text:
+        actor = getattr(request.app.state, "actor", "user:local")
+        href = starter(text, actor if isinstance(actor, str) else "user:local")
+        if isinstance(href, str):
+            return _open(request, href)
     return render(request, "home/hint.html")

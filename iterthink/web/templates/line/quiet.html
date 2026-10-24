@@ -1,0 +1,18 @@
+{% set label = request.query_params.get('opened', '') %}
+{% if label %}
+<p class="quiet">Opened as {{ label }}{% if request.query_params.get('sure') == '0' %} · not sure{% endif %} · switch
+  {% for alt in request.query_params.getlist('alt') %}
+  <form method="post" action="/p/{{ project_id }}/line" hx-post="/p/{{ project_id }}/line" hx-target="#search-results" hx-swap="innerHTML">
+    <input type="hidden" name="q" value="{{ request.query_params.get('q', '') }}">
+    <input type="hidden" name="mode" value="{{ alt }}">
+    <button type="submit">{{ alt }}</button>
+  </form>
+  {% endfor %}
+</p>
+{% endif %}
+{% if request.query_params.get('where') %}
+<p class="quiet">New project in {{ request.query_params.get('where') }}</p>
+{% endif %}
+{% if request.query_params.get('soon') %}
+<p class="quiet">coming soon</p>
+{% endif %}
