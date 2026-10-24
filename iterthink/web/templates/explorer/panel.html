@@ -1,0 +1,52 @@
+{% if panel %}
+<section class="workspace-panel">
+  {% if panel.projects %}
+  <ul class="workspace-projects">
+    {% for item in panel.projects %}
+    <li>
+      <a href="/p/{{ item.project_id }}">{{ item.name }}</a>
+      {% if item.proposals %}<span class="badge">{{ item.proposals }}</span>{% endif %}
+    </li>
+    {% endfor %}
+  </ul>
+  {% endif %}
+  {% if panel.pending %}
+  <ul class="workspace-pending">
+    {% for item in panel.pending %}
+    <li>
+      <span>{{ item.name }}</span>
+      <form method="post" action="/projects">
+        <input type="hidden" name="path" value="{{ item.path }}">
+        <button type="submit">{% if item.prompt %}Make project?{% else %}Make project{% endif %}</button>
+      </form>
+      <form method="post" action="/p/{{ project_id }}/explorer/ignore" hx-post="/p/{{ project_id }}/explorer/ignore" hx-target="#left" hx-swap="innerHTML">
+        <input type="hidden" name="workspace" value="{{ panel.root }}">
+        <input type="hidden" name="name" value="{{ item.name }}">
+        <button type="submit">Ignore</button>
+      </form>
+    </li>
+    {% endfor %}
+  </ul>
+  {% endif %}
+  {% if panel.loose %}
+  <ul class="workspace-files">
+    {% for item in panel.loose %}
+    <li>
+      <span>{{ item.name }}</span>
+      <span>Untracked</span>
+      <form method="post" action="/projects">
+        <input type="hidden" name="path" value="{{ item.path }}">
+        <button type="submit">Make project</button>
+      </form>
+      <form method="post" action="/p/{{ project_id }}/explorer/ignore" hx-post="/p/{{ project_id }}/explorer/ignore" hx-target="#left" hx-swap="innerHTML">
+        <input type="hidden" name="workspace" value="{{ panel.root }}">
+        <input type="hidden" name="name" value="{{ item.name }}">
+        <button type="submit">Ignore</button>
+      </form>
+    </li>
+    {% endfor %}
+  </ul>
+  {% endif %}
+</section>
+{% endif %}
+{% include "files/explorer.html" %}

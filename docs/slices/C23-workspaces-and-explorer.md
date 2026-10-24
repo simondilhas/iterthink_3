@@ -1,6 +1,6 @@
 ```
 id: C23
-status: ready
+status: done
 depends_on: [B1]
 ```
 # C23 · Workspaces and explorer
@@ -60,13 +60,13 @@ Added by the human on 2026-10-23 (default workspace):
   record the fake behaviour under Blocked (see slices README → Needs the human).
 
 ## Acceptance
-- [ ] `test_workspace_lists_first_level_folders_as_project_candidates`
-- [ ] `test_untracked_files_in_workspace_are_flagged_not_moved`
-- [ ] `test_ignore_is_remembered_per_workspace`
-- [ ] `test_new_subfolder_prompts_make_project`
-- [ ] `test_explorer_is_closed_by_default_and_projects_on_top`
-- [ ] `test_default_workspace_is_created_and_always_known`
-- [ ] `test_relative_make_project_creates_folder_in_default_workspace`
-- [ ] `test_new_project_name_is_sanitised_and_never_reuses_a_folder`
-- [ ] `test_new_project_rule_on_start_screen_creates_and_opens` (English and German)
-- [ ] `test_new_project_without_name_asks_for_one`
+- [x] `test_workspace_lists_first_level_folders_as_project_candidates`
+- [x] `test_untracked_files_in_workspace_are_flagged_not_moved`
+- [x] `test_ignore_is_remembered_per_workspace`
+- [x] `test_new_subfolder_prompts_make_project`
+- [x] `test_explorer_is_closed_by_default_and_projects_on_top`
+- [x] `test_default_workspace_is_created_and_always_known`
+- [x] `test_relative_make_project_creates_folder_in_default_workspace`
+- [x] `test_new_project_name_is_sanitised_and_never_reuses_a_folder`
+- [x] `test_new_project_rule_on_start_screen_creates_and_opens` (English and German)
+- [x] `test_new_project_without_name_asks_for_one`
