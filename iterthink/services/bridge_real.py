@@ -38,6 +38,7 @@ from iterthink.services.event_log import LogCorrupt, append, checkpoint, read_al
 from iterthink.services.event_log import utc_now as event_now
 from iterthink.services.handover import hand_over
 from iterthink.services.indexer import schedule_index
+from iterthink.services.intent import IntentBridge
 from iterthink.services.projects import (
     Registry,
     compare_file,
@@ -86,7 +87,7 @@ def _info_of(root: Path, item: Proposal) -> ProposalInfo:
     )
 
 
-class RealBridge(WorkspacesBridge, DocumentsBridge, ChatsBridge, Later):
+class RealBridge(IntentBridge, WorkspacesBridge, DocumentsBridge, ChatsBridge, Later):
     def __init__(
         self,
         state_dir: Path | None = None,

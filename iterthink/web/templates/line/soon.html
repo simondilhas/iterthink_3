@@ -1,0 +1,15 @@
+<p class="quiet">coming soon</p>
+<p class="quiet">Opened as search{% if found.confidence < 0.6 %} · not sure{% endif %} · switch
+  {% for alt in found.alternatives %}
+  <form method="post" action="/p/{{ project_id }}/line">
+    <input type="hidden" name="q" value="{{ line }}">
+    <input type="hidden" name="mode" value="{{ alt }}">
+    <button type="submit">{{ alt }}</button>
+  </form>
+  {% endfor %}
+</p>
+<ul>
+  {% for hit in hits %}
+  <li>{{ hit.path }}</li>
+  {% endfor %}
+</ul>
