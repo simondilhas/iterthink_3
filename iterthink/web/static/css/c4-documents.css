@@ -1,0 +1,39 @@
+/* Document: the editor is full width. History and review stay closed. */
+
+md-editor {
+  display: block;
+  width: 100%;
+}
+
+md-editor textarea {
+  width: 100%;
+  min-height: 70vh;
+  box-sizing: border-box;
+  font: inherit;
+  color: inherit;
+  background: transparent;
+  border: 1px solid var(--line);
+  padding: 12px;
+}
+
+md-preview {
+  display: block;
+  width: 100%;
+}
+
+md-preview[hidden] {
+  display: none;
+}
+
+#margin-menu {
+  margin-top: 8px;
+}
+
+#margin-panel,
+#inline-change {
+  margin-top: 12px;
+}
+
+#margin-text {
+  white-space: pre-wrap;
+}

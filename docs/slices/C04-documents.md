@@ -1,6 +1,6 @@
 ```
 id: C4
-status: ready
+status: done
 depends_on: [B1, C2]
 ```
 # C4 · Documents
@@ -56,11 +56,11 @@ def run_margin_action(project_dir: Path, *, path: str, paragraph: int, selection
   existing file is never overwritten (`Invalid`).
 
 ## Acceptance
-- [ ] `test_create_writes_md_where_user_says_and_never_overwrites`
-- [ ] `test_margin_actions_come_from_prompts_yaml`
-- [ ] `test_mod_enter_edit_creates_proposal_not_edit` — file unchanged until accept
-- [ ] `test_discuss_streams_over_sse_and_changes_nothing`
-- [ ] `test_accept_inline_updates_editor_and_history`
-- [ ] `test_unsaved_edits_saved_before_proposal`
-- [ ] `test_egress_none_uses_local_model_only`
-- [ ] `test_margin_action_is_logged`
+- [x] `test_create_writes_md_where_user_says_and_never_overwrites`
+- [x] `test_margin_actions_come_from_prompts_yaml`
+- [x] `test_mod_enter_edit_creates_proposal_not_edit` — file unchanged until accept
+- [x] `test_discuss_streams_over_sse_and_changes_nothing`
+- [x] `test_accept_inline_updates_editor_and_history`
+- [x] `test_unsaved_edits_saved_before_proposal`
+- [x] `test_egress_none_uses_local_model_only`
+- [x] `test_margin_action_is_logged`
