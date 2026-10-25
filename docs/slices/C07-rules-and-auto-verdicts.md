@@ -1,6 +1,6 @@
 ```
 id: C7
-status: ready
+status: done
 depends_on: [B1, C15]
 ```
 # C7 · Rules and automatic verdicts
@@ -74,13 +74,13 @@ def classify(path: str, before: bytes, after: bytes) -> frozenset[str]: ...
 - "Undo" on an auto verdict = `restore` of the version before it, logged by the user.
 
 ## Acceptance
-- [ ] `test_spelling_fix_auto_accepted_under_rule`
-- [ ] `test_mixed_change_waits_for_human`
-- [ ] `test_rule_limited_to_paths`
-- [ ] `test_deny_refuses_and_logs_without_proposal`
-- [ ] `test_direct_never_applies_to_deletions_ifc_plans_or_propose_always` (parametrised)
-- [ ] `test_default_direct_is_refused`
-- [ ] `test_user_saves_are_never_ruled`
-- [ ] `test_workspace_rules_inherited_by_project`
-- [ ] `test_auto_verdict_logged_with_rule_id_and_undo_restores`
-- [ ] property: `test_auto_never_applies_non_deterministic_classes`
+- [x] `test_spelling_fix_auto_accepted_under_rule`
+- [x] `test_mixed_change_waits_for_human`
+- [x] `test_rule_limited_to_paths`
+- [x] `test_deny_refuses_and_logs_without_proposal`
+- [x] `test_direct_never_applies_to_deletions_ifc_plans_or_propose_always` (parametrised)
+- [x] `test_default_direct_is_refused`
+- [x] `test_user_saves_are_never_ruled`
+- [x] `test_workspace_rules_inherited_by_project`
+- [x] `test_auto_verdict_logged_with_rule_id_and_undo_restores`
+- [x] property: `test_auto_never_applies_non_deterministic_classes`

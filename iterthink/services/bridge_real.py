@@ -10,6 +10,7 @@ from typing import cast
 
 from iterthink.persistence.snapshots import SnapshotError, Snapshots
 from iterthink.services.adhoc_apps import AppsBridge as Apps
+from iterthink.services.agent_rules import guarded_propose
 from iterthink.services.audit import publish_break
 from iterthink.services.bridge import (
     BridgeError,
@@ -28,7 +29,6 @@ from iterthink.services.bridge import (
     SearchHit,
     VerifyInfo,
     VersionInfo,
-    kind_of,
 )
 from iterthink.services.chats import ChatsBridge
 from iterthink.services.dictation import DictationBridge as Voice
@@ -67,7 +67,6 @@ from iterthink.services.proposals import (
     Proposal,
     compete,
     conflicts,
-    create,
     diff_files,
     load_all,
     reason_text,
@@ -268,27 +267,7 @@ class RealBridge(
         reason: str,
         baseline: str | None = None,
     ) -> ProposalInfo:
-        root = self._root(project)
-        rels = {relative(path): text for path, text in changes.items()}
-        for rel in rels:
-            if kind_of(rel) not in {"markdown", "table", "text"}:
-                raise Invalid(f"{rel} is not a text file")
-            inside(root, rel)
-        try:
-            made = create(
-                root,
-                Snapshots(root),
-                machine=self.machine,
-                project=project,
-                changes=rels,
-                actor=actor,
-                reason=reason,
-                baseline=baseline,
-                now=self._now,
-            )
-        except SnapshotError as exc:
-            raise NotFound(str(exc)) from exc
-        return _info_of(root, made)
+        return guarded_propose(self, project, changes, actor, reason, baseline)
 
     def proposals(self, project: str, status: ProposalStatus | None = "open") -> list[ProposalInfo]:
         root = self._root(project)
@@ -318,18 +297,15 @@ class RealBridge(
         files.update(_app_bytes(drafted))
         version = snaps.snapshot(files, f"accepted {note}".strip(), actor)
         made = shown(version if version is not None else snaps.head())
-        self._event(
-            root,
-            project,
-            actor,
-            "verdict",
-            {
-                "proposal": proposal_id,
-                "reason": store_blob(root, note),
-                "verdict": "accepted",
-                "version": made.id,
-            },
-        )
+        payload: dict[str, object] = {
+            "proposal": proposal_id,
+            "reason": store_blob(root, note),
+            "verdict": "accepted",
+            "version": made.id,
+        }
+        if actor.startswith("rule:"):
+            payload["auto"] = True
+        self._event(root, project, actor, "verdict", payload)
         self._compete(root, project, proposal_id, found.paths, actor)
         return made
 
