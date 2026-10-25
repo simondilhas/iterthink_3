@@ -1,0 +1,43 @@
+{% extends "base.html" %}
+{% block title %}Deliver{% endblock %}
+{% block head %}{% include "home/head.html" %}{% endblock %}
+{% block line %}{% include "project/line.html" %}{% endblock %}
+{% block main %}
+<h1>Deliver</h1>
+<form method="post" action="/p/{{ project_id }}/exports">
+  <label>File
+    <select name="path" required>
+      {% for item in files %}
+      <option value="{{ item.path }}">{{ item.path }}</option>
+      {% endfor %}
+    </select>
+  </label>
+  <label>Format
+    <select name="format">
+      <option value="docx">Word</option>
+      <option value="pdf">PDF</option>
+      <option value="xlsx">Excel</option>
+    </select>
+  </label>
+  <label>Template <input name="template" type="text"></label>
+  <button type="submit">Deliver</button>
+</form>
+{% if exported %}
+<p class="exports-note">Delivered {{ exported }} from version {{ version }}</p>
+{% endif %}
+<h2>Returned file</h2>
+<form method="post" action="/p/{{ project_id }}/exports/returned" enctype="multipart/form-data">
+  <label>Source
+    <select name="source" required>
+      {% for item in files %}
+      <option value="{{ item.path }}">{{ item.path }}</option>
+      {% endfor %}
+    </select>
+  </label>
+  <label>File <input name="returned" type="file" required></label>
+  <button type="submit">Propose changes</button>
+</form>
+{% if proposal %}
+<p>Proposal {{ proposal }}</p>
+{% endif %}
+{% endblock %}

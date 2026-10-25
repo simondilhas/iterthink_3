@@ -1,6 +1,6 @@
 ```
 id: C12
-status: ready
+status: done
 depends_on: [B1]
 ```
 # C12 · Work open, deliver closed
@@ -31,8 +31,8 @@ article §7.
 - Received files are kept as received (normal source files).
 
 ## Acceptance
-- [ ] `test_docx_from_markdown_with_client_template`
-- [ ] `test_xlsx_from_csv_keeps_umlauts`
-- [ ] `test_exports_are_not_versioned_and_linked_to_source_version`
-- [ ] `test_returned_docx_becomes_proposal_to_markdown`
-- [ ] `test_returned_xlsx_becomes_proposal_to_csv`
+- [x] `test_docx_from_markdown_with_client_template`
+- [x] `test_xlsx_from_csv_keeps_umlauts`
+- [x] `test_exports_are_not_versioned_and_linked_to_source_version`
+- [x] `test_returned_docx_becomes_proposal_to_markdown`
+- [x] `test_returned_xlsx_becomes_proposal_to_csv`
