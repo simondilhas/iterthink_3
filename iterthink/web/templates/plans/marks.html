@@ -1,0 +1,6 @@
+{% for box in boxes %}
+<span class="plan-box {{ box.kind }}" style="{{ box.style }}" title="{{ box.before }} {{ box.after }}">{{ box.after or box.before }}</span>
+{% endfor %}
+{% for note in notes %}
+<span class="plan-note" data-read-only="note" style="{{ note.style }}">{{ note.text }}</span>
+{% endfor %}

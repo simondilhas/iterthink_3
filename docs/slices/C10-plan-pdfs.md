@@ -1,6 +1,6 @@
 ```
 id: C10
-status: ready
+status: done
 depends_on: [B1]
 ```
 # C10 · Plan PDFs
@@ -24,7 +24,7 @@ depends_on: [B1]
 - Existing 1.x annotations shown read-only if present.
 
 ## Acceptance
-- [ ] `test_page_image_cached_per_version`
-- [ ] `test_overlays_positioned_from_bbox`
-- [ ] `test_side_by_side_and_swipe_views_render`
-- [ ] `test_multi_page_navigation`
+- [x] `test_page_image_cached_per_version`
+- [x] `test_overlays_positioned_from_bbox`
+- [x] `test_side_by_side_and_swipe_views_render`
+- [x] `test_multi_page_navigation`
