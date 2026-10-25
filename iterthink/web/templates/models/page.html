@@ -1,0 +1,34 @@
+{% extends "base.html" %}
+{% block title %}Model{% endblock %}
+{% block line %}
+{% include "project/line.html" %}
+{% include "project/nav.html" %}
+{% endblock %}
+{% block main %}
+<h1>Model</h1>
+<ul class="model-counts">
+  {% for name, count in counts.items() %}
+  <li class="cat-{{ name }}">{{ name }} {{ count }}</li>
+  {% endfor %}
+</ul>
+<form method="get" action="/p/{{ project_id }}/models/compare" hx-get="/p/{{ project_id }}/models/compare" hx-target="#model-table" hx-swap="innerHTML">
+  <input type="hidden" name="path" value="{{ path }}">
+  <input type="hidden" name="from" value="{{ base }}">
+  <input type="hidden" name="to" value="{{ target }}">
+  <label>Category <input name="category" value="{{ category }}"></label>
+  <label>Class <input name="class" value="{{ ifc_class }}"></label>
+  <label>Storey <input name="storey" value="{{ storey }}"></label>
+  <label>Property set <input name="pset" value="{{ pset }}"></label>
+  <label>Sort
+    <select name="sort">
+      {% for key in ("guid", "class", "storey", "path") %}
+      <option value="{{ key }}"{% if sort == key %} selected{% endif %}>{{ key }}</option>
+      {% endfor %}
+    </select>
+  </label>
+  <button type="submit">Filter</button>
+</form>
+<div id="model-table">
+{% include "models/table.html" %}
+</div>
+{% endblock %}

@@ -4,8 +4,9 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 from pathlib import Path
-from typing import Protocol, cast
+from typing import Any, Protocol, cast
 
+from iterthink.compare.engine_ifc import ifc_properties, query_ifc
 from iterthink.persistence.snapshots import Snapshots
 from iterthink.services.app_validate import ALLOWED
 from iterthink.services.bridge import (
@@ -18,7 +19,7 @@ from iterthink.services.bridge import (
     VersionInfo,
 )
 from iterthink.services.event_log import utc_now
-from iterthink.services.projects import tracked_files
+from iterthink.services.projects import inside, relative, tracked_files
 from iterthink.services.proposals import create as create_proposal
 
 _WRITES = "only propose can write"
@@ -58,6 +59,10 @@ def perform(host: _Host, project: str, name: str, args: object, actor: str, *, d
         return _compare(host, project, args)
     if name == "propose":
         return _propose(host, project, args, actor, dry)
+    if name == "queryIfc":
+        return _query_ifc(host, project, args)
+    if name == "ifcProperties":
+        return _ifc_properties(host, project, args)
     return {"error": _WRITES}
 
 
@@ -146,6 +151,37 @@ def stage_revision(
         now=utc_now,
     )
     return made.id
+
+
+def _model_bytes(host: _Host, project: str, path: str) -> bytes:
+    if not path:
+        return b""
+    try:
+        folder = cast(Any, host)._root(project)
+        full = inside(folder, relative(path))
+    except (AttributeError, BridgeError):
+        return b""
+    if not full.is_file():
+        return b""
+    return full.read_bytes()
+
+
+def _query_ifc(host: _Host, project: str, args: object) -> object:
+    body = _args(args)
+    data = _model_bytes(host, project, _text(body, "path"))
+    if not data:
+        return {"error": "queryIfc needs a model"}
+    raw = body.get("psets", [])
+    psets = [item for item in raw if isinstance(item, str)] if isinstance(raw, list) else []
+    return query_ifc(data, _text(body, "ifc_class"), psets)
+
+
+def _ifc_properties(host: _Host, project: str, args: object) -> object:
+    body = _args(args)
+    data = _model_bytes(host, project, _text(body, "path"))
+    if not data:
+        return {"error": "ifcProperties needs a model"}
+    return ifc_properties(data, _text(body, "guid"))
 
 
 def _propose(host: _Host, project: str, args: object, actor: str, dry: bool) -> dict[str, object]:

@@ -144,6 +144,13 @@ def diff_view(diff: FileDiff) -> dict[str, object]:
             "columns": diff.columns,
             "rows": _table_rows(diff),
         }
+    if diff.kind == "model":
+        rows = diff.details.get("rows", [])
+        return {
+            "kind": "model",
+            "summary": diff.summary,
+            "rows": rows if isinstance(rows, list) else [],
+        }
     return {"kind": "other", "summary": diff.summary}
 
 

@@ -1,0 +1,21 @@
+<main>
+  <h1>Fire rating audit</h1>
+  <button id="run" type="button">Run</button>
+  <pre id="out"></pre>
+  <script>
+    document.getElementById("run").addEventListener("click", function () {
+      bridge.queryIfc({
+        path: "model.ifc",
+        ifc_class: "IfcDoor",
+        psets: ["Pset_DoorCommon"]
+      }).then(function (rows) {
+        return bridge.search({ query: "EI 90" }).then(function (hits) {
+          document.getElementById("out").textContent = JSON.stringify({
+            rows: rows,
+            hits: hits
+          });
+        });
+      });
+    });
+  </script>
+</main>

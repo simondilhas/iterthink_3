@@ -1,6 +1,6 @@
 ```
 id: C9
-status: ready
+status: done
 depends_on: [B1]
 ```
 # C9 · IFC engine and change table
@@ -96,22 +96,22 @@ def ifc_properties(data: bytes, guid: str) -> dict[str, dict[str, str]]: ...    
   missing locally, and fail in CI.
 
 ## Acceptance
-- [ ] `test_added_removed_changed_by_globalid`: matching by GlobalId, not by
+- [x] `test_added_removed_changed_by_globalid`: matching by GlobalId, not by
       name or order.
-- [ ] `test_each_element_gets_exactly_one_category`: all six categories from
+- [x] `test_each_element_gets_exactly_one_category`: all six categories from
       one fixture pair, using the precedence above.
-- [ ] `test_moved_vs_reshaped`: a pure translation is `moved`, an extrusion
+- [x] `test_moved_vs_reshaped`: a pure translation is `moved`, an extrusion
       depth change is `reshaped`, and both together are `reshaped`.
-- [ ] `test_within_tolerance_is_unchanged`: a 0.5 mm shift is `unchanged`.
-- [ ] `test_property_change_has_pset_path`: `Pset_WallCommon.FireRating`
+- [x] `test_within_tolerance_is_unchanged`: a 0.5 mm shift is `unchanged`.
+- [x] `test_property_change_has_pset_path`: `Pset_WallCommon.FireRating`
       old → new as a `PropertyChange`.
-- [ ] `test_type_and_attribute_paths`: `attributes.Name` and
+- [x] `test_type_and_attribute_paths`: `attributes.Name` and
       `type.<Pset>.<Property>` paths.
-- [ ] `test_geometry_rows_map_to_geometry_change`: added, removed, moved and
+- [x] `test_geometry_rows_map_to_geometry_change`: added, removed, moved and
       reshaped become `GeometryChange` rows with the paths above.
-- [ ] `test_volumes_from_mesh`: a 1 × 1 × 1 m box gives 1.000 m³.
-- [ ] `test_metadata_table_one_row_per_property`: the fragment renders rows
+- [x] `test_volumes_from_mesh`: a 1 × 1 × 1 m box gives 1.000 m³.
+- [x] `test_metadata_table_one_row_per_property`: the fragment renders rows
       with GlobalId, class, path, old and new, and filters by category and pset.
-- [ ] `test_review_uses_model_partial_for_ifc_proposal`
-- [ ] `test_query_ifc_block_returns_doors_with_pset`
-- [ ] `test_example_apps_run` — door schedule, fire rating audit
+- [x] `test_review_uses_model_partial_for_ifc_proposal`
+- [x] `test_query_ifc_block_returns_doors_with_pset`
+- [x] `test_example_apps_run` — door schedule, fire rating audit

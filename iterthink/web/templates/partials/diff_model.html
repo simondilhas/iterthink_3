@@ -1,0 +1,17 @@
+<p>{{ view.summary }}</p>
+<table class="model-table" data-read-only="model">
+  <tr>
+    <th>GlobalId</th><th>Class</th><th>Name</th><th>Storey</th><th>Path</th><th>Old</th><th>New</th>
+  </tr>
+  {% for row in view.rows %}
+  <tr data-category="{{ row.category }}">
+    <td>{{ row.guid }}</td>
+    <td>{{ row.class }}</td>
+    <td>{{ row.name }}</td>
+    <td>{{ row.storey }}</td>
+    <td>{{ row.path }}</td>
+    <td>{% if row.old %}<del>{{ row.old }}</del>{% endif %}</td>
+    <td>{% if row.new %}<ins>{{ row.new }}</ins>{% endif %}</td>
+  </tr>
+  {% endfor %}
+</table>
