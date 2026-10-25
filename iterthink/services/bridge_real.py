@@ -36,6 +36,7 @@ from iterthink.services.disk_scan import notice, scan, start_watching, subscribe
 from iterthink.services.documents import DocumentsBridge
 from iterthink.services.egress import apply_setting
 from iterthink.services.egress import shield_text as shield_outbound
+from iterthink.services.erase import EraseBridge
 from iterthink.services.event_log import LogCorrupt, append, checkpoint, read_all, store_blob
 from iterthink.services.event_log import utc_now as event_now
 from iterthink.services.handover import hand_over
@@ -106,6 +107,7 @@ class RealBridge(
     Apps,
     TasksBridge,
     SharedBridge,
+    EraseBridge,
     Later,
 ):
     def __init__(
