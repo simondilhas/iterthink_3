@@ -17,7 +17,7 @@ from iterthink.web.app import actor_of, bridge_of
 from iterthink.web.routes.home import render
 
 router = APIRouter()
-_MD = MarkdownIt()
+_MD = MarkdownIt("commonmark", {"html": False})  # raw HTML in a file stays text
 _bridge = Depends(bridge_of)
 _actor = Depends(actor_of)
 _text = Form()
