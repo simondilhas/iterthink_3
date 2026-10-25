@@ -7,7 +7,18 @@ import json
 import re
 from pathlib import Path
 
-ALLOWED = frozenset({"listFiles", "readFile", "history", "search", "compare", "propose"})
+ALLOWED = frozenset(
+    {
+        "listFiles",
+        "readFile",
+        "history",
+        "search",
+        "compare",
+        "propose",
+        "queryIfc",
+        "ifcProperties",
+    }
+)
 LIMIT = 200_000
 _FACING = {
     "files": "listFiles",

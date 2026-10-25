@@ -1,0 +1,9 @@
+attempts: 0
+created_by: example
+hidden: false
+inputs: []
+model: local
+prompt_version: example
+purpose: compare fire ratings in the model with the specification
+status: draft
+title: Fire rating audit

@@ -2,7 +2,16 @@
 
 /** Inside the frame. Talks to the parent. Does not fetch. */
 
-const names = ["listFiles", "readFile", "history", "search", "compare", "propose"];
+const names = [
+  "listFiles",
+  "readFile",
+  "history",
+  "search",
+  "compare",
+  "propose",
+  "queryIfc",
+  "ifcProperties",
+];
 
 /**
  * @param {string} name
