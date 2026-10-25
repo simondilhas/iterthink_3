@@ -1,6 +1,6 @@
 ```
 id: C26
-status: ready
+status: done
 depends_on: [B1]
 ```
 # C26 · Images
@@ -28,7 +28,7 @@ kind (image); View components (`<image-compare>`).
 - `<image-compare>`: slider, plus region boxes drawn over the after image.
 
 ## Acceptance
-- [ ] `test_identical_images_are_none`
-- [ ] `test_changed_region_has_normalised_bbox`
-- [ ] `test_different_sizes_are_compared_scaled`
-- [ ] `test_review_uses_image_partial`
+- [x] `test_identical_images_are_none`
+- [x] `test_changed_region_has_normalised_bbox`
+- [x] `test_different_sizes_are_compared_scaled`
+- [x] `test_review_uses_image_partial`

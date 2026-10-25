@@ -1,0 +1,55 @@
+image-compare {
+  display: block;
+  max-width: 100%;
+}
+
+image-compare .image-stage {
+  position: relative;
+  container-type: inline-size;
+}
+
+image-compare .image-sizer {
+  display: block;
+  width: 100%;
+  height: auto;
+  visibility: hidden;
+}
+
+image-compare .image-before {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: fill;
+}
+
+image-compare .image-after {
+  position: absolute;
+  left: 0;
+  top: 0;
+  height: 100%;
+  width: 50%;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+image-compare .image-after img {
+  width: 100cqw;
+  max-width: none;
+  height: 100%;
+  object-fit: fill;
+}
+
+image-compare .image-box {
+  position: absolute;
+  box-sizing: border-box;
+  outline: 2px solid var(--accent);
+  pointer-events: none;
+}
+
+image-compare input[type="range"] {
+  display: block;
+  width: 100%;
+  margin-top: 0.5rem;
+}
