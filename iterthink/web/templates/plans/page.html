@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+{% block title %}Plan{% endblock %}
+{% block head %}
+{% include "home/head.html" %}
+<script type="module" src="/static/js/it-plan-view.js"></script>
+{% endblock %}
+{% block line %}{% include "project/line.html" %}{% endblock %}
+{% block main %}
+<section class="plan-page">
+  <nav class="plan-toolbar" aria-label="Plan">
+    {% for name, label in (("single", "Single"), ("side", "Side by side"), ("swipe", "Swipe")) %}
+    <a href="/p/{{ project_id }}/plans?path={{ screen.path | urlencode }}&amp;page={{ screen.page }}&amp;view={{ name }}"
+       {% if screen.view == name %}aria-current="true"{% endif %}>{{ label }}</a>
+    {% endfor %}
+    {% for number in screen.pages %}
+    <a href="/p/{{ project_id }}/plans?path={{ screen.path | urlencode }}&amp;page={{ number }}&amp;view={{ screen.view }}"
+       {% if number == screen.page %}aria-current="page"{% endif %}>{{ number }}</a>
+    {% endfor %}
+  </nav>
+  <p>{{ screen.summary }}</p>
+  {% if screen.view == "side" %}
+  <div class="plan-pair" data-view="side">
+    {% with url=screen.before_url, boxes=[], notes=[] %}{% include "plans/stage.html" %}{% endwith %}
+    {% with url=screen.after_url, boxes=screen.overlays, notes=screen.notes %}{% include "plans/stage.html" %}{% endwith %}
+  </div>
+  {% elif screen.view == "swipe" %}
+  <plan-viewer data-view="swipe">
+    <div class="plan-stage">
+      <img src="{{ screen.after_url }}" alt="Page {{ screen.page }}">
+      {% if screen.before_url %}
+      <img class="plan-before" src="{{ screen.before_url }}" alt="Earlier page {{ screen.page }}" style="clip-path: inset(0 50% 0 0)">
+      {% endif %}
+      {% set boxes = screen.overlays %}
+      {% set notes = screen.notes %}
+      {% include "plans/marks.html" %}
+    </div>
+    <input class="plan-swipe" type="range" min="0" max="100" value="50" aria-label="Swipe">
+  </plan-viewer>
+  {% else %}
+  <div data-view="single">
+    {% with url=screen.after_url, boxes=screen.overlays, notes=screen.notes %}{% include "plans/stage.html" %}{% endwith %}
+  </div>
+  {% endif %}
+</section>
+{% endblock %}
