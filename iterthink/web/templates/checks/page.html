@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+{% block title %}Checks{% endblock %}
+{% block head %}
+{% include "home/head.html" %}
+<script type="module" src="/static/js/check-symbols.js"></script>
+{% endblock %}
+{% block line %}
+{% include "project/line.html" %}
+{% include "project/nav.html" %}
+{% endblock %}
+{% block main %}
+<details id="checks-panel">
+  <summary>Checks</summary>
+  <form method="post" action="/p/{{ project_id }}/checks" hx-post="/p/{{ project_id }}/checks" hx-target="#check-results" hx-swap="innerHTML">
+    <label>File <input name="path" value="{{ path }}"></label>
+    <ul>
+      {% for item in checks %}
+      <li>{{ item.label }}</li>
+      {% endfor %}
+    </ul>
+    <label>Check
+      <select name="check">
+        <option value="all">All</option>
+        {% for item in checks %}
+        <option value="{{ item.id }}">{{ item.label }}</option>
+        {% endfor %}
+      </select>
+    </label>
+    <button type="submit">Run</button>
+  </form>
+  <check-symbols id="check-results"></check-symbols>
+</details>
+{% endblock %}
