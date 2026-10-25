@@ -1,0 +1,10 @@
+{% if proposal.decided_by and proposal.decided_by.startswith("rule:") %}
+<p>auto · rule {{ proposal.decided_by[5:] }}</p>
+{% if proposal.paths %}
+<form method="post" action="/p/{{ project_id }}/restore">
+  <input type="hidden" name="path" value="{{ proposal.paths[0] }}">
+  <input type="hidden" name="version" value="{{ proposal.baseline }}">
+  <button type="submit">Undo</button>
+</form>
+{% endif %}
+{% endif %}
