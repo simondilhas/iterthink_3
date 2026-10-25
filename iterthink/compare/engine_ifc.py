@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import json
 from dataclasses import dataclass
+from pathlib import Path
 from typing import Any, cast
 
 from iterthink.compare.engine_ifc_geom import (
@@ -51,7 +52,13 @@ class IfcEngine:
 
     kinds: tuple[FileKind, ...] = ("model",)
 
-    def diff(self, path: str, before: bytes | None, after: bytes | None) -> FileDiff:
+    def diff(
+        self,
+        path: str,
+        before: bytes | None,
+        after: bytes | None,
+        cache: Path | None = None,
+    ) -> FileDiff:
         old, new = _read(before), _read(after)
         elements, rows = _compare(old, new)
         counts = {name: 0 for name in _CATEGORIES}
@@ -59,11 +66,14 @@ class IfcEngine:
             counts[str(item["category"])] += 1
         changed = sum(counts[name] for name in _CATEGORIES if name != "unchanged")
         summary = "no changes" if changed == 0 else f"{changed} elements changed"
+        from iterthink.compare.ifc_glb import attach
+
+        glb = attach(before, after, elements, cache)
         return FileDiff(
             path,
             "model",
             summary,
-            details={"elements": elements, "counts": counts, "rows": rows},
+            details={"elements": elements, "counts": counts, "rows": rows, "glb": glb},
         )
 
 
