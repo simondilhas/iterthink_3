@@ -1,0 +1,60 @@
+name: Start Cursor agent on cursor_ready
+
+on:
+  issues:
+    types: [labeled]
+
+permissions:
+  issues: write
+
+jobs:
+  launch:
+    if: github.event.label.name == 'cursor_ready'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Launch Cursor cloud agent
+        id: launch
+        env:
+          CURSOR_API_KEY: ${{ secrets.CURSOR_API_KEY }}
+          ISSUE_NUMBER: ${{ github.event.issue.number }}
+          ISSUE_TITLE: ${{ github.event.issue.title }}
+          ISSUE_BODY: ${{ github.event.issue.body }}
+          ISSUE_URL: ${{ github.event.issue.html_url }}
+          REPO_URL: ${{ github.server_url }}/${{ github.repository }}
+          BASE_REF: ${{ github.event.repository.default_branch }}
+        run: |
+          if [ -z "$CURSOR_API_KEY" ]; then
+            echo "::error::CURSOR_API_KEY secret is not set"; exit 1
+          fi
+          PROMPT=$(printf 'Implement GitHub issue #%s: %s\n%s\n\nFollow AGENTS.md. Open the PR against %s and include "Closes #%s" in its description.\n\n---\n%s\n' \
+            "$ISSUE_NUMBER" "$ISSUE_TITLE" "$ISSUE_URL" "$BASE_REF" "$ISSUE_NUMBER" "$ISSUE_BODY")
+          jq -n --arg text "$PROMPT" --arg url "$REPO_URL" --arg ref "$BASE_REF" \
+                --arg name "Issue #$ISSUE_NUMBER: $ISSUE_TITLE" \
+            '{name: $name, prompt: {text: $text}, repos: [{url: $url, startingRef: $ref}], autoCreatePR: true}' > body.json
+          HTTP=$(curl -sS -o resp.json -w '%{http_code}' -u "$CURSOR_API_KEY:" \
+            -H 'Content-Type: application/json' --data @body.json \
+            https://api.cursor.com/v1/agents)
+          cat resp.json
+          if [ "${HTTP:0:1}" != "2" ]; then
+            echo "::error::Cursor API returned HTTP $HTTP"; exit 1
+          fi
+          echo "agent_id=$(jq -r '.id // .agent.id // empty' resp.json)" >> "$GITHUB_OUTPUT"
+          echo "agent_url=$(jq -r '.url // .target.url // .agent.url // empty' resp.json)" >> "$GITHUB_OUTPUT"
+
+      - name: Comment on issue
+        env:
+          GH_TOKEN: ${{ github.token }}
+          AGENT_ID: ${{ steps.launch.outputs.agent_id }}
+          AGENT_URL: ${{ steps.launch.outputs.agent_url }}
+        run: |
+          MSG="Cursor agent started${AGENT_ID:+ (\`$AGENT_ID\`)}. It will open a PR when done."
+          [ -n "$AGENT_URL" ] && MSG="$MSG $AGENT_URL"
+          gh issue comment ${{ github.event.issue.number }} -R ${{ github.repository }} --body "$MSG"
+
+      - name: Report failure on issue
+        if: failure()
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh issue comment ${{ github.event.issue.number }} -R ${{ github.repository }} \
+            --body "Could not start the Cursor agent. See ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
