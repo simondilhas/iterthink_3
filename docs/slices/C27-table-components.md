@@ -1,6 +1,6 @@
 ```
 id: C27
-status: ready
+status: done
 depends_on: [C6]
 ```
 # C27 · Table components
@@ -30,7 +30,7 @@ blocks (Table, Write).
   (C6) lists it.
 
 ## Acceptance
-- [ ] `test_components_registered_in_components_json`
-- [ ] `test_form_fields_submit_creates_proposal_not_write`
-- [ ] `test_simple_chart_renders_svg_from_csv`
-- [ ] `test_js_files_are_ts_checked`
+- [x] `test_components_registered_in_components_json`
+- [x] `test_form_fields_submit_creates_proposal_not_write`
+- [x] `test_simple_chart_renders_svg_from_csv`
+- [x] `test_js_files_are_ts_checked`
