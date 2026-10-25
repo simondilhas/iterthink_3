@@ -1,0 +1,12 @@
+<form method="post" action="/p/{{ project_id }}/apps">
+  <label for="ask">Ask for a tool</label>
+  <input id="ask" name="ask">
+  <button type="submit">Build</button>
+</form>
+{% if apps %}
+<ul>
+  {% for item in apps %}
+  <li><a href="/p/{{ project_id }}/apps/{{ item.id }}">{{ item.title }}</a></li>
+  {% endfor %}
+</ul>
+{% endif %}

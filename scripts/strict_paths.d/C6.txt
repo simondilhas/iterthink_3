@@ -1,0 +1,5 @@
+iterthink/services/adhoc_apps.py
+iterthink/services/app_calls.py
+iterthink/services/app_context.py
+iterthink/services/app_validate.py
+iterthink/web/routes/apps.py

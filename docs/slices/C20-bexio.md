@@ -1,9 +1,11 @@
 ```
 id: C20
-status: ready
+status: dropped
 depends_on: [C2, C6, C15]
 ```
 # C20 · bexio connector
+
+Dropped on 2026-10-25: connectors are not part of this version.
 
 **Goal:** accounting data from bexio is readable where the work happens
 (apps, search, the line), without moving into project files.

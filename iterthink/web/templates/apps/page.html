@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+{% block title %}{{ title | default('Apps') }}{% endblock %}
+{% block head %}
+{% include "home/head.html" %}
+<script type="module" src="/static/js/app-frame.js"></script>
+{% endblock %}
+{% block line %}
+{% include "project/line.html" %}
+{% include "project/nav.html" %}
+{% endblock %}
+{% block main %}
+{% if srcdoc %}
+{% include "apps/frame.html" %}
+{% else %}
+{% include "apps/list.html" %}
+{% endif %}
+{% endblock %}

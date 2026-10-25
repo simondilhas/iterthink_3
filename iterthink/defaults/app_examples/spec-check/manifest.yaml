@@ -1,0 +1,9 @@
+attempts: 0
+created_by: example
+hidden: false
+inputs: []
+model: local
+prompt_version: example
+purpose: compare a specification
+status: draft
+title: Spec check

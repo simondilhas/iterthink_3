@@ -1,0 +1,12 @@
+<main>
+  <h1>Clean this CSV</h1>
+  <button id="run" type="button">Clean</button>
+  <script>
+    document.getElementById("run").addEventListener("click", function () {
+      bridge.readFile({ path: "Türliste.csv" }).then(function (file) {
+        var text = String(file.text || "").trim();
+        bridge.propose({ changes: { "clean.csv": text + "\n" }, reason: "clean the table" });
+      });
+    });
+  </script>
+</main>
