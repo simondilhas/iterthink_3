@@ -1,4 +1,4 @@
-"""Eight MCP tools. They call the bridge and never decide a verdict."""
+"""MCP tools. They call the bridge and never decide a verdict."""
 
 from __future__ import annotations
 
@@ -109,7 +109,7 @@ def _actor(app: App, ctx: Context) -> str:
 
 
 def build(bridge: Bridge) -> App:
-    """Register the eight tools on a new server bound to `bridge`."""
+    """Register the bridge tools on a new server bound to `bridge`."""
     app = App(MCPServer("iterthink"))
 
     @app.mcp.tool(description="Projects opened on this machine.")
@@ -158,7 +158,44 @@ def build(bridge: Bridge) -> App:
         made = _run(lambda: bridge.propose(project, changes, actor, reason, baseline))
         return cast(dict[str, Any], made)
 
+    _task_tools(app, bridge)
     return app
+
+
+def _task(bridge: Bridge, name: str, *args: object) -> object:
+    found = getattr(bridge, name, None)
+    if not callable(found):
+        raise ToolError("tasks are not available")
+    return _run(lambda: found(*args))
+
+
+def _task_tools(app: App, bridge: Bridge) -> None:
+    """Task tools. A bridge without them still lists the tools and refuses the call."""
+
+    @app.mcp.tool(description="Tasks on the board.")
+    def list_tasks(project: str) -> list[dict[str, Any]]:
+        body = _task(bridge, "tasks", project)
+        return cast(list[dict[str, Any]], _release(bridge, project, body))
+
+    @app.mcp.tool(description="Claim a ready Claude task. Does not start a process.")
+    def claim_task(project: str, task_id: str, client: str) -> dict[str, Any]:
+        body = _task(bridge, "task_claim", project, task_id, f"agent:{client}", client)
+        return cast(dict[str, Any], _release(bridge, project, body))
+
+    @app.mcp.tool(description="Set the current step shown on the task card.")
+    def update_task(project: str, task_id: str, progress: str) -> dict[str, Any]:
+        body = _task(bridge, "task_update", project, task_id, progress, "agent:mcp")
+        return cast(dict[str, Any], _release(bridge, project, body))
+
+    @app.mcp.tool(description="Ask the user a question. The task moves to Needs input.")
+    def ask(project: str, task_id: str, question: str) -> dict[str, Any]:
+        body = _task(bridge, "task_ask", project, task_id, question, "agent:mcp")
+        return cast(dict[str, Any], _release(bridge, project, body))
+
+    @app.mcp.tool(description="Finish the task and move it to Review.")
+    def complete_task(project: str, task_id: str, summary: str) -> dict[str, Any]:
+        body = _task(bridge, "task_complete", project, task_id, summary, "agent:mcp")
+        return cast(dict[str, Any], _release(bridge, project, body))
 
 
 def open_configured(bridge: Bridge) -> None:

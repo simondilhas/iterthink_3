@@ -46,9 +46,12 @@ def _check_path(path: str) -> str:
 
 
 def _own_version(parts: list[str]) -> bool:
-    """Chat notes and app files are versions. Other iterthink data is not."""
+    """Chat notes, task files and app files are versions. Other iterthink data is not."""
     if parts[:2] == [".iterthink", "chats"] and len(parts) == 3:
         return parts[2].endswith(".md")
+    if parts[:2] == [".iterthink", "tasks"] and len(parts) == 3:
+        name = parts[2]
+        return name.endswith(".md") and not name.startswith(".")
     if parts[:2] != [".iterthink", "apps"] or len(parts) != 4:
         return False
     slug = parts[2]
