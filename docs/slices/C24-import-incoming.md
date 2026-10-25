@@ -1,6 +1,6 @@
 ```
 id: C24
-status: ready
+status: done
 depends_on: [B1]
 ```
 # C24 · Import incoming files
@@ -37,8 +37,8 @@ What stays → services/ (document_import, ocr_import, plan_text_extract).
   converted; they open in C10's viewer.
 
 ## Acceptance
-- [ ] `test_docx_kept_as_received_and_md_copy_linked`
-- [ ] `test_scanned_pdf_goes_through_ocr`
-- [ ] `test_xlsx_becomes_csv_working_copy`
-- [ ] `test_dropped_file_with_existing_name_opens_review`
-- [ ] `test_plan_pdf_is_never_converted`
+- [x] `test_docx_kept_as_received_and_md_copy_linked`
+- [x] `test_scanned_pdf_goes_through_ocr`
+- [x] `test_xlsx_becomes_csv_working_copy`
+- [x] `test_dropped_file_with_existing_name_opens_review`
+- [x] `test_plan_pdf_is_never_converted`

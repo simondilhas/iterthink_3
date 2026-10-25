@@ -42,6 +42,7 @@ from iterthink.services.handover import hand_over
 from iterthink.services.impact_review import ImpactBridge as Advice
 from iterthink.services.importer_1x import preview as preview_store
 from iterthink.services.importer_1x import run_import
+from iterthink.services.incoming import IncomingBridge
 from iterthink.services.indexer import schedule_index
 from iterthink.services.intent import IntentBridge
 from iterthink.services.plan_render import PlansBridge
@@ -106,6 +107,7 @@ class RealBridge(
     Apps,
     TasksBridge,
     SharedBridge,
+    IncomingBridge,
     Later,
 ):
     def __init__(
