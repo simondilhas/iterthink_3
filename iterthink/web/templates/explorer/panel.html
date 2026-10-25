@@ -49,4 +49,11 @@
   {% endif %}
 </section>
 {% endif %}
+{% if kept %}
+<ul class="kept-apps">
+  {% for item in kept %}
+  <li><a href="/p/{{ project_id }}/apps/{{ item.id }}">{{ item.title }}</a></li>
+  {% endfor %}
+</ul>
+{% endif %}
 {% include "files/explorer.html" %}

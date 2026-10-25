@@ -1,0 +1,12 @@
+{
+  "md-preview": {
+    "attributes": [],
+    "events": [],
+    "example": "<md-preview></md-preview>"
+  },
+  "md-editor": {
+    "attributes": [],
+    "events": ["input"],
+    "example": "<md-editor></md-editor>"
+  }
+}

@@ -1,0 +1,14 @@
+<app-frame data-call="/p/{{ project_id }}/apps/{{ slug }}/call">
+  <iframe sandbox="allow-scripts" srcdoc="{{ srcdoc }}"></iframe>
+</app-frame>
+<form method="post" action="/p/{{ project_id }}/apps/{{ slug }}/keep">
+  <button type="submit">Keep</button>
+</form>
+<form method="post" action="/p/{{ project_id }}/apps/{{ slug }}/discard">
+  <button type="submit">Discard</button>
+</form>
+<form id="app-revise" method="post" action="/p/{{ project_id }}/apps/{{ slug }}/revise">
+  <label for="app-ask">Change this app</label>
+  <textarea id="app-ask" name="ask"></textarea>
+  <button type="submit">Change</button>
+</form>

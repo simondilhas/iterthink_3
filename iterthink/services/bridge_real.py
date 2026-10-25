@@ -9,6 +9,7 @@ from pathlib import Path
 from typing import cast
 
 from iterthink.persistence.snapshots import SnapshotError, Snapshots
+from iterthink.services.adhoc_apps import AppsBridge as Apps
 from iterthink.services.audit import publish_break
 from iterthink.services.bridge import (
     BridgeError,
@@ -99,6 +100,7 @@ class RealBridge(
     DocumentsBridge,
     ChatsBridge,
     Advice,
+    Apps,
     Later,
 ):
     def __init__(
@@ -307,11 +309,14 @@ class RealBridge(
         if stale:
             self._event(root, project, actor, "conflict", {"paths": stale, "proposal": proposal_id})
             raise Conflict(f"{', '.join(stale)} changed since the proposal was made")
-        for rel, data in Snapshots(root).read_draft(found.draft).items():
+        drafted = Snapshots(root).read_draft(found.draft)
+        for rel, data in drafted.items():
             write_bytes(inside(root, rel), data)
         note = reason.strip() or reason_text(root, found.reason_ref)
         snaps = Snapshots(root)
-        version = snaps.snapshot(tracked_files(root), f"accepted {note}".strip(), actor)
+        files = tracked_files(root)
+        files.update(_app_bytes(drafted))
+        version = snaps.snapshot(files, f"accepted {note}".strip(), actor)
         made = shown(version if version is not None else snaps.head())
         self._event(
             root,
@@ -377,3 +382,14 @@ class RealBridge(
         self._root(project)
         pending = subscribe(project)
         return lambda: notice(pending.get())
+
+
+def _app_bytes(drafted: Mapping[str, bytes]) -> dict[str, bytes]:
+    """An accepted app stays in the version. Other iterthink data does not."""
+    kept: dict[str, bytes] = {}
+    for rel, data in drafted.items():
+        parts = rel.split("/")
+        own = len(parts) == 4 and parts[:2] == [".iterthink", "apps"]
+        if own and not parts[2].startswith("."):
+            kept[rel] = data
+    return kept
