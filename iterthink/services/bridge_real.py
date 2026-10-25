@@ -74,6 +74,7 @@ from iterthink.services.proposals import (
 )
 from iterthink.services.search import indexed_log, indexed_search
 from iterthink.services.settings import SettingsBridge
+from iterthink.services.tasks import TasksBridge, on_verdict
 from iterthink.services.verify_log import verify_all
 from iterthink.services.workspaces import WorkspacesBridge as Work
 
@@ -100,6 +101,7 @@ class RealBridge(
     ChatsBridge,
     Advice,
     Apps,
+    TasksBridge,
     Later,
 ):
     def __init__(
@@ -307,6 +309,7 @@ class RealBridge(
             payload["auto"] = True
         self._event(root, project, actor, "verdict", payload)
         self._compete(root, project, proposal_id, found.paths, actor)
+        on_verdict(self, project, proposal_id, "accepted", actor, reason)
         return made
 
     def _compete(
@@ -328,6 +331,7 @@ class RealBridge(
             "verdict",
             {"proposal": proposal_id, "reason": store_blob(root, reason), "verdict": "rejected"},
         )
+        on_verdict(self, project, proposal_id, "rejected", actor, reason)
 
     def log(self, project: str, limit: int = 200) -> list[LogEntry]:
         root = self._root(project)

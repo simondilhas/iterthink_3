@@ -24,6 +24,11 @@ _TOOLS = {
     "search",
     "diff",
     "propose",
+    "list_tasks",
+    "claim_task",
+    "update_task",
+    "ask",
+    "complete_task",
 }
 _EGRESS = (
     "This project keeps its content on this machine (egress: {value}). "

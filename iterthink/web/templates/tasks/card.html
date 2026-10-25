@@ -1,0 +1,40 @@
+<article class="task-card" data-task="{{ card.id }}" data-status="{{ card.status }}"{% if card.status == 'backlog' %} draggable="true"{% endif %}>
+  <h3>{{ card.title }}</h3>
+  <p class="task-progress" sse-connect="/p/{{ project_id }}/tasks/{{ card.id }}/events" sse-swap="progress">{{ card.progress }}</p>
+  {% if card.blocked %}<p class="task-blocked">{{ card.blocked }}</p>{% endif %}
+  {% if card.overlap %}<p class="task-overlap">Overlaps {{ card.overlap }}</p>{% endif %}
+  {% if card.question %}<p class="task-question">{{ card.question }}</p>{% endif %}
+  {% if card.url %}<p><a href="{{ card.url }}">Open agent</a></p>{% endif %}
+  {% if card.proposals %}
+  <ul class="task-proposals">
+    {% for pid in card.proposals %}
+    <li>{% if has_route(request, "proposal") %}<a href="/p/{{ project_id }}/proposals/{{ pid }}">{{ pid }}</a>{% else %}{{ pid }}{% endif %}</li>
+    {% endfor %}
+  </ul>
+  {% endif %}
+  {% if card.status == 'backlog' %}
+  <form id="ready-{{ card.id }}" method="post" action="/p/{{ project_id }}/tasks/{{ card.id }}/ready">
+    <button type="submit">Ready</button>
+  </form>
+  {% endif %}
+  {% if card.question %}
+  <form method="post" action="/p/{{ project_id }}/tasks/{{ card.id }}/answer">
+    <input name="text" aria-label="Answer" placeholder="Answer">
+    <button type="submit">Answer</button>
+  </form>
+  {% endif %}
+  {% if card.run_again %}
+  <form method="post" action="/p/{{ project_id }}/tasks/{{ card.id }}/again">
+    <button type="submit">Run again on the new version</button>
+  </form>
+  {% endif %}
+  {% if card.status == 'review' and not card.proposals %}
+  <form method="post" action="/p/{{ project_id }}/tasks/{{ card.id }}/accept">
+    <button type="submit">Accept</button>
+  </form>
+  <form method="post" action="/p/{{ project_id }}/tasks/{{ card.id }}/reject">
+    <input name="text" aria-label="Reason" placeholder="Reason">
+    <button type="submit">Reject</button>
+  </form>
+  {% endif %}
+</article>

@@ -1,0 +1,6 @@
+<section class="task-column" data-column="{{ column.id }}">
+  <h2>{{ column.label }}</h2>
+  {% for card in column.cards %}
+  {% include "tasks/card.html" %}
+  {% endfor %}
+</section>

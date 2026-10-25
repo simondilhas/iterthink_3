@@ -1,0 +1,19 @@
+spec-checker:
+  runner: local
+  model_tier: cloud
+  blocks: [read, import, compare, judge, find, model, table, write]
+  rules: default
+  max_parallel: 2
+cursor-coder:
+  runner: cursor
+  model_tier: cloud
+  cursor_model: ""
+  blocks: [read, import, compare, judge, find, model, table, write]
+  rules: default
+  max_parallel: 2
+claude-coder:
+  runner: claude
+  model_tier: cloud
+  blocks: [read, import, compare, judge, find, model, table, write]
+  rules: default
+  max_parallel: 2
