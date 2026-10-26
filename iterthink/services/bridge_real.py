@@ -39,6 +39,7 @@ from iterthink.services.egress import shield_text as shield_outbound
 from iterthink.services.erase import EraseBridge
 from iterthink.services.event_log import LogCorrupt, append, checkpoint, read_all, store_blob
 from iterthink.services.event_log import utc_now as event_now
+from iterthink.services.exports import DeliverBridge
 from iterthink.services.handover import hand_over
 from iterthink.services.impact_review import ImpactBridge as Advice
 from iterthink.services.importer_1x import preview as preview_store
@@ -108,6 +109,7 @@ class RealBridge(
     TasksBridge,
     SharedBridge,
     EraseBridge,
+    DeliverBridge,
     Later,
 ):
     def __init__(
