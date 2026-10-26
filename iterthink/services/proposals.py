@@ -7,6 +7,7 @@ from collections.abc import Callable, Iterator, Mapping
 from dataclasses import dataclass
 from datetime import datetime
 from pathlib import Path
+from typing import Literal
 
 from iterthink.compare.engines import diff as diff_bytes
 from iterthink.persistence.snapshots import SnapshotError, Snapshots
@@ -236,6 +237,29 @@ def diff_files(project_dir: Path, proposal_id: str) -> list[FileDiff]:
 
 class Later:
     """Bridge methods that belong to a later slice. They refuse until that slice."""
+
+    def decide_change(
+        self,
+        project: str,
+        proposal_id: str,
+        change_id: str,
+        verdict: Literal["accepted", "rejected"],
+        actor: str,
+        reason: str = "",
+        candidate: str | None = None,
+    ) -> ProposalInfo:
+        raise NotImplementedError("slice A7")
+
+    def edit_change(
+        self,
+        project: str,
+        proposal_id: str,
+        change_id: str,
+        text: str,
+        actor: str,
+        candidate: str | None = None,
+    ) -> ProposalInfo:
+        raise NotImplementedError("slice A7")
 
     def interpret(self, project: str, line: str) -> Intent:
         raise NotImplementedError("slice C3")

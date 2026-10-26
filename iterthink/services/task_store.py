@@ -25,16 +25,6 @@ _SPEC = (
     "rejected",
     "cancelled",
 )
-_CONTRACT: dict[str, TaskStatus] = {
-    "backlog": "todo",
-    "ready": "todo",
-    "running": "running",
-    "needs-input": "failed",
-    "review": "review",
-    "done": "done",
-    "rejected": "failed",
-    "cancelled": "failed",
-}
 _RUNNERS = {"local", "cursor", "claude"}
 _TIERS = {"local", "company", "cloud"}
 
@@ -97,8 +87,8 @@ def path_of(task_id: str) -> str:
 
 
 def info(task: Task) -> TaskInfo:
-    """Contract view. Spec words that the contract lacks map onto today's five."""
-    status = _CONTRACT.get(task.status, "todo")
+    """Contract view. The file and the contract use the same eight status words."""
+    status = cast(TaskStatus, task.status if task.status in _SPEC else "backlog")
     return TaskInfo(
         id=task.id,
         title=task.title,

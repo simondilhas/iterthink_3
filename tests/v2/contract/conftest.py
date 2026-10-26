@@ -1,7 +1,7 @@
 """Runs every contract test against each bridge implementation.
 
 - fake: always.
-- real: once `iterthink/services/bridge_real.py` exists (slice B1); needs jj.
+- real: once `iterthink/services/bridge_real.py` exists (slice B1).
 """
 
 from __future__ import annotations
@@ -34,10 +34,7 @@ IMPLEMENTATIONS = [
     pytest.param(
         "real",
         id="real",
-        marks=[
-            pytest.mark.jj,
-            pytest.mark.skipif(not HAS_REAL, reason="bridge_real not written yet (B1)"),
-        ],
+        marks=pytest.mark.skipif(not HAS_REAL, reason="bridge_real not written yet (B1)"),
     ),
 ]
 
@@ -53,8 +50,6 @@ class Ctx:
 @pytest.fixture(params=IMPLEMENTATIONS)
 def impl(request: pytest.FixtureRequest) -> str:
     kind: str = request.param
-    if kind == "real":
-        request.getfixturevalue("jj_bin")
     return kind
 
 

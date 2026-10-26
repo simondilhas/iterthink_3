@@ -68,7 +68,7 @@ def test_claude_profile_is_claimed_over_mcp_and_not_launched(
     made = bridge.task_create(project, "Check doors", "Compare.", "user:ada")
     bridge.task_configure(project, made.id, "user:ada", agent="claude-coder")
     ready = bridge.task_ready(project, made.id, "user:ada")
-    assert ready.status == "todo"
+    assert ready.status == "ready"
     assert task_meta(project_dir, made.id)["status"] == "ready"
     assert task_meta(project_dir, made.id)["runner"] == "claude"
     assert holder(project_dir, path_of(made.id)) is None

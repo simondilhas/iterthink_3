@@ -116,7 +116,7 @@ class ImageEngine:
     def diff(self, path: str, before: bytes | None, after: bytes | None) -> FileDiff:
         if before is None or after is None:
             word = "image added" if before is None else "image removed"
-            return FileDiff(path, "binary", word, details=_details(path, [], before, after))
+            return FileDiff(path, "image", word, details=_details(path, [], before, after))
         try:
             regions = _regions(before, after)
         except (OSError, UnidentifiedImageError, ValueError):
@@ -124,4 +124,4 @@ class ImageEngine:
         if not regions:
             return FileDiff(path, "none", "no changes", details=_details(path, [], before, after))
         summary = _summary(len(regions))
-        return FileDiff(path, "binary", summary, details=_details(path, regions, before, after))
+        return FileDiff(path, "image", summary, details=_details(path, regions, before, after))

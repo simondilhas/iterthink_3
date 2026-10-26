@@ -66,6 +66,20 @@ def test_open_folder_finds_existing_project(
     assert [f.project_id for f in folders if f.name == project_dir.name] == [pid]
 
 
+def test_relative_path_makes_a_new_folder_in_the_default_workspace(
+    make_bridge: Callable[[], Bridge], tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    from iterthink import config
+
+    workspace = tmp_path / "Dokumente"
+    monkeypatch.setattr(config, "DOCUMENTS", workspace)
+    (workspace / "Neubau").mkdir(parents=True)
+    info = make_bridge().make_project(Path("Neubau"))
+    assert Path(info.path) == (workspace / "Neubau 2").resolve()
+    assert (workspace / "Neubau 2" / ".iterthink/settings/project.yaml").is_file()
+    assert list((workspace / "Neubau").iterdir()) == []
+
+
 def test_default_egress_is_shielded_and_can_be_changed(ctx: Ctx) -> None:
     assert ctx.bridge.projects()[0].egress == "shielded"
     info = ctx.bridge.set_egress(ctx.project, "none", ctx.actor)
@@ -364,6 +378,20 @@ def test_search_is_keyword_and_case_insensitive(ctx: Ctx) -> None:
 
 def test_search_matches_file_names(ctx: Ctx) -> None:
     assert any(h.path == CSV for h in ctx.bridge.search(ctx.project, "türliste"))
+
+
+def test_search_kind_keeps_hits_in_files_of_that_kind(ctx: Ctx) -> None:
+    hits = ctx.bridge.search(ctx.project, "ei30", kind="table")
+    assert hits
+    assert {kind_of(h.path) for h in hits} == {"table"}
+
+
+def test_search_in_history_finds_text_of_earlier_versions(ctx: Ctx) -> None:
+    ctx.bridge.save(ctx.project, MD, "Altbau Kellerfenster\n", ctx.actor)
+    ctx.bridge.save(ctx.project, MD, "Neubau\n", ctx.actor)
+    assert ctx.bridge.search(ctx.project, "kellerfenster") == []
+    hits = ctx.bridge.search(ctx.project, "kellerfenster", in_history=True)
+    assert {h.path for h in hits} == {MD}
 
 
 def test_returned_text_has_no_vcs_vocabulary(ctx: Ctx) -> None:

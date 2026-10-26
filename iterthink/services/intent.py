@@ -133,7 +133,7 @@ def rules(host: _Host | None, project: str, line: str) -> Classified | None:
         title = document.group("title") or "Untitled"
         return _titled("document", title, "write the file")
     if _REVIEW.match(text):
-        return _titled("search", text, "review", review=True)
+        return _titled("review", text, "review", review=True)
     if text.endswith("?"):
         return _titled("chat", text, "answer")
     if _APP.search(text):
@@ -190,7 +190,7 @@ def _log(
     payload: dict[str, object] = {
         "model": "rule" if found.via == "rule" else "model",
         "prompt": PROMPT_ID,
-        "mode": "review" if found.review else found.intent.mode,
+        "mode": found.intent.mode,
         "confidence": f"{found.confidence:.2f}",
         "line": store_blob(root, line),
         "source": _input_source(root),
@@ -233,7 +233,7 @@ def _chat(host: _Host, project: str, line: str) -> ChatInfo:
 
 
 def _query(found: Classified, line: str) -> str:
-    label = "review" if found.review else found.intent.mode
+    label = found.intent.mode
     parts = [
         f"opened={quote(label)}",
         f"q={quote(line)}",

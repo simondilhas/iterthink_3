@@ -45,8 +45,8 @@ def _events(project: Path) -> str:
         ("find the EI30 doors", "search", False),
         ("where is the escape route", "search", False),
         ("which document mentions EI30", "search", False),
-        ("compare Pflichtenheft.md and Türliste.csv", "search", True),
-        ("vergleiche Pflichtenheft.md und Türliste.csv", "search", True),
+        ("compare Pflichtenheft.md and Türliste.csv", "review", True),
+        ("vergleiche Pflichtenheft.md und Türliste.csv", "review", True),
     ],
 )
 def test_rule_based_modes(

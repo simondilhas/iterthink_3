@@ -8,10 +8,20 @@
       "before": "Die Türen sind EI30.",
       "after": "Die Türen sind EI90.",
       "segments": [
-        {"op": "equal", "text": "Die Türen sind"},
-        {"op": "delete", "text": "EI30."},
-        {"op": "insert", "text": "EI90."}
-      ]
+        {
+          "op": "equal",
+          "text": "Die Türen sind"
+        },
+        {
+          "op": "delete",
+          "text": "EI30."
+        },
+        {
+          "op": "insert",
+          "text": "EI90."
+        }
+      ],
+      "id": ""
     }
   ],
   "added_rows": [],

@@ -19,6 +19,7 @@ from iterthink.services.bridge import (
     FileContent,
     FileDiff,
     FileEntry,
+    FileKind,
     HandoverMode,
     Invalid,
     LogEntry,
@@ -77,7 +78,7 @@ from iterthink.services.proposals import (
     reason_text,
     require,
 )
-from iterthink.services.search import indexed_log, indexed_search
+from iterthink.services.search import indexed_log, indexed_search, with_filters
 from iterthink.services.settings import SettingsBridge
 from iterthink.services.tasks import TasksBridge, on_verdict
 from iterthink.services.verify_log import verify_all
@@ -366,9 +367,17 @@ class RealBridge(
         error = None if result.ok else f"line {result.error_line}: {result.reason}"
         return VerifyInfo(ok=result.ok, lines=result.lines, error=error)
 
-    def search(self, project: str, query: str, limit: int = 50) -> list[SearchHit]:
+    def search(
+        self,
+        project: str,
+        query: str,
+        limit: int = 50,
+        kind: FileKind | None = None,
+        in_history: bool = False,
+    ) -> list[SearchHit]:
         root = self._root(project)
-        return indexed_search(self.state_dir, root, project, query, limit)
+        text = with_filters(query, kind, in_history)
+        return indexed_search(self.state_dir, root, project, text, limit)
 
     def disk_pull(self, project: str) -> Callable[[], str]:
         self._root(project)

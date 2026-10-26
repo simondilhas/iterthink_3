@@ -310,6 +310,16 @@ def hybrid(index: Index, project: str, query: str, limit: int) -> list[SearchHit
     return [best[item] for item in ordered[:limit]]
 
 
+def with_filters(query: str, kind: str | None, in_history: bool) -> str:
+    """The bridge's `kind` and `in_history` arguments as the query words the parser reads."""
+    words = [query]
+    if kind:
+        words.append(f"kind:{kind}")
+    if in_history:
+        words.append("in:history")
+    return " ".join(words)
+
+
 def indexed_search(
     state_dir: Path, root: Path, project: str, query: str, limit: int
 ) -> list[SearchHit]:

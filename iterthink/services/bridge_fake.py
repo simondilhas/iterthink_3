@@ -20,6 +20,7 @@ from collections.abc import Callable, Iterator, Mapping
 from dataclasses import dataclass, replace
 from datetime import UTC, datetime
 from pathlib import Path, PurePosixPath
+from typing import Literal
 
 import yaml
 
@@ -35,6 +36,7 @@ from iterthink.services.bridge import (
     FileContent,
     FileDiff,
     FileEntry,
+    FileKind,
     FolderInfo,
     Forbidden,
     HandoverMode,
@@ -226,7 +228,8 @@ class FakeBridge:
         return result
 
     def make_project(self, path: Path) -> ProjectInfo:
-        path = path.expanduser().resolve()
+        path = path.expanduser()
+        path = (path if path.is_absolute() else _new_folder(path.as_posix())).resolve()
         if not path.is_dir():
             raise NotFound(f"no folder at {path}")
         if not self._read_settings(path).get("id"):
@@ -482,83 +485,159 @@ class FakeBridge:
             prev = digest
         return VerifyInfo(ok=True, lines=len(entries), error=None)
 
-    def search(self, project: str, query: str, limit: int = 50) -> list[SearchHit]:
+    def search(
+        self,
+        project: str,
+        query: str,
+        limit: int = 50,
+        kind: FileKind | None = None,
+        in_history: bool = False,
+    ) -> list[SearchHit]:
         needle = query.strip().casefold()
         if not needle:
             return []
+        p = self._project(project)
+        snaps = [self._scan(p.root)]
+        if in_history:
+            snaps += [snap for _, snap in reversed(p.versions)]
         hits: list[SearchHit] = []
-        for rel, data in self._scan(self._project(project).root).items():
-            if needle in rel.casefold():
-                hits.append(SearchHit(path=rel, line=0, snippet=rel))
-            if kind_of(rel) not in TEXT_KINDS:
-                continue
-            try:
-                lines = data.decode("utf-8").splitlines()
-            except UnicodeDecodeError:
-                continue
-            for n, line in enumerate(lines, 1):
-                if needle in line.casefold():
-                    hits.append(SearchHit(path=rel, line=n, snippet=line.strip()[:200]))
-        return hits[:limit]
+        for snap in snaps:
+            for rel, data in snap.items():
+                if kind is None or kind_of(rel) == kind:
+                    hits.extend(_hits_in(rel, data, needle))
+        return list(dict.fromkeys(hits))[:limit]
 
     # --- later slices ----------------------------------------------------
 
+    def decide_change(
+        self,
+        project: str,
+        proposal_id: str,
+        change_id: str,
+        verdict: Literal["accepted", "rejected"],
+        actor: str,
+        reason: str = "",
+        candidate: str | None = None,
+    ) -> ProposalInfo:
+        raise NotImplementedError("slice A7")
+
+    def edit_change(
+        self,
+        project: str,
+        proposal_id: str,
+        change_id: str,
+        text: str,
+        actor: str,
+        candidate: str | None = None,
+    ) -> ProposalInfo:
+        raise NotImplementedError("slice A7")
+
     def interpret(self, project: str, line: str) -> Intent:
-        raise NotImplementedError("slice C2")
+        raise NotImplementedError("slice C3")
 
     def chat_start(self, project: str, text: str, actor: str) -> ChatInfo:
-        raise NotImplementedError("slice C3")
+        raise NotImplementedError("slice C5")
 
     def chat_send(self, project: str, chat_id: str, text: str, actor: str) -> Iterator[str]:
-        raise NotImplementedError("slice C3")
+        raise NotImplementedError("slice C5")
 
     def chat_messages(self, project: str, chat_id: str) -> list[ChatMessage]:
-        raise NotImplementedError("slice C3")
+        raise NotImplementedError("slice C5")
 
     def chats(self, project: str) -> list[ChatInfo]:
-        raise NotImplementedError("slice C3")
+        raise NotImplementedError("slice C5")
 
     def app_build(self, project: str, request: str, actor: str) -> AppInfo:
-        raise NotImplementedError("slice C5")
+        raise NotImplementedError("slice C6")
 
     def app_run(self, project: str, app_id: str) -> AppInfo:
-        raise NotImplementedError("slice C5")
+        raise NotImplementedError("slice C6")
 
     def app_keep(self, project: str, app_id: str, actor: str) -> AppInfo:
-        raise NotImplementedError("slice C5")
+        raise NotImplementedError("slice C6")
 
     def app_discard(self, project: str, app_id: str, actor: str) -> AppInfo:
-        raise NotImplementedError("slice C5")
+        raise NotImplementedError("slice C6")
 
     def apps(self, project: str) -> list[AppInfo]:
-        raise NotImplementedError("slice C5")
+        raise NotImplementedError("slice C6")
 
     def task_create(
         self, project: str, title: str, body: str, actor: str, depends_on: tuple[str, ...] = ()
     ) -> TaskInfo:
-        raise NotImplementedError("slice C6")
+        raise NotImplementedError("slice C8")
 
     def task_start(self, project: str, task_id: str, actor: str) -> TaskInfo:
-        raise NotImplementedError("slice C6")
+        raise NotImplementedError("slice C8")
 
     def tasks(self, project: str) -> list[TaskInfo]:
-        raise NotImplementedError("slice C6")
+        raise NotImplementedError("slice C8")
+
+    def task_claim(self, project: str, task_id: str, actor: str, client: str) -> TaskInfo:
+        raise NotImplementedError("slice C8")
+
+    def task_update(self, project: str, task_id: str, progress: str, actor: str) -> TaskInfo:
+        raise NotImplementedError("slice C8")
+
+    def task_ask(self, project: str, task_id: str, question: str, actor: str) -> TaskInfo:
+        raise NotImplementedError("slice C8")
+
+    def task_answer(self, project: str, task_id: str, text: str, actor: str) -> TaskInfo:
+        raise NotImplementedError("slice C8")
+
+    def task_complete(self, project: str, task_id: str, summary: str, actor: str) -> TaskInfo:
+        raise NotImplementedError("slice C8")
+
+    def task_cancel(self, project: str, task_id: str, actor: str) -> TaskInfo:
+        raise NotImplementedError("slice C8")
 
     def export(
         self, project: str, path: str, format: str, template: str | None = None
     ) -> ExportInfo:
-        raise NotImplementedError("slice C10")
+        raise NotImplementedError("slice C12")
 
     def import_returned(
         self, project: str, returned: Path, source: str, actor: str
     ) -> ProposalInfo:
-        raise NotImplementedError("slice C10")
+        raise NotImplementedError("slice C12")
 
     def handover(self, project: str, mode: HandoverMode, target: Path) -> Path:
-        raise NotImplementedError("slice C11")
+        raise NotImplementedError("slice C13")
 
     def settings(self, project: str) -> list[SettingInfo]:
-        raise NotImplementedError("slice C13")
+        raise NotImplementedError("slice C15")
+
+
+def _hits_in(rel: str, data: bytes, needle: str) -> list[SearchHit]:
+    hits: list[SearchHit] = []
+    if needle in rel.casefold():
+        hits.append(SearchHit(path=rel, line=0, snippet=rel))
+    if kind_of(rel) not in TEXT_KINDS:
+        return hits
+    try:
+        lines = data.decode("utf-8").splitlines()
+    except UnicodeDecodeError:
+        return hits
+    for n, line in enumerate(lines, 1):
+        if needle in line.casefold():
+            hits.append(SearchHit(path=rel, line=n, snippet=line.strip()[:200]))
+    return hits
+
+
+def _new_folder(name: str) -> Path:
+    """A new folder in the default workspace; an existing name gets a number."""
+    from iterthink import config
+
+    root = config.DOCUMENTS.expanduser().resolve()
+    root.mkdir(parents=True, exist_ok=True)
+    stem = PurePosixPath(name).name.strip() or "Project"
+    chosen = root / stem
+    number = 2
+    while chosen.exists():
+        chosen = root / f"{stem} {number}"
+        number += 1
+    chosen.mkdir()
+    return chosen
 
 
 # --- diffs (simple engines; the real ones come from compare/, slice A4) ------

@@ -19,244 +19,93 @@ Conventions
 - `actor` is `user:<name>`, `agent:<name>`, `app:<id>` or `rule:<id>`.
 - Version ids are opaque strings. Timestamps are UTC `YYYY-MM-DDTHH:MM:SSZ`.
 - Nothing returned here leaks Git or jj vocabulary.
+
+The vocabulary, errors and records live in `bridge_records.py` and are
+re-exported here: surfaces import everything from this module.
 """
 
 from __future__ import annotations
 
 import os
 from collections.abc import Iterator, Mapping
-from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Literal, Protocol, cast
 
-# --- vocabulary --------------------------------------------------------------
+from iterthink.services.bridge_records import (
+    KIND_BY_SUFFIX,
+    AppInfo,
+    Block,
+    BridgeError,
+    CellChange,
+    ChangeStatus,
+    ChatInfo,
+    ChatMessage,
+    Conflict,
+    Egress,
+    ExportInfo,
+    FileContent,
+    FileDiff,
+    FileEntry,
+    FileKind,
+    FolderInfo,
+    Forbidden,
+    HandoverMode,
+    Intent,
+    Invalid,
+    LogEntry,
+    Mode,
+    NotFound,
+    ProjectInfo,
+    ProposalInfo,
+    ProposalStatus,
+    SearchHit,
+    Segment,
+    SettingInfo,
+    TaskInfo,
+    TaskStatus,
+    VerifyInfo,
+    VersionInfo,
+    kind_of,
+)
 
-Egress = Literal["none", "shielded", "allowed"]
-FileKind = Literal["markdown", "table", "plan", "model", "image", "document", "text", "other"]
-ProposalStatus = Literal["open", "accepted", "rejected", "conflict"]
-Mode = Literal["search", "document", "chat", "app", "task"]
-TaskStatus = Literal["todo", "running", "review", "done", "failed"]
-HandoverMode = Literal["full", "client"]
-
-KIND_BY_SUFFIX: dict[str, FileKind] = {
-    ".md": "markdown",
-    ".markdown": "markdown",
-    ".csv": "table",
-    ".tsv": "table",
-    ".xlsx": "table",
-    ".pdf": "plan",
-    ".ifc": "model",
-    ".png": "image",
-    ".jpg": "image",
-    ".jpeg": "image",
-    ".webp": "image",
-    ".docx": "document",
-    ".txt": "text",
-    ".json": "text",
-    ".yaml": "text",
-    ".yml": "text",
-    ".html": "text",
-}
-
-
-def kind_of(path: str) -> FileKind:
-    """File kind from the suffix, case-insensitive."""
-    return KIND_BY_SUFFIX.get(Path(path).suffix.lower(), "other")
-
-
-# --- errors ------------------------------------------------------------------
-
-
-class BridgeError(Exception):
-    """Base class. Surfaces show `str(error)` to the user."""
-
-
-class NotFound(BridgeError):
-    """Unknown project, path, version, proposal, chat, app or task."""
-
-
-class Forbidden(BridgeError):
-    """Path outside the project, egress blocks the call, or the actor may not do this."""
-
-
-class Conflict(BridgeError):
-    """Already decided, stale baseline that cannot be applied, or a held claim."""
-
-
-class Invalid(BridgeError):
-    """Malformed input: empty reason on reject, binary save, unknown mode."""
-
-
-# --- records -----------------------------------------------------------------
-
-
-@dataclass(frozen=True)
-class FolderInfo:
-    path: str  # absolute
-    name: str
-    project_id: str | None  # None: not a project yet
-
-
-@dataclass(frozen=True)
-class ProjectInfo:
-    id: str
-    name: str
-    path: str  # absolute, as seen on this machine
-    egress: Egress
-
-
-@dataclass(frozen=True)
-class FileEntry:
-    path: str
-    kind: FileKind
-    size: int
-    open_proposals: int
-
-
-@dataclass(frozen=True)
-class FileContent:
-    path: str
-    kind: FileKind
-    size: int
-    text: str | None  # None for binary files
-
-
-@dataclass(frozen=True)
-class VersionInfo:
-    id: str
-    ts: str
-    actor: str
-    message: str
-    paths: tuple[str, ...]
-
-
-@dataclass(frozen=True)
-class Segment:
-    op: Literal["equal", "insert", "delete"]
-    text: str
-
-
-@dataclass(frozen=True)
-class Block:
-    """One paragraph-level unit of a text diff."""
-
-    kind: Literal["stable", "refined", "modified", "rephrased", "added", "removed"]
-    before: str
-    after: str
-    segments: tuple[Segment, ...] = ()
-
-
-@dataclass(frozen=True)
-class CellChange:
-    row: str  # row key (first column) or row number as string
-    column: str
-    before: str
-    after: str
-
-
-@dataclass(frozen=True)
-class FileDiff:
-    path: str
-    kind: Literal["text", "table", "plan", "model", "binary", "none"]
-    summary: str  # one line, plain words: "2 paragraphs changed, 1 added"
-    blocks: tuple[Block, ...] = ()
-    added_rows: tuple[tuple[str, ...], ...] = ()
-    removed_rows: tuple[tuple[str, ...], ...] = ()
-    cell_changes: tuple[CellChange, ...] = ()
-    columns: tuple[str, ...] = ()
-    details: Mapping[str, object] = field(default_factory=dict)  # engine-specific (plan, model)
-
-
-@dataclass(frozen=True)
-class ProposalInfo:
-    id: str
-    baseline: str  # version id
-    actor: str
-    reason: str
-    paths: tuple[str, ...]
-    status: ProposalStatus
-    created: str
-    decided_by: str | None = None  # actor, or "rule:<id>" for automatic verdicts
-
-
-@dataclass(frozen=True)
-class LogEntry:
-    seq: int
-    ts: str
-    machine: str
-    actor: str
-    type: str
-    summary: str  # plain words, e.g. "accepted proposal pr-1a2b: fix door type"
-    hash: str
-
-
-@dataclass(frozen=True)
-class VerifyInfo:
-    ok: bool
-    lines: int
-    error: str | None  # "machine m-7f3a, line 42: hash mismatch"
-
-
-@dataclass(frozen=True)
-class SearchHit:
-    path: str
-    line: int
-    snippet: str
-
-
-@dataclass(frozen=True)
-class Intent:
-    mode: Mode
-    title: str
-    plan: tuple[str, ...]  # short steps shown before anything runs
-
-
-@dataclass(frozen=True)
-class ChatMessage:
-    role: Literal["user", "assistant", "system"]
-    text: str
-    ts: str
-
-
-@dataclass(frozen=True)
-class ChatInfo:
-    id: str
-    title: str
-    path: str  # .iterthink/chats/<id>.md
-    references: tuple[str, ...]  # project paths
-
-
-@dataclass(frozen=True)
-class AppInfo:
-    id: str
-    title: str
-    status: Literal["draft", "kept", "discarded"]
-    url: str | None  # on the app origin, while running
-
-
-@dataclass(frozen=True)
-class TaskInfo:
-    id: str
-    title: str
-    path: str  # .iterthink/tasks/<id>.md
-    status: TaskStatus
-    depends_on: tuple[str, ...]
-    runner: str | None  # machine running it
-    proposals: tuple[str, ...]
-
-
-@dataclass(frozen=True)
-class ExportInfo:
-    path: str  # .iterthink/exports/...
-    source_version: str
-    format: Literal["docx", "xlsx", "pdf", "csv"]
-
-
-@dataclass(frozen=True)
-class SettingInfo:
-    key: str
-    value: object
-    source: Literal["default", "workspace", "project"]
+__all__ = [
+    "KIND_BY_SUFFIX",
+    "AppInfo",
+    "Block",
+    "Bridge",
+    "BridgeError",
+    "CellChange",
+    "ChangeStatus",
+    "ChatInfo",
+    "ChatMessage",
+    "Conflict",
+    "Egress",
+    "ExportInfo",
+    "FileContent",
+    "FileDiff",
+    "FileEntry",
+    "FileKind",
+    "FolderInfo",
+    "Forbidden",
+    "HandoverMode",
+    "Intent",
+    "Invalid",
+    "LogEntry",
+    "Mode",
+    "NotFound",
+    "ProjectInfo",
+    "ProposalInfo",
+    "ProposalStatus",
+    "SearchHit",
+    "Segment",
+    "SettingInfo",
+    "TaskInfo",
+    "TaskStatus",
+    "VerifyInfo",
+    "VersionInfo",
+    "get_bridge",
+    "kind_of",
+]
 
 
 # --- the contract ------------------------------------------------------------
@@ -269,7 +118,9 @@ class Bridge(Protocol):
         ...
 
     def make_project(self, path: Path) -> ProjectInfo:
-        """Start tracking a folder. Never moves or changes its source files."""
+        """Start tracking a folder. Never moves or changes its source files.
+        A relative path names a new folder in the default workspace; it is created,
+        and an existing folder of that name gets a number appended."""
         ...
 
     def projects(self) -> list[ProjectInfo]:
@@ -324,6 +175,35 @@ class Bridge(Protocol):
     ) -> VersionInfo: ...
     def reject(self, project: str, proposal_id: str, actor: str, reason: str) -> None: ...
 
+    # per-change verdicts — slice A7
+    def decide_change(
+        self,
+        project: str,
+        proposal_id: str,
+        change_id: str,
+        verdict: Literal["accepted", "rejected"],
+        actor: str,
+        reason: str = "",
+        candidate: str | None = None,
+    ) -> ProposalInfo:
+        """One change of an open proposal. `candidate` is the hash the screen showed:
+        a different current hash raises Conflict and nothing is decided. Once every
+        change is decided, the accepted ones become one version and the proposal is
+        accepted, or rejected when none was accepted."""
+        ...
+
+    def edit_change(
+        self,
+        project: str,
+        proposal_id: str,
+        change_id: str,
+        text: str,
+        actor: str,
+        candidate: str | None = None,
+    ) -> ProposalInfo:
+        """Replace the proposed text of one change. The change stays open."""
+        ...
+
     # decision log
     def log(self, project: str, limit: int = 200) -> list[LogEntry]:
         """Newest first, all machines merged."""
@@ -332,12 +212,22 @@ class Bridge(Protocol):
     def verify(self, project: str) -> VerifyInfo: ...
 
     # search (keyword, no AI; live while typing)
-    def search(self, project: str, query: str, limit: int = 50) -> list[SearchHit]: ...
+    def search(
+        self,
+        project: str,
+        query: str,
+        limit: int = 50,
+        kind: FileKind | None = None,
+        in_history: bool = False,
+    ) -> list[SearchHit]:
+        """`kind` keeps hits in files of that kind; `in_history` also searches
+        earlier versions."""
+        ...
 
-    # the line — slice C2
+    # the line — slice C3
     def interpret(self, project: str, line: str) -> Intent: ...
 
-    # chats — slice C3
+    # chats — slice C5
     def chat_start(self, project: str, text: str, actor: str) -> ChatInfo: ...
     def chat_send(self, project: str, chat_id: str, text: str, actor: str) -> Iterator[str]:
         """Streams the answer in chunks; the full exchange lands in the chat file."""
@@ -346,21 +236,36 @@ class Bridge(Protocol):
     def chat_messages(self, project: str, chat_id: str) -> list[ChatMessage]: ...
     def chats(self, project: str) -> list[ChatInfo]: ...
 
-    # ad-hoc apps — slice C5
+    # ad-hoc apps — slice C6
     def app_build(self, project: str, request: str, actor: str) -> AppInfo: ...
     def app_run(self, project: str, app_id: str) -> AppInfo: ...
     def app_keep(self, project: str, app_id: str, actor: str) -> AppInfo: ...
     def app_discard(self, project: str, app_id: str, actor: str) -> AppInfo: ...
     def apps(self, project: str) -> list[AppInfo]: ...
 
-    # tasks and agents — slice C6
+    # tasks and agents — slice C8
     def task_create(
         self, project: str, title: str, body: str, actor: str, depends_on: tuple[str, ...] = ()
     ) -> TaskInfo: ...
     def task_start(self, project: str, task_id: str, actor: str) -> TaskInfo: ...
     def tasks(self, project: str) -> list[TaskInfo]: ...
+    def task_claim(self, project: str, task_id: str, actor: str, client: str) -> TaskInfo:
+        """An agent takes a ready task; it moves to running. A held claim raises Conflict."""
+        ...
 
-    # deliver closed — slice C10
+    def task_update(self, project: str, task_id: str, progress: str, actor: str) -> TaskInfo: ...
+    def task_ask(self, project: str, task_id: str, question: str, actor: str) -> TaskInfo:
+        """The agent needs a human; the task moves to needs-input."""
+        ...
+
+    def task_answer(self, project: str, task_id: str, text: str, actor: str) -> TaskInfo: ...
+    def task_complete(self, project: str, task_id: str, summary: str, actor: str) -> TaskInfo:
+        """The agent is done; the task moves to review. A human decides from there."""
+        ...
+
+    def task_cancel(self, project: str, task_id: str, actor: str) -> TaskInfo: ...
+
+    # deliver closed — slice C12
     def export(
         self, project: str, path: str, format: str, template: str | None = None
     ) -> ExportInfo: ...
@@ -370,10 +275,10 @@ class Bridge(Protocol):
         """An edited DOCX/XLSX back from a client becomes a proposal to the source."""
         ...
 
-    # handover — slice C11
+    # handover — slice C13
     def handover(self, project: str, mode: HandoverMode, target: Path) -> Path: ...
 
-    # settings — slice C13
+    # settings — slice C15
     def settings(self, project: str) -> list[SettingInfo]: ...
 
 
