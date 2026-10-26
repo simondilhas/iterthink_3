@@ -1,6 +1,6 @@
 ```
 id: C18
-status: ready
+status: done
 depends_on: [B2, C9b, C16]
 ```
 # C18 · Package the app
@@ -16,10 +16,8 @@ dependency, no `compare/diff_card.py`; `compare/judge.py` holds the semantic
 tie-break. This slice packages the desktop window and guards against Flet
 coming back. It comes last so the build includes the `ifc` and `voice` extras.
 
-**Set `ready`** by the human on 2026-10-23. PyInstaller is still not in
-`pyproject.toml`, and adding a dependency is a hard stop for the agent. Until
-it is there, do the `__main__` entry, the Flet guard and the `packaging/` spec
-files; record the build and the build tests under Blocked.
+**Set `ready`** by the human on 2026-10-23. PyInstaller is in
+`pyproject.toml` (extra `package`) since 2026-10-26.
 
 ## Scope
 - `iterthink/__main__.py` → starts `desktop.py`; `iterthink --version`
@@ -40,9 +38,9 @@ files; record the build and the build tests under Blocked.
   `defaults/` and `verify_log.py`.
 
 ## Acceptance
-- [ ] `test_core_imports_without_flet` — subprocess with a finder that blocks `flet`
-- [ ] Architecture tests pass with every Flet allowlist entry removed
-- [ ] `test_main_starts_desktop_and_version_prints`
-- [ ] `test_spec_includes_templates_static_defaults`
-- [ ] `test_macos_plist_has_microphone_description`
-- [ ] Linux build runs `--version` locally; CI change proposed in the run report
+- [x] `test_core_imports_without_flet` — subprocess with a finder that blocks `flet`
+- [x] Architecture tests pass with every Flet allowlist entry removed
+- [x] `test_main_starts_desktop_and_version_prints`
+- [x] `test_spec_includes_templates_static_defaults`
+- [x] `test_macos_plist_has_microphone_description`
+- [x] Linux build runs `--version` locally; CI change proposed in the run report
