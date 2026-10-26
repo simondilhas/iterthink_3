@@ -12,7 +12,7 @@ from iterthink import config
 from iterthink.mcp.server import build
 from iterthink.privacy_shield_settings import load_categories
 from iterthink.services.bridge_real import RealBridge
-from iterthink.services.egress import EgressDenied, check, prepare, restore
+from iterthink.services.egress import EgressDenied, check, deliver, prepare, restore
 from iterthink.services.event_log import read_all
 from iterthink.services.projects import project_file, settings_of, write_yaml
 from iterthink.web.app import TOKEN_HEADER, create_app
@@ -54,30 +54,42 @@ async def _data(server: object, name: str, arguments: dict[str, object]) -> obje
 
 @pytest.mark.parametrize("purpose", _PURPOSES)
 @pytest.mark.parametrize("tier", _TIERS)
-def test_none_blocks_company_and_cloud_for_every_purpose_except_app_build(
+def test_none_blocks_company_and_cloud_for_every_purpose(
     tmp_path: Path, project_dir: Path, purpose: str, tier: str
 ) -> None:
     _root(tmp_path, project_dir)
     _set(project_dir, "none")
-    if purpose == "app_build":
-        assert check(project_dir, purpose, tier) == "shield"  # type: ignore[arg-type]
-        return
     assert check(project_dir, purpose, tier) == "deny"  # type: ignore[arg-type]
+    sent: list[str] = []
+
+    def send(text: str) -> str:
+        sent.append(text)
+        return text
+
     with pytest.raises(EgressDenied):
-        prepare(project_dir, "hello", purpose, tier)  # type: ignore[arg-type]
+        deliver(project_dir, purpose, tier, "hello", send)
+    assert sent == []
 
 
-@pytest.mark.parametrize("mode", ["none", "shielded"])
-def test_app_build_schemas_are_shielded_under_none_and_shielded(
-    tmp_path: Path, project_dir: Path, mode: str
+def test_app_build_schemas_are_shielded_when_egress_is_shielded(
+    tmp_path: Path, project_dir: Path
 ) -> None:
     _root(tmp_path, project_dir)
-    _set(project_dir, mode)
     schema = f"owner email {SECRET}"
     shielded = prepare(project_dir, schema, "app_build", "cloud")
     assert shielded.decision == "shield"
     assert SECRET not in shielded.text
     assert "EMAIL" in shielded.text
+
+
+def test_shielded_redacts_patterns_and_leaves_names(tmp_path: Path, project_dir: Path) -> None:
+    _root(tmp_path, project_dir)
+    text = "Isolde Brennan, Bahnhofstrasse 12, writes ada@example.com"
+    shielded = prepare(project_dir, text, "mcp", "cloud")
+    assert "ada@example.com" not in shielded.text
+    assert "EMAIL" in shielded.text
+    assert "Isolde Brennan" in shielded.text
+    assert "Bahnhofstrasse" in shielded.text
 
 
 def test_shielded_redacts_and_restores_placeholders(tmp_path: Path, project_dir: Path) -> None:
@@ -119,6 +131,7 @@ def test_settings_page_switches_egress(tmp_path: Path, project_dir: Path) -> Non
     page = client.get(f"/p/{project}/settings")
     assert page.status_code == 200
     assert "shielded" in page.text
+    assert "does not remove names" in page.text
     saved = client.post(f"/p/{project}/settings", data={"egress": "none"})
     assert saved.status_code == 200
     assert "Saved." in saved.text
@@ -136,3 +149,32 @@ async def test_mcp_shielded_returns_redacted_content(tmp_path: Path, project_dir
     bridge.set_egress(project, "none", "user:ada")
     with pytest.raises(ToolError, match="egress: none"):
         await app.mcp.call_tool("read_file", {"project": project, "path": "note.md"})
+
+
+async def test_mcp_shielded_redacts_paths_messages_and_reasons(
+    tmp_path: Path, project_dir: Path
+) -> None:
+    name = f"{SECRET}.md"
+    (project_dir / name).write_text("plain\n", encoding="utf-8")
+    bridge, project, _root_dir = _root(tmp_path, project_dir)
+    bridge.save(project, name, "plain\nmore\n", "user:ada", f"note for {SECRET}")
+    bridge.propose(project, {name: "next\n"}, "user:ada", f"because {SECRET}")
+    app = build(bridge)
+    files = await _data(app.mcp, "list_files", {"project": project})
+    versions = await _data(app.mcp, "history", {"project": project})
+    proposals = await _data(app.mcp, "list_proposals", {"project": project})
+    read = await _data(app.mcp, "read_file", {"project": project, "path": name})
+    leaked = str((files, versions, proposals, read))
+    assert SECRET not in leaked
+    assert "EMAIL" in leaked
+
+
+@pytest.mark.parametrize("tool", ["list_files", "history", "list_proposals"])
+async def test_mcp_metadata_refused_when_egress_is_none(
+    tmp_path: Path, project_dir: Path, tool: str
+) -> None:
+    bridge, project, _root_dir = _root(tmp_path, project_dir)
+    bridge.set_egress(project, "none", "user:ada")
+    app = build(bridge)
+    with pytest.raises(ToolError, match="egress: none"):
+        await app.mcp.call_tool(tool, {"project": project})

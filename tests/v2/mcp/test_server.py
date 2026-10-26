@@ -96,8 +96,9 @@ async def test_content_tools_refused_when_egress_shielded_or_none(
         await app.mcp.call_tool(tool, arguments)
 
 
-async def test_metadata_tools_work_under_egress_none(bridge: FakeBridge, project_id: str) -> None:
-    bridge.set_egress(project_id, "none", "user:simon")
+async def test_metadata_tools_work_when_egress_is_shielded(
+    bridge: FakeBridge, project_id: str
+) -> None:
     app = build(bridge)
     files = await _data(app.mcp, "list_files", {"project": project_id})
     history = await _data(app.mcp, "history", {"project": project_id})
@@ -107,6 +108,16 @@ async def test_metadata_tools_work_under_egress_none(bridge: FakeBridge, project
     assert isinstance(history, list)
     assert history
     assert proposals == []
+
+
+@pytest.mark.parametrize("tool", ["list_files", "history", "list_proposals"])
+async def test_metadata_tools_refused_under_egress_none(
+    bridge: FakeBridge, project_id: str, tool: str
+) -> None:
+    bridge.set_egress(project_id, "none", "user:simon")
+    app = build(bridge)
+    with pytest.raises(ToolError, match="egress: none"):
+        await app.mcp.call_tool(tool, {"project": project_id})
 
 
 async def test_propose_creates_open_proposal_and_leaves_files(

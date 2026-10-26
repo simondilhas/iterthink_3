@@ -34,12 +34,15 @@ class ShieldedText:
 
 
 def check(project_dir: Path, purpose: Purpose, tier: Tier) -> Decision:
-    """`send` as-is, `shield` through redaction, or `deny`."""
+    """`send` as-is, `shield` through pattern redaction, or `deny`.
+
+    `none` denies every company and cloud purpose, including `app_build`.
+    `shielded` removes regex categories only (email, phone, keys, and similar).
+    Names, addresses, organisations and project names stay in the text.
+    """
     mode = _mode(project_dir)
     if tier == "local":
         return "send"
-    if purpose == "app_build":
-        return "send" if mode == "allowed" else "shield"
     if mode == "none":
         return "deny"
     if mode == "allowed":

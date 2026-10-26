@@ -9,7 +9,7 @@ from pathlib import Path
 import pytest
 
 from iterthink.services.app_validate import bridge_reference, problems
-from iterthink.services.bridge import Invalid, NotFound
+from iterthink.services.bridge import Forbidden, Invalid, NotFound
 from iterthink.services.bridge_real import RealBridge
 from iterthink.services.event_log import read_all
 
@@ -172,12 +172,9 @@ def test_build_under_egress_none_sends_no_content(tmp_path: Path, project_dir: P
     _tier(project_dir, "cloud")
     model = _Model([_good()], tier="cloud")
     bridge.use_app_model(model)
-    info = bridge.app_build(project, "summarise the files", "user:ada")
-    assert info.id == "door-notes"
-    user = model.seen[0][1]
-    assert _BODY not in user
-    assert "T01" not in user
-    assert "Türliste.csv" in user
+    with pytest.raises(Forbidden, match="egress blocks app_build"):
+        bridge.app_build(project, "summarise the files", "user:ada")
+    assert model.seen == []
     assert (project_dir / "Türliste.csv").read_text(encoding="utf-8").startswith("id,")
 
 

@@ -66,18 +66,27 @@ def _guard(bridge: Bridge, project: str) -> str | None:
     raise ToolError(_EGRESS.format(value=mode))
 
 
-def _redact(shield: object, project: str, value: object, key: str = "") -> object:
+def _redact(shield: object, project: str, value: object) -> object:
+    """Redact every string, including paths, kinds and ids."""
     if isinstance(value, str):
-        if key in {"path", "kind", "id"} or value == "":
+        if value == "":
             return value
         return shield(project, value)  # type: ignore[operator]
     if isinstance(value, dict):
-        redacted = {
-            str(name): _redact(shield, project, item, str(name)) for name, item in value.items()
-        }
-        return redacted
+        return {str(name): _redact(shield, project, item) for name, item in value.items()}
     if isinstance(value, list):
         return [_redact(shield, project, item) for item in value]
+    return value
+
+
+def _opened(bridge: Bridge, project: str, value: object) -> object:
+    """File lists, history and proposals stop at egress none. Shielded redacts them."""
+    mode = _mode(bridge, project)
+    if mode == "none":
+        raise ToolError(_EGRESS.format(value=mode))
+    shield = getattr(bridge, "shield_text", None)
+    if mode == "shielded" and callable(shield):
+        return _redact(shield, project, value)
     return value
 
 
@@ -118,16 +127,19 @@ def build(bridge: Bridge) -> App:
 
     @app.mcp.tool(description="Files in the project. iterthink's own data is hidden.")
     def list_files(project: str) -> list[dict[str, Any]]:
-        return cast(list[dict[str, Any]], _run(lambda: bridge.files(project)))
+        body = _run(lambda: bridge.files(project))
+        return cast(list[dict[str, Any]], _opened(bridge, project, body))
 
     @app.mcp.tool(description="Versions, newest first. Optionally one file.")
     def history(project: str, path: str | None = None) -> list[dict[str, Any]]:
-        return cast(list[dict[str, Any]], _run(lambda: bridge.history(project, path)))
+        body = _run(lambda: bridge.history(project, path))
+        return cast(list[dict[str, Any]], _opened(bridge, project, body))
 
     @app.mcp.tool(description="Proposals. Default status is open.")
     def list_proposals(project: str, status: str = "open") -> list[dict[str, Any]]:
         kind = cast(ProposalStatus, status)
-        return cast(list[dict[str, Any]], _run(lambda: bridge.proposals(project, kind)))
+        body = _run(lambda: bridge.proposals(project, kind))
+        return cast(list[dict[str, Any]], _opened(bridge, project, body))
 
     @app.mcp.tool(description=f"Read one file. {_CONTENT}")
     def read_file(project: str, path: str) -> dict[str, Any]:

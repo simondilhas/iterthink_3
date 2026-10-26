@@ -43,7 +43,7 @@ class _Router:
 
 @given(
     st.text(max_size=40),
-    st.sampled_from(["agent", "app_ai", "chat", "impact", "mcp"]),
+    st.sampled_from(["agent", "app_build", "app_ai", "chat", "impact", "mcp"]),
     st.sampled_from(["company", "cloud"]),
 )
 @settings(max_examples=20, deadline=None)

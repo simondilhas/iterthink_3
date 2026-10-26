@@ -121,9 +121,10 @@ Code lives in `services/adhoc_apps.py`; the prompt is a seed file.
 - The model writes the app; it never sees the data. It receives the line,
   paths and schemas only. The app reads content at runtime through the bridge,
   locally.
-- Therefore app building may use the cloud tier even for sensitive projects.
-  Schemas still pass the privacy shield (names in property values, file names
-  with persons or addresses are redacted).
+- Egress `none` denies a company or cloud build: nothing is sent. `shielded`
+  and `allowed` may use those tiers. `shielded` redacts pattern categories
+  (email, phone, keys and similar) on the line, paths and schemas. Names,
+  addresses, organisations and project names are not removed by that pass.
 - Settings: app builder tier selectable separately (local / company / cloud),
   default = strongest configured model, since code generation needs it.
 

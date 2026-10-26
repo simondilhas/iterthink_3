@@ -8,8 +8,8 @@ from pathlib import Path
 from typing import Protocol
 
 from iterthink.services.app_validate import bridge_reference, component_reference
-from iterthink.services.bridge import FileContent, FileEntry
-from iterthink.services.egress import prepare
+from iterthink.services.bridge import FileContent, FileEntry, Forbidden
+from iterthink.services.egress import EgressDenied, prepare
 from iterthink.services.projects import read_yaml
 from iterthink.services.settings import get
 
@@ -60,11 +60,19 @@ def user_prompt(host: _Files, project: str, line: str, tier: str) -> str:
             f"Kept apps:\n{_kept(root, line)}",
         )
     )
-    if tier == "company":
-        return prepare(root, body, "app_build", "company").text
-    if tier == "cloud":
-        return prepare(root, body, "app_build", "cloud").text
+    if tier in {"company", "cloud"}:
+        return _remote(root, body, tier)
     return body
+
+
+def _remote(root: Path, body: str, tier: str) -> str:
+    """Company and cloud builds are shielded. Egress none refuses them."""
+    try:
+        if tier == "company":
+            return prepare(root, body, "app_build", "company").text
+        return prepare(root, body, "app_build", "cloud").text
+    except EgressDenied as exc:
+        raise Forbidden(str(exc)) from exc
 
 
 def _file_list(host: _Files, project: str) -> str:
