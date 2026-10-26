@@ -8,5 +8,20 @@
     "attributes": [],
     "events": ["input"],
     "example": "<md-editor></md-editor>"
+  },
+  "data-table": {
+    "attributes": ["src", "changed"],
+    "events": [],
+    "example": "<data-table src=\"doors.csv\" changed=\"[]\"></data-table>"
+  },
+  "simple-chart": {
+    "attributes": ["src", "type", "x", "y"],
+    "events": [],
+    "example": "<simple-chart src=\"doors.csv\" type=\"bar\" x=\"name\" y=\"count\"></simple-chart>"
+  },
+  "form-fields": {
+    "attributes": ["target", "schema"],
+    "events": ["submit"],
+    "example": "<form-fields target=\"doors.csv\" schema=\"[]\"></form-fields>"
   }
 }
