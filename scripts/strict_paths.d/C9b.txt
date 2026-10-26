@@ -1,1 +1,3 @@
 iterthink/compare/ifc_glb.py
+iterthink/services/model_views.py
+iterthink/compare/ifc_progress.py

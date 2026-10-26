@@ -49,6 +49,7 @@ from iterthink.services.importer_1x import run_import
 from iterthink.services.incoming import IncomingBridge
 from iterthink.services.indexer import schedule_index
 from iterthink.services.intent import IntentBridge
+from iterthink.services.model_views import ModelsBridge
 from iterthink.services.plan_render import PlansBridge
 from iterthink.services.projects import (
     Registry,
@@ -115,6 +116,7 @@ class RealBridge(
     DeliverBridge,
     IncomingBridge,
     ChecksBridge,
+    ModelsBridge,
     Later,
 ):
     def __init__(

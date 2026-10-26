@@ -7,6 +7,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, cast
 
+from iterthink.compare import ifc_progress as progress
 from iterthink.compare.engine_ifc_geom import (
     Matrix,
     bbox_of,
@@ -59,8 +60,12 @@ class IfcEngine:
         after: bytes | None,
         cache: Path | None = None,
     ) -> FileDiff:
+        key = progress.key_of(before, after)
+        progress.start(key)
         old, new = _read(before), _read(after)
+        progress.set_count(key, "elements", len(old.keys() | new.keys()))
         elements, rows = _compare(old, new)
+        progress.set_count(key, "matched", len(elements))
         counts = {name: 0 for name in _CATEGORIES}
         for item in elements:
             counts[str(item["category"])] += 1
@@ -69,6 +74,7 @@ class IfcEngine:
         from iterthink.compare.ifc_glb import attach
 
         glb = attach(before, after, elements, cache)
+        progress.set_count(key, "done", 1)
         return FileDiff(
             path,
             "model",

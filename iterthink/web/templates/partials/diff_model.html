@@ -4,7 +4,7 @@
     <th>GlobalId</th><th>Class</th><th>Name</th><th>Storey</th><th>Path</th><th>Old</th><th>New</th>
   </tr>
   {% for row in view.rows %}
-  <tr data-category="{{ row.category }}">
+  <tr data-category="{{ row.category }}" data-guid="{{ row.guid }}">
     <td>{{ row.guid }}</td>
     <td>{{ row.class }}</td>
     <td>{{ row.name }}</td>

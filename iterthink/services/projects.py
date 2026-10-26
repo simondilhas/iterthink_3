@@ -361,7 +361,10 @@ def _earlier(root: Path, rel: str, after: bytes | None) -> object:
     return _MISSING
 
 
-def compare_file(root: Path, path: str, base: str | None, target: str | None) -> FileDiff:
+def file_pair(
+    root: Path, path: str, base: str | None, target: str | None
+) -> tuple[bytes | None, bytes | None] | None:
+    """Before and after bytes of a diff; None when no earlier version differs."""
     rel = relative(path)
     if target is None:
         full = inside(root, rel)
@@ -370,8 +373,16 @@ def compare_file(root: Path, path: str, base: str | None, target: str | None) ->
         after = _at(root, target, rel)
     before = _at(root, base, rel) if base else _earlier(root, rel, after)
     if isinstance(before, bytes) or before is None:
-        return diff_bytes(rel, before, after)
-    return FileDiff(path=rel, kind="none", summary="no earlier version differs")
+        return before, after
+    return None
+
+
+def compare_file(root: Path, path: str, base: str | None, target: str | None) -> FileDiff:
+    rel = relative(path)
+    pair = file_pair(root, rel, base, target)
+    if pair is None:
+        return FileDiff(path=rel, kind="none", summary="no earlier version differs")
+    return diff_bytes(rel, *pair)
 
 
 def restore_file(root: Path, path: str, version: str, actor: str) -> VersionInfo:

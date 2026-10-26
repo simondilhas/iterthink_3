@@ -338,6 +338,16 @@ class FakeBridge:
             before = self._version(p, base)[1].get(rel)
         return diff_bytes(rel, before, after)
 
+    def model_glb(self, project: str, key: str, part: Literal["before", "after", "diff"]) -> bytes:
+        self._project(project)
+        raise NotFound(f"the fake renders no model views ({part} of {key[:12]})")
+
+    def diff_progress(
+        self, project: str, path: str, base: str | None = None, target: str | None = None
+    ) -> Mapping[str, int]:
+        self._project(project)
+        return {}
+
     def restore(self, project: str, path: str, version: str, actor: str) -> VersionInfo:
         p = self._project(project)
         rel = self._rel(path)

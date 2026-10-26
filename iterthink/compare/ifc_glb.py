@@ -2,8 +2,8 @@
 
 from __future__ import annotations
 
-import hashlib
 import json
+import re
 import struct
 from pathlib import Path
 from typing import Any
@@ -11,11 +11,13 @@ from typing import Any
 import numpy as np
 
 from iterthink.compare.engine_ifc_geom import Mesh, mesh_of, volume_of
+from iterthink.compare.ifc_progress import bump, set_count
+from iterthink.compare.ifc_progress import key_of as _key
 
-ENGINE_VERSION = "1"
 _MAX_TRIANGLES = 50_000
 _JSON = 0x4E4F534A
 _BIN = 0x004E4942
+_HEX = re.compile(r"[0-9a-f]{64}")
 Part = tuple[str, str, str, Mesh]
 
 
@@ -60,19 +62,27 @@ def attach(
     before: bytes | None, after: bytes | None, elements: list[dict[str, object]], cache: Path | None
 ) -> dict[str, str]:
     """Record volumes on ``elements`` and the URLs of the three GLBs."""
-    _volumes(before, after, elements)
-    folder = (cache if cache is not None else _default_cache()) / _key(before, after)
+    key = _key(before, after)
+    _volumes(before, after, elements, key)
+    folder = (cache if cache is not None else _default_cache()) / key
     if not (folder / "diff.glb").is_file():
         _emit(folder / "before.glb", _version_parts(before))
         _emit(folder / "after.glb", _version_parts(after))
         _emit(folder / "diff.glb", _diff_parts(before, after, elements))
-    key = folder.name
     return {
         "key": key,
         "before": f"/models/glb/{key}/before.glb" if before else "",
         "after": f"/models/glb/{key}/after.glb" if after else "",
         "diff": f"/models/glb/{key}/diff.glb",
     }
+
+
+def cached(key: str, part: str, cache: Path | None = None) -> bytes | None:
+    """Bytes of a GLB that ``attach`` wrote, or None for an unknown key or part."""
+    if part not in ("before", "after", "diff") or not _HEX.fullmatch(key):
+        return None
+    path = (cache if cache is not None else _default_cache()) / key / f"{part}.glb"
+    return path.read_bytes() if path.is_file() else None
 
 
 def boolean_difference(before: bytes, after: bytes, guid: str) -> tuple[Mesh, Mesh]:
@@ -84,16 +94,6 @@ def _default_cache() -> Path:
     from iterthink.services.projects import default_state_dir
 
     return default_state_dir() / "ifc-glb"
-
-
-def _key(before: bytes | None, after: bytes | None) -> str:
-    digest = hashlib.sha256()
-    digest.update(ENGINE_VERSION.encode("utf-8"))
-    digest.update(b"\0")
-    digest.update(before or b"")
-    digest.update(b"\0")
-    digest.update(after or b"")
-    return digest.hexdigest()
 
 
 def _emit(path: Path, parts: list[Part]) -> None:
@@ -117,7 +117,11 @@ def _arrays(mesh: Mesh) -> tuple[np.ndarray, np.ndarray]:
     return np.array(mesh.verts, dtype=np.float32), np.array(mesh.faces, dtype=np.uint32)
 
 
-def _volumes(before: bytes | None, after: bytes | None, elements: list[dict[str, object]]) -> None:
+def _volumes(
+    before: bytes | None, after: bytes | None, elements: list[dict[str, object]], key: str
+) -> None:
+    reshaped = sum(1 for element in elements if element.get("category") == "reshaped")
+    set_count(key, "reshaped", reshaped if before is not None and after is not None else 0)
     for element in elements:
         element["volume_added"] = None
         element["volume_removed"] = None
@@ -131,7 +135,9 @@ def _volumes(before: bytes | None, after: bytes | None, elements: list[dict[str,
             added, removed = boolean_difference(before, after, guid)
         except Exception:
             element["diff_method"] = "overlay"
+            bump(key, "fallbacks")
             continue
+        bump(key, "booleans")
         element["diff_method"] = "boolean"
         element["volume_added"] = _metres(added)
         element["volume_removed"] = _metres(removed)

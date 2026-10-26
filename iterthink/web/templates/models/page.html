@@ -1,11 +1,23 @@
 {% extends "base.html" %}
 {% block title %}Model{% endblock %}
+{% block head %}
+<script type="module" src="/static/js/ifc-viewer.js"></script>
+{% endblock %}
 {% block line %}
 {% include "project/line.html" %}
 {% include "project/nav.html" %}
 {% endblock %}
 {% block main %}
 <h1>Model</h1>
+<div class="model-compare"{% if events %} sse-connect="{{ events }}" sse-close="done"{% endif %}>
+<section class="model-3d"{% if events %} sse-swap="viewer"{% endif %}>
+  {% if events %}
+  <p class="model-progress" sse-swap="progress" aria-live="polite">{% include "models/progress.html" %}</p>
+  {% else %}
+  {% include "models/viewer.html" %}
+  {% endif %}
+</section>
+<section class="model-side">
 <ul class="model-counts">
   {% for name, count in counts.items() %}
   <li class="cat-{{ name }}">{{ name }} {{ count }}</li>
@@ -28,7 +40,9 @@
   </label>
   <button type="submit">Filter</button>
 </form>
-<div id="model-table">
+<div id="model-table"{% if events %} sse-swap="table"{% endif %}>
 {% include "models/table.html" %}
+</div>
+</section>
 </div>
 {% endblock %}

@@ -1,6 +1,6 @@
 ```
 id: C9b
-status: ready
+status: done
 depends_on: [C9]
 ```
 # C9b · IFC 3D diff
@@ -85,6 +85,6 @@ View components (`<ifc-viewer>`, `<ifc-diff>`); Ad-hoc apps → Building blocks
       check (header, JSON chunk, BIN chunk alignment).
 - [x] `test_glb_cached_outside_project`: no file is written under the project
       root, and a second call hits the cache.
-- [ ] `test_model_compare_page_loads_viewer_and_legend`: `<ifc-diff>` has
+- [x] `test_model_compare_page_loads_viewer_and_legend`: `<ifc-diff>` has
       all four attributes, plus a legend with six categories.
-- [ ] `test_large_model_reports_progress` (slow)
+- [x] `test_large_model_reports_progress` (slow)

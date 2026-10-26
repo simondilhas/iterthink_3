@@ -1,0 +1,5 @@
+{% if error %}<span class="model-error">{{ error }}</span>
+{% elif counts and counts.elements %}<span>{{ counts.matched }} of {{ counts.elements }} elements matched</span>
+{% if counts.reshaped %}<span>{{ counts.booleans + counts.fallbacks }} of {{ counts.reshaped }} shape differences{% if counts.fallbacks %}, {{ counts.fallbacks }} shown as overlay{% endif %}</span>{% endif %}
+{% if counts.done %}<span>done</span>{% endif %}
+{% else %}<span>Reading the model…</span>{% endif %}

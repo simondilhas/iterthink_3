@@ -154,6 +154,17 @@ class Bridge(Protocol):
         """New version with the file as it was in `version`. History only grows."""
         ...
 
+    def model_glb(self, project: str, key: str, part: Literal["before", "after", "diff"]) -> bytes:
+        """A GLB named in a model diff's `details["glb"]`. NotFound if never rendered. C9b."""
+        ...
+
+    def diff_progress(
+        self, project: str, path: str, base: str | None = None, target: str | None = None
+    ) -> Mapping[str, int]:
+        """Counters of this session's model diff of those versions: elements, matched,
+        reshaped, booleans, fallbacks, done. Empty when none has started. C9b."""
+        ...
+
     # proposals and verdicts
     def propose(
         self,

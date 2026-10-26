@@ -114,3 +114,20 @@ def test_glb_cached_outside_project(tmp_path: Path) -> None:
     assert second == first
     assert second.stat().st_mtime_ns == stamp
     assert [path.name for path in project.rglob("*") if path.is_file()] == ["model.ifc"]
+
+
+def test_diff_counts_matches_and_booleans(tmp_path: Path) -> None:
+    from iterthink.compare.ifc_progress import counters, key_of
+
+    before = build([Item("wall", length=1), Item("door")])
+    after = build([Item("wall", length=2), Item("door"), Item("new")])
+    IfcEngine().diff("model.ifc", before, after, cache=tmp_path / "cache")
+    assert counters(key_of(before, after)) == {
+        "elements": 3,
+        "matched": 3,
+        "reshaped": 1,
+        "booleans": 1,
+        "fallbacks": 0,
+        "done": 1,
+    }
+    assert counters(key_of(after, before)) == {}

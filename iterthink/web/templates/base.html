@@ -8,7 +8,10 @@
   {% for href in stylesheets() %}<link rel="stylesheet" href="{{ href }}">
   {% endfor %}
   <script type="importmap">
-    { "imports": {} }
+    { "imports": {
+        "three": "/static/vendor/three/build/three.module.js",
+        "three/addons/": "/static/vendor/three/examples/jsm/"
+    } }
   </script>
   <script src="/static/vendor/htmx-2.0.11.min.js"></script>
   <script src="/static/vendor/htmx-ext-sse-2.2.4.js"></script>

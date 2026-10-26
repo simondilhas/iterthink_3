@@ -262,6 +262,17 @@ def test_unknown_version_raises_not_found(ctx: Ctx) -> None:
         ctx.bridge.restore(ctx.project, MD, "v-unknown", ctx.actor)
 
 
+def test_model_glb_not_rendered_raises_not_found(ctx: Ctx) -> None:
+    with pytest.raises(NotFound):
+        ctx.bridge.model_glb(ctx.project, "0" * 64, "diff")
+    with pytest.raises(NotFound):
+        ctx.bridge.model_glb(ctx.project, "../../etc", "diff")
+
+
+def test_diff_progress_is_empty_before_a_model_diff(ctx: Ctx) -> None:
+    assert dict(ctx.bridge.diff_progress(ctx.project, MD)) == {}
+
+
 # --- proposals and verdicts --------------------------------------------------
 
 

@@ -1,0 +1,19 @@
+{% set models = "/p/" ~ project_id %}
+{% set query = {"path": path, "from": base, "to": target} | urlencode %}
+<div class="model-views" role="radiogroup" aria-label="View">
+  <label><input type="radio" name="view" value="diff" checked> Changes</label>
+  <label><input type="radio" name="view" value="before"{% if not glb.before %} disabled{% endif %}> Before</label>
+  <label><input type="radio" name="view" value="after"{% if not glb.after %} disabled{% endif %}> After</label>
+</div>
+<fieldset class="model-legend">
+  <legend>Show</legend>
+  {% for name in categories %}
+  <label class="cat-{{ name }}"><input type="checkbox" name="show" value="{{ name }}" checked> {{ name | replace("_", " ") }}</label>
+  {% endfor %}
+</fieldset>
+<ifc-diff
+  model-before="{% if glb.before %}{{ models }}{{ glb.before }}{% endif %}"
+  model-after="{% if glb.after %}{{ models }}{{ glb.after }}{% endif %}"
+  model-diff="{% if glb.diff %}{{ models }}{{ glb.diff }}{% endif %}"
+  changes="{{ models }}/models/changes.json?{{ query }}"></ifc-diff>
+<p class="model-caption" aria-live="polite"></p>
