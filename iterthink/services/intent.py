@@ -9,6 +9,8 @@ from secrets import token_hex
 from typing import Literal, Protocol, cast
 from urllib.parse import quote
 
+import yaml
+
 from iterthink import config
 from iterthink.services.bridge import (
     Bridge,
@@ -23,12 +25,31 @@ from iterthink.services.bridge import (
 from iterthink.services.egress import check
 from iterthink.services.event_log import store_blob
 
-PROMPT_ID = "intent-v1"
-PROMPT = (
+_SEED = Path(__file__).resolve().parents[1] / "defaults" / "prompts.yaml"
+_BUILT_IN = (
+    "intent-v1",
     "Classify one line as search, document, chat, app, or task. "
     "Reply with the mode and a confidence between 0 and 1, for example: chat 0.8. "
-    "Do not write the document, the answer, or the task."
+    "Do not write the document, the answer, or the task.",
 )
+
+
+def _seeded_prompt() -> tuple[str, str]:
+    """The `intent` prompt from the bundled prompts.yaml, else the built-in text."""
+    try:
+        loaded = yaml.safe_load(_SEED.read_text(encoding="utf-8"))
+    except (OSError, yaml.YAMLError):
+        return _BUILT_IN
+    row = loaded.get("intent") if isinstance(loaded, dict) else None
+    if not isinstance(row, dict):
+        return _BUILT_IN
+    pid, text = row.get("id"), row.get("system_prompt")
+    if isinstance(pid, str) and isinstance(text, str) and pid and text.strip():
+        return pid, " ".join(text.split())
+    return _BUILT_IN
+
+
+PROMPT_ID, PROMPT = _seeded_prompt()
 
 _MODES = {"search", "document", "chat", "app", "task"}
 _DOCUMENT = re.compile(r"^(?:new document|neues dokument)(?: (?P<title>.+))?$", re.I)

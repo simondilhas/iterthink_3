@@ -31,6 +31,8 @@ KEYS: dict[str, object] = {
     "runner.max_parallel_cloud": 4,
     "dictation.language": "auto",
     "dictation.model": "small",
+    "dictation.hotkey": "Mod+Shift+Space",
+    "dictation.hands_free": "off",
     "shortcuts.line": "Mod+K",
     "shortcuts.save": "Mod+S",
     "shortcuts.files": "Mod+E",

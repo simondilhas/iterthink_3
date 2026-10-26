@@ -1,4 +1,4 @@
-/* The dot is steady unless a verdict is waiting. warning and error fall back to accent. */
+/* The dot is steady unless a verdict is waiting. Colours come from the theme's warning and error. */
 
 .dot {
   animation: none;
@@ -15,12 +15,12 @@
 
 .dot[data-state="verdict"],
 .dot.pulsing {
-  background: var(--warning, var(--accent));
+  background: var(--warn);
   animation: it-pulse 1s ease-in-out infinite;
 }
 
 .dot[data-state="error"] {
-  background: var(--error, var(--accent));
+  background: var(--error);
   animation: none;
 }
 

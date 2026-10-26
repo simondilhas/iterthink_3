@@ -41,6 +41,22 @@ def test_source_shown_for_each_value(project_dir: Path) -> None:
     assert shown["storage.versions"] == "project"
 
 
+def test_dictation_hold_key_and_hands_free_are_settings(project_dir: Path) -> None:
+    from iterthink.services.dictation import hands_free, hotkey
+
+    shown = {item.key: item for item in settings_mod.all_settings(project_dir)}
+    assert shown["dictation.hotkey"].value == "Mod+Shift+Space"
+    assert shown["dictation.hands_free"].value == "off"
+    assert hands_free(project_dir) is False
+    write_yaml(
+        project_dir / ".iterthink" / "settings" / "values.yaml",
+        {"dictation.hotkey": "Mod+Shift+D", "dictation.hands_free": "on"},
+    )
+    assert get(project_dir, "dictation.hotkey").source == "project"
+    assert hotkey(project_dir) == "Mod+Shift+D"
+    assert hands_free(project_dir) is True
+
+
 def test_load_yaml_merges_mappings_replaces_lists(project_dir: Path) -> None:
     workspace = project_dir.parent / ".iterthink" / "settings"
     write_yaml(workspace / "sample.yaml", {"a": {"x": 1, "y": 1}, "tags": [1]})

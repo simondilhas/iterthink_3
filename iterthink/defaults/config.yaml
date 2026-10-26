@@ -26,6 +26,8 @@ theme:
     on_sidebar_surface: "#A8A6B4"
     outline: "#3E3E4A"
     success: "#C8E4C4"
+    warning: "#F0A04B"
+    error: "#F07A7A"
     selection_overlay: "#88B8A8D4"
   # Light: white editor, soft gray sidebars, indigo action pills, lavender tab/icons.
   light:
@@ -40,6 +42,8 @@ theme:
     on_sidebar_surface: "#6B6B78"
     outline: "#C6C6D2"
     success: "#C8E4C4"
+    warning: "#B85C00"
+    error: "#B42318"
     selection_overlay: "#552E2C6E"
 
 chat_system: "You are a prose editor focusing on intent and clarity."

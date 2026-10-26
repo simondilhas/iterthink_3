@@ -5,6 +5,7 @@ from __future__ import annotations
 from pathlib import Path
 
 import pytest
+import yaml
 from fastapi.testclient import TestClient
 
 from iterthink import config
@@ -209,28 +210,28 @@ def test_dot_working_marks_the_line() -> None:
     assert 'data-state="working"' in css
 
 
-def test_dot_verdict_uses_warning_or_accent(tmp_path: Path, project_dir: Path) -> None:
+def test_dot_verdict_uses_the_warning_colour(tmp_path: Path, project_dir: Path) -> None:
     bridge, project = _bridge(tmp_path, project_dir)
     bridge.propose(project, {"Pflichtenheft.md": "Neu\n"}, "user:ada", "retitle")
     page = _client(bridge).get(f"/p/{project}")
-    theme = Path("iterthink/defaults/config.yaml").read_text(encoding="utf-8")
+    theme = yaml.safe_load(Path("iterthink/defaults/config.yaml").read_text(encoding="utf-8"))
     css = CSS.read_text(encoding="utf-8")
     assert 'data-state="verdict"' in page.text
-    assert "warning:" not in theme
-    assert "var(--warning, var(--accent))" in css
-    assert "--theme-warning" not in page.text
+    assert all("warning" in theme["theme"][name] for name in ("dark", "light"))
+    assert "--warn:" in page.text
+    assert "var(--warn)" in css
 
 
-def test_dot_error_uses_error_or_accent(tmp_path: Path, project_dir: Path) -> None:
+def test_dot_error_uses_the_error_colour(tmp_path: Path, project_dir: Path) -> None:
     bridge, project = _bridge(tmp_path, project_dir)
     _break_log(project_dir, project)
     page = _client(bridge).get(f"/p/{project}")
-    theme = Path("iterthink/defaults/config.yaml").read_text(encoding="utf-8")
+    theme = yaml.safe_load(Path("iterthink/defaults/config.yaml").read_text(encoding="utf-8"))
     css = CSS.read_text(encoding="utf-8")
     assert 'data-state="error"' in page.text
-    assert "error:" not in theme
-    assert "var(--error, var(--accent))" in css
-    assert "--theme-error" not in page.text
+    assert all("error" in theme["theme"][name] for name in ("dark", "light"))
+    assert "--error:" in page.text
+    assert "var(--error)" in css
 
 
 def test_dot_precedence_and_reduced_motion(tmp_path: Path, project_dir: Path) -> None:

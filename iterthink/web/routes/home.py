@@ -31,6 +31,8 @@ _TOKEN = {
     "outline": "--line",
     "primary": "--accent",
     "success": "--ins-bg",
+    "warning": "--warn",
+    "error": "--error",
 }
 
 

@@ -2,6 +2,15 @@
 # topic: discuss | change | evaluate (change = reply can replace the paragraph via Accept).
 # Adapted from old/prompts.json (web); shared rules folded into each system_prompt.
 # Keep the language: always respond in the same language as the input (unless an action is explicitly for translation).
+# The line (slice C3): classify one line before anything runs. The id is logged
+# with every intent; change the id when you change the text.
+intent:
+  id: intent-v1
+  system_prompt: >-
+    Classify one line as search, document, chat, app, or task.
+    Reply with the mode and a confidence between 0 and 1, for example: chat 0.8.
+    Do not write the document, the answer, or the task.
+
 margin_actions:
   # --- discuss ---
   - id: create_summary
