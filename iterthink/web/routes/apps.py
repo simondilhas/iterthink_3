@@ -102,13 +102,14 @@ def app_revise(
     return RedirectResponse(f"/p/{project_id}/proposals", status_code=303)
 
 
-@router.get("/app-vendor/{name}")
+@router.get("/app-vendor/{name:path}")
 def app_vendor(name: str) -> Response:
-    """Vendor bytes for a sandboxed frame. The frame's origin is opaque."""
-    if "/" in name or name.startswith("."):
+    """Vendor modules for a sandboxed frame. The frame's origin is opaque and it has no token."""
+    parts = name.split("/")
+    if any(not part or part.startswith(".") for part in parts) or not name.endswith(".js"):
         raise NotFound(name)
-    path = _VENDOR / name
-    if not path.is_file():
+    path = (_VENDOR / name).resolve()
+    if not path.is_relative_to(_VENDOR.resolve()) or not path.is_file():
         raise NotFound(name)
     return Response(
         path.read_bytes(),

@@ -13,6 +13,7 @@ import yaml
 
 from iterthink import config
 from iterthink.services.bridge import (
+    AppInfo,
     Bridge,
     ChatInfo,
     FileEntry,
@@ -20,6 +21,7 @@ from iterthink.services.bridge import (
     Invalid,
     Mode,
     ProjectInfo,
+    TaskInfo,
     VersionInfo,
 )
 from iterthink.services.egress import check
@@ -98,6 +100,10 @@ class _Host(Protocol):
     def history(self, project: str, path: str | None = None) -> list[VersionInfo]: ...
     def make_project(self, path: Path) -> ProjectInfo: ...
     def search(self, project: str, query: str, limit: int = 50) -> list[object]: ...
+    def app_build(self, project: str, request: str, actor: str) -> AppInfo: ...
+    def task_create(
+        self, project: str, title: str, body: str, actor: str, depends_on: tuple[str, ...] = ()
+    ) -> TaskInfo: ...
 
 
 def _intent(mode: Mode, title: str, *steps: str) -> Intent:
@@ -265,7 +271,7 @@ def _query(found: Classified, line: str) -> str:
 
 
 def surface_href(
-    project: str, found: Classified, line: str, *, path: str = "", chat: str = ""
+    project: str, found: Classified, line: str, *, path: str = "", chat: str = "", app: str = ""
 ) -> str:
     """URL of the opened surface, including the quiet line."""
     extra = _query(found, line)
@@ -279,8 +285,10 @@ def surface_href(
         return f"/p/{project}/f/{quote(path)}?{extra}"
     if found.intent.mode == "chat" and chat:
         return f"/p/{project}/chats/{quote(chat)}?{extra}"
-    if found.intent.mode in {"app", "task"}:
-        return f"/p/{project}?soon=1&{extra}"
+    if found.intent.mode == "app" and app:
+        return f"/p/{project}/apps/{quote(app)}?{extra}"
+    if found.intent.mode == "task":
+        return f"/p/{project}/tasks?{extra}"
     return f"/p/{project}/search?q={quote(line)}&{extra}"
 
 
@@ -347,6 +355,11 @@ class IntentBridge:
         if found.intent.mode == "chat":
             info = _chat(host, project, line)
             return surface_href(project, found, line, chat=info.id)
+        if found.intent.mode == "app":
+            built = host.app_build(project, line, actor)
+            return surface_href(project, found, line, app=built.id)
+        if found.intent.mode == "task":
+            host.task_create(project, found.intent.title, line, actor)
         return surface_href(project, found, line)
 
     def start_work(self, line: str, actor: str = "user:local") -> str | None:

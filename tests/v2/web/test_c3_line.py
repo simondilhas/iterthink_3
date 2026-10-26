@@ -163,12 +163,15 @@ def test_low_confidence_model_says_not_sure(tmp_path: Path, project_dir: Path) -
     assert "/chats/" in page.headers["hx-redirect"]
 
 
-def test_unbuilt_mode_falls_back_to_search(tmp_path: Path, project_dir: Path) -> None:
+def test_app_without_a_builder_says_why_and_falls_back_to_search(
+    tmp_path: Path, project_dir: Path
+) -> None:
     bridge, project = _bridge(tmp_path, project_dir)
     page = _client(bridge).post(f"/p/{project}/line", data={"q": "Door schedule from the model"})
     assert page.status_code == 200
-    assert "coming soon" in page.text
-    assert "Pflichtenheft.md" in page.text or "Opened as search" in page.text
+    assert "Could not open as app: no builder model" in page.text
+    assert "coming soon" not in page.text
+    assert bridge.apps(project) == []
 
 
 def test_dot_pulses_when_proposals_are_open(tmp_path: Path, project_dir: Path) -> None:

@@ -6,6 +6,7 @@ from pathlib import Path
 
 import pytest
 
+from iterthink.services.bridge import Invalid
 from iterthink.services.bridge_real import RealBridge
 from iterthink.services.intent import PROMPT_ID
 
@@ -134,10 +135,23 @@ def test_names_apps_and_blank_lines(tmp_path: Path, project_dir: Path) -> None:
     blank = bridge.classify_line(project, "   ", None, "user:ada")
     assert blank.intent.mode == "search"
     app = bridge.classify_line(project, "Door schedule from the model", None, "user:ada")
-    assert "soon=1" in bridge.open_line(project, app, app.intent.title, "user:ada")
+    assert app.intent.mode == "app"
+    with pytest.raises(Invalid, match="no builder model"):
+        bridge.open_line(project, app, app.intent.title, "user:ada")
     found = bridge.classify_line(project, "find the hall", None, "user:ada")
     assert "/search" in bridge.open_line(project, found, "find the hall", "user:ada")
     empty = tmp_path / "empty-project"
     empty.mkdir()
     continued = bridge.classify_line(bridge.make_project(empty).id, "continue", None, "user:ada")
     assert continued.reopen is None
+
+
+def test_task_line_creates_a_task_and_opens_the_board(tmp_path: Path, project_dir: Path) -> None:
+    bridge = _bridge(tmp_path)
+    project = bridge.make_project(project_dir).id
+    found = bridge.classify_line(project, "Check every door rating", "task", "user:ada")
+    assert found.intent.mode == "task"
+    href = bridge.open_line(project, found, "Check every door rating", "user:ada")
+    assert href.startswith(f"/p/{project}/tasks?")
+    assert [task.title for task in bridge.tasks(project)] == ["Check every door rating"]
+    assert bridge.tasks(project)[0].status == "backlog"

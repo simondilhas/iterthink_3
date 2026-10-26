@@ -31,7 +31,7 @@ from iterthink.web import routes
 HERE = Path(__file__).parent
 TOKEN_COOKIE = "iterthink_token"  # noqa: S105 - a cookie name, not a secret
 TOKEN_HEADER = "x-iterthink-token"  # noqa: S105 - a header name
-PUBLIC_PREFIXES = ("/static/",)
+PUBLIC_PREFIXES = ("/static/", "/app-vendor/")
 
 STATUS = {NotFound: 404, Forbidden: 403, Conflict: 409, Invalid: 422}
 

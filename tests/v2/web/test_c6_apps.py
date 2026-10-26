@@ -98,6 +98,19 @@ def test_shell_csp_unchanged_when_app_open(tmp_path: Path, project_dir: Path) ->
     assert hidden.status_code == 404
 
 
+def test_frame_loads_vendor_modules_without_the_token() -> None:
+    from iterthink.services.bridge_fake import FakeBridge
+    from iterthink.web.app import create_app
+
+    client = TestClient(create_app(bridge=FakeBridge(), token="t"))
+    three = client.get("/app-vendor/three/build/three.module.js")
+    assert three.status_code == 200
+    assert three.headers.get("access-control-allow-origin") == "null"
+    assert client.get("/app-vendor/three/LICENSE").status_code == 404
+    assert client.get("/app-vendor/three/%2E%2E/%2E%2E/app.js").status_code == 404
+    assert client.get("/app/p-x").status_code == 401
+
+
 def test_build_keep_and_revise_from_the_page(tmp_path: Path, project_dir: Path) -> None:
     client, project, slug = _page(tmp_path, project_dir)
     listed = client.get(f"/p/{project}/apps")
@@ -115,3 +128,15 @@ def test_build_keep_and_revise_from_the_page(tmp_path: Path, project_dir: Path) 
     assert changed.status_code == 303
     dropped = client.post(f"/p/{project}/apps/{slug}/discard", follow_redirects=False)
     assert dropped.headers["location"].endswith("/apps")
+
+
+def test_line_builds_the_app_and_opens_it(tmp_path: Path, project_dir: Path) -> None:
+    client, project, _ = _page(tmp_path, project_dir)
+    page = client.post(
+        f"/p/{project}/line",
+        data={"q": "Door schedule from the model"},
+        headers={"HX-Request": "true"},
+    )
+    assert page.status_code == 200
+    assert page.headers["hx-redirect"].startswith(f"/p/{project}/apps/")
+    assert "Opened as app" in page.text
