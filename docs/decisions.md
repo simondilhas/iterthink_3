@@ -10,28 +10,6 @@ Format: `D-NNN · title · status · date` then 1–4 lines.
 ## Proposed
 _(human copies open questions from run reports here while thinking them over)_
 
-Proposed by Claude while writing the slices. The slices already follow them;
-accept, change or reject before the runs that depend on them.
-
-**D-011 · A user's own save is their verdict · proposed · 2026-10-23**
-Saving your own edit creates a version and logs it as your accepted change
-(`kind: own_edit`). Only agents, apps and rules go through proposals. Affects A1, B1.
-
-**D-012 · Human-owned bridge contract · proposed · 2026-10-23**
-`services/bridge.py`, its fake and `tests/v2/contract/` are written by the
-human; slices implement them. UI and MCP slices start on the fake, so all of
-wave 1 runs in parallel. Affects every slice.
-
-**D-013 · English UI text · proposed · 2026-10-23**
-UI text in English, kept in templates, no translation system yet. Affects A1, A5.
-
-**D-014 · Agents never decide · proposed · 2026-10-23**
-MCP and the agent runner expose no accept, reject, save or restore. Affects A6, C8.
-
-**D-015 · MCP reads content only under egress `allowed` until C2 · proposed · 2026-10-23**
-`shielded` and `none` refuse content tools until C2 adds redacted reads for
-`shielded`. Affects A6, C2.
-
 ## Accepted
 
 **D-001 · Plain HTML frontend · accepted · 2026-10-23**
@@ -69,11 +47,36 @@ The agent builds the slices in `docs/slices/`, tests first, and writes a run
 report for each. Allowlists in architecture tests only shrink. A human reads
 the reports when they want to. Review does not gate the next slice.
 
+**D-011 · A user's own save is their verdict · accepted · 2026-10-26**
+Saving your own edit creates a version and logs it as your accepted change
+(`kind: own_edit`). Only agents, apps and rules go through proposals. Affects A1, B1.
+
+**D-012 · Human-owned bridge contract · accepted · 2026-10-26**
+`services/bridge.py`, its fake and `tests/v2/contract/` are written by the
+human; slices implement them. UI and MCP slices start on the fake, so all of
+wave 1 runs in parallel. Affects every slice.
+
+**D-013 · English UI text · accepted · 2026-10-26**
+UI text in English, kept in templates, no translation system yet. Affects A1, A5.
+
+**D-014 · Agents never decide · accepted · 2026-10-26**
+MCP and the agent runner expose no accept, reject, save or restore. Affects A6, C8.
+
+**D-015 · MCP reads content only under egress `allowed` until C2 · accepted · 2026-10-26**
+`shielded` and `none` refuse content tools until C2 adds redacted reads for
+`shielded`. Affects A6, C2.
+
 **D-016 · One continuous run · accepted · 2026-10-23**
 Flet is replaced by the local web UI in `docs/spec/`.
 The agent keeps going through the slice order as far as it can. A blocked
 slice does not stop slices that do not depend on it. Connectors (C20) are
 out of this version.
+
+**D-017 · Contract follows the spec · accepted · 2026-10-26**
+Task statuses use the spec's eight words and the task tools are bridge methods.
+`Mode` has `review`, `FileDiff.kind` has `image`, `search` takes `kind` and
+`in_history`. Per-change verdicts are in the contract (slice A7). Apps stay on
+`srcdoc`; `AppInfo.url` is None. Contract tests run against both bridges, no jj.
 
 ## Rejected
 

@@ -29,7 +29,7 @@ Where a slice disagrees with the spec, the spec wins.
 | `review.md` | Review screen |
 | `agents.md` | Agent rules · Agents (MCP) |
 | `conventions.md` | UI style · Logic rules · File size |
-| `audit-and-security.md` | Audit trail · Security |
+| `audit-and-security.md` | Audit trail · Erase · Security |
 
 
 # Role & tone

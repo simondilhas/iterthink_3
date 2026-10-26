@@ -38,6 +38,7 @@ One rule: **take the first slice in the list below that is `ready` and whose
 | 7 | A6 MCP server | — | Agents |
 | 8 | B1 Real bridge | A2, A3, A4 | 1 Foundation |
 | 9 | B2 Integration | A1, A5, A6, B1 | — |
+| 9a | A7 Per-change verdicts | A5, B1 | 2 Review |
 | 10 | C21 Disk changes & tracked files | B1 | 1 Foundation |
 | 11 | C22 Claims | B1 | Shared folders |
 | 12 | C1 Index & search | B1 | 1 Foundation, 5 Panels |
@@ -71,31 +72,17 @@ One rule: **take the first slice in the list below that is `ready` and whose
 These are contract, seed or spec changes. A slice that hits one records it
 under Blocked and finishes its other items.
 
-- **Contract `Mode`** has no `review` (spec: "Compare spec v6 and v7" → review). C3.
-- **`make_project`** docstring and `bridge_fake.py` do not say that a relative
-  path means "new folder in the default workspace" (spec Folder model). C23
-  implements it in `bridge_real` and tests against `RealBridge`; the human
-  updates the contract docstring, a contract test and the fake.
-- **Contract `TaskStatus`** is `todo|running|review|done|failed`; the spec has
-  `backlog|ready|running|needs-input|review|done|rejected|cancelled`. No task
-  tools for `claim`, `update`, `ask`, `complete`. C8 builds the rest and
-  records these under Blocked.
-- **No per-change verdict** in the bridge (spec review: accept / reject / edit
-  per change, `data-hash`, 409). A5 and C9 work per proposal until then.
-- **`search`** has no `kind`, `in_history` parameters (spec Search → Bridge). C1.
-- **`AppInfo.url`** says "on the app origin"; the spec delivers apps via
-  `srcdoc`. C6 follows the spec.
-- **`bridge_fake.py`** labels (`NotImplementedError("slice C2")` for
-  `interpret`, `"slice C3"` for chats) use the old numbering.
-- **Seeds:** intent prompt in `defaults/prompts.yaml` (C3). Three.js in
-  `static/vendor/` (C9b). Theme keys `warning` (orange) and `error` (red) in
-  both palettes of `defaults/config.yaml`, mapped to `--warn` / `--error` in
-  `web/routes/home.py` `_TOKEN` and `app.css`, for the dot (C3).
-- **Spec:** an Erase section (C19) and a connector / API access section
-  (C20). Both slices are `ready` and propose the text in their run report.
-  An external timestamp service is not in the spec (C13 leaves it out).
-- **Packaging tool:** PyInstaller is not in `pyproject.toml` (C18 records the
-  build under Blocked).
+Settled on 2026-10-26 (D-017): task statuses and task tools, `Mode` review,
+`FileDiff.kind` image, `search` filters, per-change verdicts in the contract
+(A7 implements them), `make_project` with a relative path, `AppInfo.url`,
+fake labels, the intent prompt and dot colours in the seeds, Three.js in
+`static/vendor/`, the Erase spec section, PyInstaller as the `package` extra,
+and the `ifc` extra in CI.
+
+Still open:
+- **Spec:** an external timestamp service is not in the spec (C13 leaves it out).
+- **Erase on the bridge:** `erase(project, versions, reason, confirmed, actor)`
+  is not a contract method; the C19 route reaches the service through getattr.
 
 ## Definition of Ready — check before setting `ready`
 - [ ] Goal is one sentence a user would recognise.

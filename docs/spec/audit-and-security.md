@@ -19,6 +19,20 @@
   log without iterthink.
 - Logs are never rewritten. Corrections are new events.
 
+# Erase
+- Personal data or a wrong upload can be erased from history. Snapshot objects
+  that only the erased versions referenced are deleted. Blobs referenced only
+  by events that name those versions are deleted too.
+- The log is not rewritten. A new erase event records a hash of each file
+  path, the version ids, who erased, and the reason. It does not record the
+  content or the path.
+- Erase removes history, not the working file on disk.
+- Erase needs a reason and a second confirmation.
+- Another machine drops the same bytes the next time it reads history.
+- Checkpoints and handover bundles made before the erase still verify. The
+  chain is unchanged. A bundle made before the erase still contains what it
+  contained then.
+
 # Security
 - Bind 127.0.0.1 only. Token generated at startup, handed to the page through
   pywebview's JS API, required on every request including SSE.
