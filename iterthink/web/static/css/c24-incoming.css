@@ -1,0 +1,4 @@
+.incoming-note,
+.incoming-ask {
+  color: var(--muted);
+}

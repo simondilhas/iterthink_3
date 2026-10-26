@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+{% block title %}Import{% endblock %}
+{% block head %}{% include "home/head.html" %}{% endblock %}
+{% block line %}{% include "project/line.html" %}{% endblock %}
+{% block main %}
+<h1>Import</h1>
+{% if ask %}
+<p class="incoming-ask" role="status">Where should {{ ask }} go? The project folder is the usual place.</p>
+<form method="post" action="/p/{{ project_id }}/incoming/drop" enctype="multipart/form-data">
+  <label>Folder <input name="folder" type="text" value="."></label>
+  <label>File <input name="file" type="file" required></label>
+  <button type="submit">Put it here</button>
+</form>
+{% else %}
+<form method="post" action="/p/{{ project_id }}/incoming">
+  <label>File <input name="path" type="text" value="{{ path }}" required></label>
+  <button type="submit">Work on this</button>
+</form>
+{% endif %}
+{% if worked and worked.kind == "plan" %}
+<p class="incoming-note">This plan stays PDF.</p>
+{% elif worked and worked.path %}
+<p class="incoming-note">Working copy {{ worked.path }}</p>
+{% endif %}
+{% endblock %}
