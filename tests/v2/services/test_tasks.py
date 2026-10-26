@@ -86,6 +86,17 @@ def test_dependency_blocks_start(tmp_path: Path, project_dir: Path) -> None:
     assert task_meta(project_dir, second.id)["status"] == "running"
 
 
+def test_task_info_reports_the_spec_status_of_the_file(tmp_path: Path, project_dir: Path) -> None:
+    bridge, project = bridge_for(tmp_path, project_dir)
+    made = bridge.task_create(project, "Check doors", "Compare.", "user:ada")
+    seen = [made.status]
+    seen.append(bridge.task_ready(project, made.id, "user:ada").status)
+    seen.append(bridge.task_ask(project, made.id, "Which floor?", "agent:spec-checker").status)
+    seen.append(bridge.task_cancel(project, made.id, "user:ada").status)
+    assert seen == ["backlog", "running", "needs-input", "cancelled"]
+    assert bridge.tasks(project)[0].status == task_meta(project_dir, made.id)["status"]
+
+
 def test_claimed_task_not_started_twice(tmp_path: Path, project_dir: Path) -> None:
     bridge, project = bridge_for(tmp_path, project_dir)
     made = bridge.task_create(project, "Check doors", "Compare.", "user:ada")
