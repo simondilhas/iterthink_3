@@ -1,5 +1,6 @@
 # Human-owned contract and its fake (not written by slices)
 iterthink/services/bridge.py
+iterthink/services/bridge_records.py
 iterthink/services/bridge_fake.py
 iterthink/web/app.py
 iterthink/web/__main__.py
