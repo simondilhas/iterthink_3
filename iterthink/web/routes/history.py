@@ -132,8 +132,29 @@ def _table_rows(diff: FileDiff) -> tuple[_Row, ...]:
     return tuple(rows)
 
 
+def _data_image(media: str, value: object) -> str:
+    if not isinstance(value, str) or not value:
+        return ""
+    return f"data:{media};base64,{value}"
+
+
+def _image_view(diff: FileDiff) -> dict[str, object]:
+    regions = diff.details.get("regions")
+    media = diff.details.get("media")
+    kind = media if isinstance(media, str) and media else "image/png"
+    return {
+        "kind": "image",
+        "summary": diff.summary,
+        "regions": regions if isinstance(regions, list) else [],
+        "before_url": _data_image(kind, diff.details.get("before_png")),
+        "after_url": _data_image(kind, diff.details.get("after_png")),
+    }
+
+
 def diff_view(diff: FileDiff) -> dict[str, object]:
     """Template values for one file diff."""
+    if isinstance(diff.details.get("regions"), list):
+        return _image_view(diff)
     if diff.kind == "text":
         changes, stable = _text_changes(diff)
         return {"kind": "text", "summary": diff.summary, "changes": changes, "stable": stable}

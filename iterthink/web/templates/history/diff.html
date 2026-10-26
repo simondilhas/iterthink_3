@@ -2,6 +2,7 @@
 {% if view.kind == "text" %}{% include "partials/diff_text.html" %}
 {% elif view.kind == "table" %}{% include "partials/diff_table.html" %}
 {% elif view.kind == "model" %}{% include "partials/diff_model.html" %}
+{% elif view.kind == "image" %}{% include "partials/diff_image.html" %}
 {% else %}{% include "partials/diff_other.html" %}
 {% endif %}
 </div>

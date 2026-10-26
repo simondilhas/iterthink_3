@@ -1,0 +1,23 @@
+<p>{{ view.summary }}</p>
+<image-compare>
+  <div class="image-stage">
+    {% if view.after_url %}
+    <img class="image-sizer" src="{{ view.after_url }}" alt="" aria-hidden="true">
+    {% elif view.before_url %}
+    <img class="image-sizer" src="{{ view.before_url }}" alt="" aria-hidden="true">
+    {% endif %}
+    {% if view.before_url %}
+    <img class="image-before" src="{{ view.before_url }}" alt="Before">
+    {% endif %}
+    {% if view.after_url %}
+    <div class="image-after">
+      <img src="{{ view.after_url }}" alt="After">
+      {% for box in view.regions %}
+      <span class="image-box" style="left: {{ box[0] * 100 }}cqw; top: {{ box[1] * 100 }}%; width: {{ box[2] * 100 }}cqw; height: {{ box[3] * 100 }}%;"></span>
+      {% endfor %}
+    </div>
+    {% endif %}
+  </div>
+  <input type="range" min="0" max="100" value="50" aria-label="Before and after" oninput="var box=this.parentElement&&this.parentElement.querySelector('.image-after');if(box)box.style.width=this.value+'%'">
+</image-compare>
+<script src="/static/js/image-compare.js"></script>
