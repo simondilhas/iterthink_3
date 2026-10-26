@@ -60,6 +60,20 @@ def _own_version(parts: list[str]) -> bool:
     return parts[3] in {"index.html", "module.js"}
 
 
+def _event_order(root: Path) -> dict[str, tuple[str, str, int]]:
+    """Last log position of each version id. Merge order is time, machine, sequence."""
+    from iterthink.services.event_log import read_all
+
+    order: dict[str, tuple[str, str, int]] = {}
+    for event in read_all(root):
+        if event.type != "version":
+            continue
+        version = event.payload.get("version")
+        if isinstance(version, str):
+            order[version] = (event.ts, event.machine, event.seq)
+    return order
+
+
 def _atomic(directory: Path, name: str, data: bytes) -> None:
     """Write ``data`` to ``directory/name`` via a temp file, fsync, then replace."""
     directory.mkdir(parents=True, exist_ok=True)
@@ -124,8 +138,29 @@ class Snapshots:
         return self._commit(merged, description, author, str(current["id"]), draft=False)
 
     def head(self) -> Version:
-        """Latest version that is not a draft."""
+        """Latest version that is not a draft.
+
+        When two versions share a parent, the one whose version event is last
+        in merge order (time, machine, sequence) is head.
+        """
         return self._version(self._require_head())
+
+    def snapshot_from(
+        self, parent: str | None, files: dict[str, bytes], description: str, author: str
+    ) -> Version:
+        """Store ``files`` under ``parent``. The other machine may still see that parent."""
+        if parent is not None:
+            self._load(parent)
+        return self._commit(self._hash_files(files), description, author, parent, draft=False)
+
+    def tips(self) -> list[Version]:
+        """Versions that are not a parent of another version."""
+        return [self._version(item) for item in self._tips()]
+
+    def parent_of(self, version: str) -> str | None:
+        """The parent id, or None for the first version."""
+        raw = self._load(version).get("parent")
+        return raw if isinstance(raw, str) else None
 
     def draft(
         self, baseline: str, changes: dict[str, bytes], description: str, author: str
@@ -198,17 +233,33 @@ class Snapshots:
         return self._read_manifest(path)
 
     def _head_manifest(self) -> dict[str, Any] | None:
-        applied = [item for item in self._manifests_data() if item.get("draft") is not True]
-        if not applied:
-            return None
-        applied.sort(key=lambda item: str(item["ts"]), reverse=True)
-        return applied[0]
+        return self._winning()
 
     def _require_head(self) -> dict[str, Any]:
-        current = self._head_manifest()
+        current = self._winning()
         if current is None:
             raise SnapshotError("no version yet")
         return current
+
+    def _tips(self) -> list[dict[str, Any]]:
+        applied = [item for item in self._manifests_data() if item.get("draft") is not True]
+        parents = {item.get("parent") for item in applied}
+        return [item for item in applied if item.get("id") not in parents]
+
+    def _winning(self) -> dict[str, Any] | None:
+        tips = self._tips()
+        if not tips:
+            return None
+        if len(tips) == 1:
+            return tips[0]
+        return max(tips, key=self._event_key)
+
+    def _event_key(self, manifest: dict[str, Any]) -> tuple[str, str, int]:
+        version = str(manifest.get("id", ""))
+        found = _event_order(self._root).get(version)
+        if found is not None:
+            return found
+        return (str(manifest.get("ts", "")), "", 0)
 
     def _next_ts(self) -> str:
         stamps = [str(item["ts"]) for item in self._manifests_data()]

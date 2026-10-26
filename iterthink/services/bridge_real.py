@@ -77,6 +77,7 @@ from iterthink.services.search import indexed_log, indexed_search
 from iterthink.services.settings import SettingsBridge
 from iterthink.services.tasks import TasksBridge, on_verdict
 from iterthink.services.verify_log import verify_all
+from iterthink.services.watcher import SharedBridge
 from iterthink.services.workspaces import WorkspacesBridge as Work
 
 
@@ -104,6 +105,7 @@ class RealBridge(
     Advice,
     Apps,
     TasksBridge,
+    SharedBridge,
     Later,
 ):
     def __init__(

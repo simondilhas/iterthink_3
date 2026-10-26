@@ -1,6 +1,6 @@
 ```
 id: C14
-status: ready
+status: done
 depends_on: [C1, C22]
 ```
 # C14 · Shared folders and several machines
@@ -43,9 +43,9 @@ Folder model (copy detection).
   (different `machine`, `state_dir`) on one folder.
 
 ## Acceptance
-- [ ] `test_two_machines_edit_different_files_both_kept`
-- [ ] `test_two_machines_edit_same_file_shows_conflict`
-- [ ] `test_other_machine_events_appear_after_rescan`
-- [ ] `test_conflicting_verdicts_from_two_machines_in_review`
-- [ ] `test_cloud_sync_folder_warns_and_conflict_copy_is_candidate`
-- [ ] `test_confirmed_copy_gets_new_id`
+- [x] `test_two_machines_edit_different_files_both_kept`
+- [x] `test_two_machines_edit_same_file_shows_conflict`
+- [x] `test_other_machine_events_appear_after_rescan`
+- [x] `test_conflicting_verdicts_from_two_machines_in_review`
+- [x] `test_cloud_sync_folder_warns_and_conflict_copy_is_candidate`
+- [x] `test_confirmed_copy_gets_new_id`
