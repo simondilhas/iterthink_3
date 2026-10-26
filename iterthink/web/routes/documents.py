@@ -17,7 +17,7 @@ from iterthink.web.routes.history import diff_view
 from iterthink.web.routes.home import render
 
 router = APIRouter()
-_MD = MarkdownIt()
+_MD = MarkdownIt("commonmark", {"html": False})  # raw HTML in a file stays text
 _bridge = Depends(bridge_of)
 _actor = Depends(actor_of)
 _op = Form("")
