@@ -14,5 +14,5 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: astral-sh/setup-uv@v6
-      - run: uv sync --extra dev
+      - run: uv sync --extra dev --extra ifc
       - run: uv run python scripts/check.py
