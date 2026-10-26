@@ -1,6 +1,6 @@
 ```
 id: C9b
-status: blocked
+status: ready
 depends_on: [C9]
 ```
 # C9b · IFC 3D diff
