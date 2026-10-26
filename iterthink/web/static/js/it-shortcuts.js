@@ -94,7 +94,12 @@ function onKey(event) {
       return;
     }
   }
-  if (event.key === "Escape" && !document.querySelector(".settings")) closePanels();
+  if (event.key !== "Escape") return;
+  const settings = document.querySelector(".settings-close");
+  const field = document.activeElement;
+  if (!(settings instanceof HTMLAnchorElement)) closePanels();
+  else if (field instanceof HTMLElement && field.matches("input, select, textarea")) field.blur();
+  else settings.click();
 }
 
 document.addEventListener("keydown", onKey);

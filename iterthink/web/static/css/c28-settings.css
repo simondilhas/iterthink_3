@@ -23,19 +23,16 @@
   margin: 0;
 }
 
-.settings-back {
-  color: var(--muted);
-  text-decoration: none;
-}
-
-.settings-back:hover {
-  color: var(--fg);
+.settings-close {
+  float: none;
+  position: static;
+  margin: 0 0 0 auto;
 }
 
 .settings-level {
   display: flex;
   gap: var(--gap);
-  margin: 0 0 0 auto;
+  margin: 0;
   padding: 0;
   border: 0;
   color: var(--muted);

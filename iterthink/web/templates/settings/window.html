@@ -3,7 +3,6 @@
 {% block head %}{% include "home/head.html" %}{% endblock %}
 {% block line %}
 <div class="settings-bar">
-  <a class="settings-back" href="{{ '/p/' ~ project_id if project_id else '/' }}" title="Back">Back</a>
   <h1>Settings</h1>
   {% if project_id %}
   <fieldset class="settings-level">
@@ -12,10 +11,11 @@
     <label><input type="radio" name="scope_level" value="workspace"> the workspace</label>
   </fieldset>
   {% endif %}
+  <a class="it-close settings-close" href="{{ '/p/' ~ project_id if project_id else '/' }}" title="Close" aria-label="Close settings">×</a>
 </div>
 {% endblock %}
 {% block left %}
-<nav class="settings-nav" aria-label="Settings sections">
+<nav class="settings-nav" aria-label="Settings sections" data-no-close>
   {% for section in sections %}<a href="#{{ section.name }}">{{ section.title }}</a>
   {% endfor %}
 </nav>

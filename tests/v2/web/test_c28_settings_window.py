@@ -59,6 +59,16 @@ def test_all_sections_render(client: TestClient, bridge: RealBridge, project_dir
     assert ">Search index</h2>" not in start.text
 
 
+def test_settings_close_returns_to_where_it_opened(
+    client: TestClient, bridge: RealBridge, project_dir: Path
+) -> None:
+    project = bridge.make_project(project_dir).id
+    inside = client.get(f"/p/{project}/settings").text
+    assert f'class="it-close settings-close" href="/p/{project}"' in inside
+    assert 'class="it-close settings-close" href="/"' in client.get("/settings").text
+    assert "/static/js/it-close.js" in client.get("/").text
+
+
 def test_change_posts_and_shows_saved(
     client: TestClient, bridge: RealBridge, project_dir: Path
 ) -> None:
