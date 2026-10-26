@@ -5,5 +5,5 @@ Ownership (one slice per module, so parallel runs don't collide):
 - history.py, review.py, log.py             → slice A5
 - line.py                                   → slice C3
 - chats.py → C5 · apps.py → C6 · tasks.py → C8 · models.py → C9 · plans.py → C10 · settings.py → C15
-- dictation.py → C16
+- dictation.py → C16 · erase.py → C19
 """

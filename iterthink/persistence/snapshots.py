@@ -30,6 +30,34 @@ class Version:
     paths: tuple[str, ...]
 
 
+def _forget_erased(root: Path) -> set[str]:
+    """Drop bytes named by erase events. Returns those version ids."""
+    from iterthink.services.erase import apply_erases, erased_ids
+
+    apply_erases(root)
+    return erased_ids(root)
+
+
+def _object_file(directory: Path, digest: str) -> Path | None:
+    if len(digest) != 64 or any(char not in "0123456789abcdef" for char in digest):
+        return None
+    return directory / digest
+
+
+def _split_hashes(manifests: list[dict[str, Any]], wanted: set[str]) -> tuple[set[str], set[str]]:
+    erased: set[str] = set()
+    kept: set[str] = set()
+    for manifest in manifests:
+        files = manifest.get("files")
+        if not isinstance(files, dict):
+            continue
+        bucket = erased if str(manifest.get("id")) in wanted else kept
+        for digest in files.values():
+            if isinstance(digest, str):
+                bucket.add(digest)
+    return erased, kept
+
+
 def _canonical(obj: object) -> str:
     return json.dumps(obj, sort_keys=True, separators=(",", ":"), ensure_ascii=False)
 
@@ -110,8 +138,10 @@ class Snapshots:
 
     def history(self, path: str | None = None) -> list[Version]:
         """Newest version first. ``path`` keeps versions that contain that file."""
+        gone = _forget_erased(self._root)
         chosen = None if path is None else _check_path(path)
         versions = [self._version(item) for item in self._manifests_data()]
+        versions = [item for item in versions if item.id not in gone]
         if chosen is not None:
             versions = [item for item in versions if chosen in item.paths]
         versions.sort(key=lambda item: item.timestamp, reverse=True)
@@ -119,11 +149,29 @@ class Snapshots:
 
     def file_at(self, version: str, path: str) -> bytes | None:
         """Bytes of ``path`` in ``version``, or ``None`` when the version lacks it."""
+        _forget_erased(self._root)
         checked = _check_path(path)
         digest = self._load(version)["files"].get(checked)
         if not isinstance(digest, str):
             return None
-        return (self._objects / digest).read_bytes()
+        target = _object_file(self._objects, digest)
+        if target is None or not target.is_file():
+            return None
+        return target.read_bytes()
+
+    def drop_unique(self, version_ids: list[str]) -> tuple[str, ...]:
+        """Delete object files that only these versions referenced."""
+        wanted = set(version_ids)
+        manifests = self._manifests_data()
+        known = {str(item.get("id")) for item in manifests}
+        erased, kept = _split_hashes(manifests, wanted & known)
+        deleted: list[str] = []
+        for digest in sorted(erased - kept):
+            target = _object_file(self._objects, digest)
+            if target is not None and target.is_file():
+                target.unlink()
+                deleted.append(digest)
+        return tuple(deleted)
 
     def restore(self, version: str, paths: list[str], description: str, author: str) -> Version:
         """New version: listed paths from ``version``, every other path from head."""

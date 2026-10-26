@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+{% block title %}Erase{% endblock %}
+{% block head %}{% include "home/head.html" %}{% endblock %}
+{% block line %}{% include "project/line.html" %}{% endblock %}
+{% block main %}
+<h1>Erase</h1>
+{% if step == "done" %}
+<p class="erase-note">Erased. History no longer has that content. The decision record notes why.</p>
+{% elif step == "confirm" %}
+<p class="erase-confirm" role="status">This removes the content from history. It cannot be undone.</p>
+<form method="post" action="/p/{{ project_id }}/erase">
+  <input type="hidden" name="version" value="{{ version }}">
+  <input type="hidden" name="reason" value="{{ reason }}">
+  <input type="hidden" name="confirm" value="yes">
+  <p>Reason: {{ reason }}</p>
+  <p>Version: {{ version }}</p>
+  <button type="submit">Erase</button>
+</form>
+{% else %}
+<form method="post" action="/p/{{ project_id }}/erase">
+  <label>Version <input name="version" type="text" required></label>
+  <label>Reason <input name="reason" type="text" required></label>
+  <button type="submit">Review</button>
+</form>
+{% endif %}
+{% endblock %}

@@ -1,0 +1,10 @@
+.erase-confirm {
+  color: var(--del-fg);
+  background: var(--del-bg);
+  padding: 4px 8px;
+  border-radius: var(--radius);
+}
+
+.erase-note {
+  color: var(--muted);
+}
