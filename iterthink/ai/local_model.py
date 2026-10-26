@@ -15,6 +15,7 @@ from iterthink.ai.ollama_util import chat_response_text, chat_stream_delta
 LINE_MODEL = "qwen2.5:3b"
 _KEEP_ALIVE = "30m"
 _TIMEOUT = 60.0
+_STATUS_TIMEOUT = 3.0
 
 
 def _messages(system: str, user: str) -> list[dict[str, str]]:
@@ -27,11 +28,11 @@ class LocalModel:
 
     tier = "local"
 
-    def __init__(self, model: str, client: Any | None = None) -> None:
+    def __init__(self, model: str, client: Any | None = None, host: str | None = None) -> None:
         self.model = model
-        self._client = (
-            client if client is not None else Client(config.OLLAMA_HOST, timeout=_TIMEOUT)
-        )
+        if client is None:
+            client = Client(host or config.OLLAMA_HOST, timeout=_TIMEOUT)
+        self._client = client
 
     def complete(self, system: str, user: str, tier: str) -> str:
         """The answer, or "" when Ollama is not running or the model is missing."""
@@ -60,13 +61,19 @@ class LocalModel:
                 yield text
 
 
-def connect(bridge: object, *, client: Any | None = None, warm: bool = True) -> None:
+def connect(
+    bridge: object,
+    *,
+    line_model: str = LINE_MODEL,
+    chat_model: str | None = None,
+    host: str | None = None,
+    client: Any | None = None,
+    warm: bool = True,
+) -> None:
     """Give the line and chats their local model. `warm` loads the line model in the background."""
-    line = LocalModel(LINE_MODEL, client)
-    for method, router in (
-        ("use_intent_model", line),
-        ("use_model", LocalModel(config.DEFAULT_OLLAMA_MODEL, client)),
-    ):
+    line = LocalModel(line_model, client, host)
+    chat = LocalModel(chat_model or config.DEFAULT_OLLAMA_MODEL, client, host)
+    for method, router in (("use_intent_model", line), ("use_model", chat)):
         setter = getattr(bridge, method, None)
         if callable(setter):
             setter(router)
@@ -74,3 +81,24 @@ def connect(bridge: object, *, client: Any | None = None, warm: bool = True) -> 
         threading.Thread(
             target=line.complete, args=("", "ok", "local"), name="iterthink-warm", daemon=True
         ).start()
+
+
+def _model_names(listing: object) -> tuple[str, ...]:
+    items = listing.get("models") if isinstance(listing, dict) else getattr(listing, "models", [])
+    names: list[str] = []
+    for item in items if isinstance(items, list) else []:
+        name = item.get("model") or item.get("name") if isinstance(item, dict) else None
+        name = name or getattr(item, "model", None)
+        if isinstance(name, str) and name:
+            names.append(name)
+    return tuple(sorted(names))
+
+
+def installed_models(client: Any | None = None, host: str | None = None) -> tuple[str, ...] | None:
+    """The models Ollama has, or None when it does not answer."""
+    if client is None:
+        client = Client(host or config.OLLAMA_HOST, timeout=_STATUS_TIMEOUT)
+    try:
+        return _model_names(client.list())
+    except (ConnectionError, ResponseError, httpx.HTTPError, OSError):
+        return None

@@ -75,6 +75,7 @@ from iterthink.services.proposals import (
 )
 from iterthink.services.search import indexed_log, indexed_search, with_filters
 from iterthink.services.settings import SettingsBridge
+from iterthink.services.settings_window import SettingsWindowBridge
 from iterthink.services.tasks import TasksBridge, on_verdict
 from iterthink.services.verify_log import verify_all
 from iterthink.services.watcher import SharedBridge
@@ -87,6 +88,7 @@ class RealBridge(
     Voice,
     IntentBridge,
     SettingsBridge,
+    SettingsWindowBridge,
     DocumentsBridge,
     ChatsBridge,
     Advice,

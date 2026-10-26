@@ -1,0 +1,12 @@
+{% set field = "file-" ~ name | replace(".", "-") %}
+<form class="settings-file" id="{{ field }}" hx-post="/settings/file" hx-target="this" hx-swap="outerHTML">
+  <input type="hidden" name="name" value="{{ name }}">
+  <input type="hidden" name="project" value="{{ project_id or '' }}">
+  <input type="hidden" name="level" value="{{ level }}">
+  <details{% if message %} open{% endif %}>
+    <summary>{{ name }} <span class="source">{{ level }}</span></summary>
+    <textarea id="{{ field }}-text" name="text" rows="14" spellcheck="false" aria-label="{{ name }}">{{ text }}</textarea>
+    <button type="submit">Save</button>
+    {% if message %}<span class="{{ 'saved' if ok else 'settings-error' }}" role="status">{{ message }}</span>{% endif %}
+  </details>
+</form>

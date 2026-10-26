@@ -1,4 +1,5 @@
-<script type="module" src="/static/js/it-shortcuts.js"></script>
+{% if shortcuts %}<meta name="it-shortcuts" content="{{ shortcuts | tojson | forceescape }}">
+{% endif %}<script type="module" src="/static/js/it-shortcuts.js"></script>
 <script type="module" src="/static/js/it-folder-picker.js"></script>
 <script type="module" src="/static/js/it-dictation.js"></script>
 <script type="module" src="/static/js/it-drop.js"></script>

@@ -2,11 +2,35 @@
 
 const mac = /Mac/.test(navigator.platform);
 
+/** @type {Record<string, string>} */
+const DEFAULTS = { line: "Mod+K", save: "Mod+S", files: "Mod+E" };
+
 /**
+ * @returns {Record<string, string>}
+ */
+function configured() {
+  const meta = document.querySelector('meta[name="it-shortcuts"]');
+  if (!(meta instanceof HTMLMetaElement)) return DEFAULTS;
+  try {
+    return { ...DEFAULTS, ...JSON.parse(meta.content) };
+  } catch {
+    return DEFAULTS;
+  }
+}
+
+/**
+ * @param {string} combo such as "Mod+Shift+K"
  * @param {KeyboardEvent} event
  */
-function isMod(event) {
-  return mac ? event.metaKey : event.ctrlKey;
+function matches(combo, event) {
+  const parts = combo.split("+").map((part) => part.trim().toLowerCase());
+  const key = parts.pop() || "";
+  const wantMod = parts.includes("mod");
+  const wantShift = parts.includes("shift");
+  const wantAlt = parts.includes("alt");
+  const mod = mac ? event.metaKey : event.ctrlKey;
+  const pressed = event.key === " " ? "space" : event.key.toLowerCase();
+  return pressed === key && mod === wantMod && event.shiftKey === wantShift && event.altKey === wantAlt;
 }
 
 function focusLine() {
@@ -51,23 +75,26 @@ function onSubmit(event) {
   if (event.target instanceof Element && event.target.closest("details.menu")) closeMenus();
 }
 
+/** @type {Array<[string, () => void]>} */
+const ACTIONS = [
+  ["line", focusLine],
+  ["save", saveEditor],
+  ["files", toggleFiles],
+];
+
 /**
  * @param {KeyboardEvent} event
  */
 function onKey(event) {
-  const key = event.key.toLowerCase();
-  if (isMod(event) && key === "k") {
-    event.preventDefault();
-    focusLine();
-  } else if (isMod(event) && key === "s") {
-    event.preventDefault();
-    saveEditor();
-  } else if (isMod(event) && key === "e") {
-    event.preventDefault();
-    toggleFiles();
-  } else if (event.key === "Escape") {
-    closePanels();
+  const keys = configured();
+  for (const [name, action] of ACTIONS) {
+    if (keys[name] && matches(keys[name], event)) {
+      event.preventDefault();
+      action();
+      return;
+    }
   }
+  if (event.key === "Escape" && !document.querySelector(".settings")) closePanels();
 }
 
 document.addEventListener("keydown", onKey);

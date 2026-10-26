@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+{% block title %}Settings{% endblock %}
+{% block head %}{% include "home/head.html" %}{% endblock %}
+{% block line %}
+<div class="settings-bar">
+  <a class="settings-back" href="{{ '/p/' ~ project_id if project_id else '/' }}" title="Back">Back</a>
+  <h1>Settings</h1>
+  {% if project_id %}
+  <fieldset class="settings-level">
+    <legend>Changes apply to</legend>
+    <label><input type="radio" name="scope_level" value="project" checked> this project</label>
+    <label><input type="radio" name="scope_level" value="workspace"> the workspace</label>
+  </fieldset>
+  {% endif %}
+</div>
+{% endblock %}
+{% block left %}
+<nav class="settings-nav" aria-label="Settings sections">
+  {% for section in sections %}<a href="#{{ section.name }}">{{ section.title }}</a>
+  {% endfor %}
+</nav>
+{% endblock %}
+{% block main %}
+<div class="settings">
+  {% if notice %}<p class="saved" role="status">{{ notice }}</p>{% endif %}
+  {% for section in sections %}
+  <section id="{{ section.name }}" class="settings-section">
+    <h2>{{ section.title }}</h2>
+    {% include ["settings/sections/" ~ section.name ~ ".html", "settings/sections/rows.html"] %}
+  </section>
+  {% endfor %}
+</div>
+{% endblock %}

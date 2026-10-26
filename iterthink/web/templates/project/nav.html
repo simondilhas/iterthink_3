@@ -7,3 +7,22 @@
   <button type="button" hx-get="/p/{{ project_id }}/panel" hx-target="#right" hx-swap="innerHTML" hx-trigger="click">History</button>
   {% endif %}
 </nav>
+<details class="menu">
+  <summary aria-label="Menu"><span></span><span></span><span></span></summary>
+  <div class="menu-panel">
+    {% if has_route(request, "settings") %}
+    <a href="/p/{{ project_id }}/settings">Settings</a>
+    {% endif %}
+    <form method="post" action="/line" hx-post="/line" hx-target="#main" hx-swap="innerHTML">
+      <input type="hidden" name="q" value="open project">
+      <button type="submit">Open project</button>
+    </form>
+    <form method="post" action="/open" hx-post="/open" hx-target="#main" hx-swap="innerHTML">
+      <it-folder-picker>
+        <label>Folder path <input name="path" type="text" spellcheck="false" placeholder="/path/to/folder"></label>
+        <button type="submit">Open folder</button>
+      </it-folder-picker>
+    </form>
+    <a href="/">Start screen</a>
+  </div>
+</details>

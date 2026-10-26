@@ -1,0 +1,18 @@
+{% if section.extra.questions %}
+<h3>Defaults changed</h3>
+{% for item in section.extra.questions %}
+<form class="settings-question" method="post" action="/p/{{ project_id }}/settings">
+  <input type="hidden" name="file" value="{{ item.file }}">
+  <input type="hidden" name="key" value="{{ item.key }}">
+  <span>{{ item.file }} · {{ item.key }}</span>
+  <button type="submit" name="choice" value="keep" title="Keep mine">Keep mine</button>
+  <button type="submit" name="choice" value="take" title="Take the new default">Take new</button>
+  <button type="submit" name="choice" value="merge" title="Merge the two mappings">Merge</button>
+</form>
+{% endfor %}
+{% endif %}
+{% set level = section.extra.level %}
+{% for name, text in section.extra.files %}
+{% set message = "" %}{% set ok = True %}
+{% include "settings/file.html" %}
+{% endfor %}

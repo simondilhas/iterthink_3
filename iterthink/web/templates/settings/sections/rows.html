@@ -1,0 +1,5 @@
+{% set ns = namespace(group="") %}
+{% for row in section.rows %}
+{% if row.group != ns.group %}<h3>{{ row.group }}</h3>{% set ns.group = row.group %}{% endif %}
+{% include "settings/row.html" %}
+{% endfor %}

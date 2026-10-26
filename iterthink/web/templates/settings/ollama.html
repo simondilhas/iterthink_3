@@ -1,0 +1,9 @@
+<datalist id="ollama-models">
+  {% for name in status.models %}<option value="{{ name }}"></option>
+  {% endfor %}
+</datalist>
+<p>
+  {% if status.running %}Ollama running · {{ status.models | length }} models{% else %}Ollama not running{% endif %}
+  {% for name in status.missing %} · not installed: <code>ollama pull {{ name }}</code>{% endfor %}
+  <button type="button" hx-get="/settings/ollama" hx-target="#ollama-status" hx-swap="innerHTML">Refresh</button>
+</p>

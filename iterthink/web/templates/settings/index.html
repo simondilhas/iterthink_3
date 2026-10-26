@@ -1,0 +1,8 @@
+<div id="index-status" class="settings-status">
+  <p>{{ index.files }} files · {{ index.events }} events · {{ index.size }}</p>
+  <form hx-post="/settings/index" hx-target="#index-status" hx-swap="outerHTML">
+    <input type="hidden" name="project" value="{{ project_id }}">
+    <button type="submit" title="Read the project folder and its log again">Rebuild</button>
+    {% if notice %}<span class="saved" role="status">{{ notice }}</span>{% endif %}
+  </form>
+</div>

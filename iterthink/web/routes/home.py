@@ -9,7 +9,7 @@ import yaml
 from fastapi import APIRouter, Depends, Form, Request
 from fastapi.responses import HTMLResponse, RedirectResponse, Response
 
-from iterthink.services.bridge import Bridge, ProjectInfo
+from iterthink.services.bridge import Bridge, BridgeError, ProjectInfo
 from iterthink.web.app import bridge_of, templates
 
 router = APIRouter()
@@ -36,7 +36,7 @@ _TOKEN = {
 }
 
 
-def theme_style() -> str:
+def theme_style(appearance: str | None = None) -> str:
     """CSS variables from the seeded theme. Appearance picks dark or light."""
     path = Path(__file__).resolve().parents[2] / "defaults" / "config.yaml"
     loaded = yaml.safe_load(path.read_text(encoding="utf-8"))
@@ -44,7 +44,7 @@ def theme_style() -> str:
     themes = data.get("theme")
     if not isinstance(themes, dict):
         return ""
-    name = "dark" if data.get("appearance") == "dark" else "light"
+    name = "dark" if (appearance or data.get("appearance")) == "dark" else "light"
     palette = themes.get(name)
     if not isinstance(palette, dict):
         return ""
@@ -61,9 +61,26 @@ def theme_style() -> str:
     return "<style>:root{" + "".join(rules) + "}</style>"
 
 
+def _ask(request: Request, name: str, *args: object) -> object:
+    """A value the bridge offers for every page, or None when it has none."""
+    found = getattr(getattr(request.app.state, "bridge", None), name, None)
+    if not callable(found):
+        return None
+    try:
+        return found(*args)
+    except BridgeError:
+        return None
+
+
 def render(request: Request, template: str, **context: object) -> HTMLResponse:
-    """A full page or fragment with the shared language and theme."""
-    payload: dict[str, object] = {"lang": "en", "theme_style": theme_style()}
+    """A full page or fragment with the shared language, theme and shortcuts."""
+    appearance = _ask(request, "appearance")
+    project = request.path_params.get("project_id")
+    payload: dict[str, object] = {
+        "lang": "en",
+        "theme_style": theme_style(appearance if isinstance(appearance, str) else None),
+        "shortcuts": _ask(request, "shortcut_keys", project) or {},
+    }
     payload.update(context)
     return templates.TemplateResponse(request, template, payload)
 

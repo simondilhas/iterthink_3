@@ -186,14 +186,64 @@ def _reconcile(
     return merged, nxt, questions
 
 
-def _merged(project_dir: Path) -> dict[str, Layer]:
-    found: dict[str, Layer] = {}
+def workspace_file(workspace: Path) -> Path:
+    return workspace / ".iterthink" / "settings" / "values.yaml"
+
+
+def in_workspace(workspace: Path) -> list[SettingInfo]:
+    """Defaults and a workspace's own values, for a workspace without a project."""
+    found = _defaults()
+    for key, value in read_yaml(workspace_file(workspace)).items():
+        if key in KEYS:
+            found[key] = (value, "workspace")
+    return [
+        SettingInfo(key=key, value=value, source=source) for key, (value, source) in found.items()
+    ]
+
+
+def set_in_workspace(workspace: Path, key: str, value: object) -> None:
+    if key not in KEYS:
+        raise Invalid(f"unknown setting {key}")
+    data = read_yaml(workspace_file(workspace))
+    data[key] = _coerce(key, value)
+    write_yaml(workspace_file(workspace), data)
+
+
+def clear_in_workspace(workspace: Path, key: str) -> None:
+    _drop(workspace_file(workspace), key)
+
+
+def clear_value(project_dir: Path, key: str, level: str, actor: str, emit: object) -> SettingInfo:
+    """Remove one override so the next layer's value applies, and log it."""
+    if level not in _LEVELS:
+        raise Invalid("level is workspace or project")
+    if key not in KEYS:
+        raise Invalid(f"unknown setting {key}")
+    previous = _current(project_dir, key)
+    if _drop(_values_path(project_dir, cast(Level, level)), key):
+        _emit(emit, project_dir, actor, key, previous, "default", level)
+    return get(project_dir, key)
+
+
+def _drop(path: Path, key: str) -> bool:
+    data = read_yaml(path)
+    if key not in data:
+        return False
+    data.pop(key)
+    write_yaml(path, data)
+    return True
+
+
+def _defaults() -> dict[str, Layer]:
     defaults = dict(KEYS)
     model = _read_any(SEEDS_DIR / "config.yaml").get("default_ollama_model")
     if isinstance(model, str) and model:
         defaults["model.local"] = model
-    for key, value in defaults.items():
-        found[key] = (value, "default")
+    return {key: (value, "default") for key, value in defaults.items()}
+
+
+def _merged(project_dir: Path) -> dict[str, Layer]:
+    found = _defaults()
     for source, path in (
         ("workspace", _workspace_values(project_dir)),
         ("project", project_dir / ".iterthink" / "settings" / "values.yaml"),

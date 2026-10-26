@@ -12,7 +12,6 @@ from urllib.parse import quote
 import yaml
 
 from iterthink import config
-from iterthink.ai.local_model import connect
 from iterthink.services import navigate
 from iterthink.services.bridge import (
     AppInfo,
@@ -323,10 +322,6 @@ class IntentBridge:
 
     def use_intent_model(self, router: Router) -> None:
         self._intent_router = router
-
-    def use_local_model(self) -> None:
-        """The line and chats use the local Ollama models from now on."""
-        connect(self)
 
     def place_line(self, line: str) -> tuple[Literal["project", "folder"], str] | None:
         """Start screen: the local model picks a project or workspace folder to open."""

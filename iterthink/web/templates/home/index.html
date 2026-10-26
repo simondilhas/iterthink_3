@@ -26,6 +26,9 @@
         <button type="submit">Open folder</button>
       </it-folder-picker>
     </form>
+    {% if has_route(request, "settings_home") %}
+    <a href="/settings">Settings</a>
+    {% endif %}
   </div>
 </details>
 {% endblock %}

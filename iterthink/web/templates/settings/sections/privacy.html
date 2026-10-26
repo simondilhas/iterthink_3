@@ -1,0 +1,12 @@
+{% include "settings/sections/rows.html" %}
+<p class="settings-disclaimer">Privacy shield: names and keys are redacted on this machine before a company or cloud call.</p>
+{% if section.extra.categories %}
+<table class="settings-table">
+  <thead><tr><th>Redacted</th><th>How</th><th>On</th></tr></thead>
+  <tbody>
+    {% for item in section.extra.categories %}
+    <tr><td>{{ item.label }}</td><td>{{ "pattern" if item.mode == "regex" else "local model" }}</td><td>{{ "yes" if item.enabled else "no" }}</td></tr>
+    {% endfor %}
+  </tbody>
+</table>
+{% endif %}

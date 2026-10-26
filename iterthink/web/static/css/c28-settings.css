@@ -1,0 +1,224 @@
+/* C28: the Settings page. Tokens only; colours come from the theme. */
+
+.menu-panel a {
+  color: var(--fg);
+  text-decoration: none;
+  padding: 4px 0;
+}
+
+.menu-panel a:hover {
+  text-decoration: underline;
+}
+
+.settings-bar {
+  display: flex;
+  align-items: center;
+  gap: var(--gap);
+  flex-wrap: wrap;
+}
+
+.settings-bar h1 {
+  font-size: 1.1rem;
+  font-weight: 600;
+  margin: 0;
+}
+
+.settings-back {
+  color: var(--muted);
+  text-decoration: none;
+}
+
+.settings-back:hover {
+  color: var(--fg);
+}
+
+.settings-level {
+  display: flex;
+  gap: var(--gap);
+  margin: 0 0 0 auto;
+  padding: 0;
+  border: 0;
+  color: var(--muted);
+}
+
+.settings-level legend {
+  float: left;
+  margin-right: 4px;
+  padding: 0;
+}
+
+.settings-nav {
+  position: sticky;
+  top: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: var(--gap);
+}
+
+.settings-nav a {
+  color: var(--fg);
+  text-decoration: none;
+  padding: 6px 10px;
+  border-radius: var(--radius);
+}
+
+.settings-nav a:hover {
+  background: color-mix(in srgb, var(--fg) 6%, transparent);
+}
+
+.settings {
+  max-width: 52rem;
+  padding: var(--gap) calc(var(--gap) * 2) 30vh;
+}
+
+.settings-section {
+  padding-bottom: calc(var(--gap) * 2);
+  border-bottom: 1px solid var(--line);
+  scroll-margin-top: var(--gap);
+}
+
+.settings-section h2 {
+  font-size: 1rem;
+  font-weight: 600;
+  margin: calc(var(--gap) * 1.5) 0 var(--gap);
+}
+
+.settings-section h3 {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--muted);
+  margin: calc(var(--gap) * 1.5) 0 4px;
+}
+
+.setting-form {
+  display: grid;
+  grid-template-columns: 14rem minmax(0, 1fr) auto auto;
+  align-items: center;
+  gap: 4px var(--gap);
+  padding: 6px 0;
+}
+
+.setting-control input:not([type="checkbox"]),
+.setting-control select {
+  width: 100%;
+  font: inherit;
+  color: var(--fg);
+  background: var(--bg);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 4px 8px;
+}
+
+.setting-control output {
+  font-family: var(--mono);
+}
+
+.source {
+  font-size: 0.75rem;
+  color: var(--muted);
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  padding: 0 8px;
+}
+
+.setting-row.is-set .source {
+  color: var(--accent);
+  border-color: var(--accent);
+}
+
+.setting-reset {
+  font: inherit;
+  font-size: 0.8rem;
+  color: var(--muted);
+  background: none;
+  border: 0;
+  cursor: pointer;
+  text-decoration: underline;
+}
+
+.setting-note,
+.saved {
+  grid-column: 2 / -1;
+  font-size: 0.8rem;
+  color: var(--muted);
+}
+
+.saved {
+  color: var(--accent);
+}
+
+.settings-error {
+  font-size: 0.8rem;
+  color: var(--error);
+}
+
+.settings-status {
+  color: var(--muted);
+}
+
+.settings-status p {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px var(--gap);
+  margin: 0 0 var(--gap);
+}
+
+.settings-status code {
+  font-family: var(--mono);
+  color: var(--fg);
+}
+
+.settings-disclaimer {
+  color: var(--muted);
+  font-size: 0.85rem;
+}
+
+.settings-table {
+  border-collapse: collapse;
+  width: 100%;
+  font-size: 0.85rem;
+}
+
+.settings-table th,
+.settings-table td {
+  text-align: left;
+  padding: 4px 8px;
+  border-bottom: 1px solid var(--line);
+}
+
+.settings-table th {
+  color: var(--muted);
+  font-weight: 500;
+}
+
+.settings-file summary {
+  cursor: pointer;
+  padding: 6px 0;
+}
+
+.settings-file textarea {
+  display: block;
+  width: 100%;
+  margin: 6px 0;
+  font: 0.85rem/1.5 var(--mono);
+  color: var(--fg);
+  background: var(--bg);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 8px;
+}
+
+.settings-question {
+  display: flex;
+  align-items: center;
+  gap: var(--gap);
+  padding: 4px 0;
+}
+
+@media (max-width: 720px) {
+  .setting-form {
+    grid-template-columns: 1fr;
+  }
+}

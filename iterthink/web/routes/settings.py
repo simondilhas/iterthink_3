@@ -1,4 +1,4 @@
-"""Settings: the egress switch and the inherited values."""
+"""Settings in a project: the Settings page, plus the egress switch and the upgrade review."""
 
 from __future__ import annotations
 
@@ -9,7 +9,7 @@ from fastapi.responses import HTMLResponse
 
 from iterthink.services.bridge import Bridge, Egress, Invalid, SettingInfo
 from iterthink.web.app import actor_of, bridge_of
-from iterthink.web.routes.home import render
+from iterthink.web.routes.settings_window import window
 
 router = APIRouter()
 _bridge = Depends(bridge_of)
@@ -50,10 +50,10 @@ def _questions(bridge: Bridge, project_id: str) -> list[object]:
 def _page(
     request: Request, project_id: str, bridge: Bridge, egress: str, notice: str
 ) -> HTMLResponse:
-    return render(
+    return window(
         request,
-        "settings/page.html",
-        project_id=project_id,
+        bridge,
+        project_id,
         egress=egress,
         notice=notice,
         rows=_rows(bridge, project_id),

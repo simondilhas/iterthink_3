@@ -1,0 +1,37 @@
+{% set field = "in-" ~ row.key | replace(".", "-") %}
+{% if row.level == "machine" %}{% set level = "machine" %}
+{% elif row.level == "egress" or project_id %}{% set level = "project" %}
+{% else %}{% set level = "workspace" %}{% endif %}
+<div class="setting-row{% if row.overridden %} is-set{% endif %}" id="row-{{ row.key | replace('.', '-') }}" title="{{ row.key }}">
+  <form class="setting-form" hx-post="/settings/set" hx-trigger="change, submit" hx-target="closest .setting-row" hx-swap="outerHTML"{% if row.level == "inherited" and project_id %} hx-include="[name='scope_level']:checked"{% endif %}>
+    <input type="hidden" name="key" value="{{ row.key }}">
+    <input type="hidden" name="project" value="{{ project_id or '' }}">
+    <input type="hidden" name="level" value="{{ level }}">
+    <label for="{{ field }}">{{ row.label }}</label>
+    <span class="setting-control">
+      {% if row.control == "select" %}
+      <select id="{{ field }}" name="value">
+        {% for value, label in row.options %}<option value="{{ value }}"{% if value == row.value | string %} selected{% endif %}>{{ label }}</option>
+        {% endfor %}
+      </select>
+      {% elif row.control == "switch" %}
+      <input type="hidden" name="value" value="off">
+      <input id="{{ field }}" type="checkbox" name="value" value="on"{% if row.value %} checked{% endif %}>
+      {% elif row.control == "secret" %}
+      <input id="{{ field }}" type="password" name="value" autocomplete="off" placeholder="{{ 'stored' if row.value == 'stored' else 'not set' }}">
+      {% elif row.control == "info" %}
+      <output id="{{ field }}">{{ row.value }}</output>
+      {% elif row.control == "model" %}
+      <input id="{{ field }}" name="value" list="ollama-models" value="{{ row.value }}" spellcheck="false" autocomplete="off">
+      {% elif row.control == "number" %}
+      <input id="{{ field }}" type="number" min="1" name="value" value="{{ row.value }}">
+      {% else %}
+      <input id="{{ field }}" name="value" value="{{ row.value }}" spellcheck="false" autocomplete="off"{% if row.control == "folder" %} placeholder="/path/to/folder"{% endif %}>
+      {% endif %}
+    </span>
+    {% if row.control != "info" %}<span class="source" title="Where the value comes from">{{ row.source }}</span>{% endif %}
+    {% if row.overridden %}<button class="setting-reset" type="submit" name="clear" value="1">Use default</button>{% endif %}
+    {% if row.note %}<small class="setting-note">{{ row.note }}</small>{% endif %}
+    {% if row.saved %}<span class="saved" role="status">Saved</span>{% endif %}
+  </form>
+</div>
