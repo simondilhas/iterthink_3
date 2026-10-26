@@ -1,0 +1,2 @@
+iterthink/ai/local_model.py
+iterthink/services/navigate.py

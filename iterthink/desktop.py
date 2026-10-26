@@ -58,9 +58,12 @@ def _wait_until_up(port: int, token: str) -> None:
     raise RuntimeError("iterthink did not start")
 
 
-def launch(webview: Any) -> None:
+def launch(webview: Any, *, local_model: bool = False) -> None:
     """Serve the app and open it. Returns when the window closes."""
     app = create_app()
+    connect = getattr(app.state.bridge, "use_local_model", None)
+    if local_model and callable(connect):
+        connect()
     port = _free_port()
     server = uvicorn.Server(uvicorn.Config(app, host="127.0.0.1", port=port, log_level="warning"))
     thread = threading.Thread(target=server.run, name="iterthink-http", daemon=True)
@@ -79,7 +82,7 @@ def launch(webview: Any) -> None:
 def main() -> None:
     import webview
 
-    launch(webview)
+    launch(webview, local_model=True)
 
 
 if __name__ == "__main__":

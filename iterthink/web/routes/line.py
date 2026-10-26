@@ -70,7 +70,7 @@ def line(
     if not callable(classify) or not callable(opener):
         return _keyword(request, project_id, text, bridge)
     found = classify(project_id, text, mode or None, actor)
-    if found.intent.mode == "search" and not found.review and not found.reopen:
+    if found.intent.mode == "search" and not (found.review or found.reopen or found.goto):
         hits = bridge.search(project_id, text, limit=20)
         return render(
             request, "line/results.html", project_id=project_id, line=text, hits=hits, found=found

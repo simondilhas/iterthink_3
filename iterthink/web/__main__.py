@@ -21,6 +21,9 @@ def free_port() -> int:
 
 def main() -> None:
     app = create_app()
+    connect = getattr(app.state.bridge, "use_local_model", None)
+    if callable(connect):
+        connect()
     port = free_port()
     print(f"iterthink: http://127.0.0.1:{port}/?token={app.state.token}", flush=True)
     uvicorn.run(app, host="127.0.0.1", port=port, log_level="warning")

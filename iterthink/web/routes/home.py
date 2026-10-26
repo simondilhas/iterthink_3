@@ -110,7 +110,7 @@ def _create_named(request: Request, name: str, bridge: Bridge) -> Response:
 def home_line(
     request: Request, q: str = _query, create: str = _create, bridge: Bridge = _bridge
 ) -> Response:
-    """Enter on the start screen. Fixed rules, no AI: list, open a project, or open a folder."""
+    """Enter on the start screen. Fixed rules first; then the local model may name a place."""
     text = " ".join(q.split())
     if create == "1":
         if not text:
@@ -137,4 +137,11 @@ def home_line(
         href = starter(text, request.app.state.actor)
         if isinstance(href, str):
             return _open(request, href)
+    placer = getattr(bridge, "place_line", None)
+    place = placer(text) if callable(placer) and text else None
+    if place is not None:
+        kind, target = place
+        if kind == "project":
+            return _open(request, target)
+        return folder_page(request, bridge, target)
     return render(request, "home/hint.html")

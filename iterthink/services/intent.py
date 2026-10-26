@@ -12,6 +12,8 @@ from urllib.parse import quote
 import yaml
 
 from iterthink import config
+from iterthink.ai.local_model import connect
+from iterthink.services import navigate
 from iterthink.services.bridge import (
     AppInfo,
     Bridge,
@@ -79,6 +81,8 @@ class Classified:
     via: Literal["rule", "model"]
     review: bool = False
     reopen: str | None = None
+    goto: str | None = None
+    prompt: str = PROMPT_ID
 
 
 class Router(Protocol):
@@ -97,6 +101,7 @@ class _Host(Protocol):
         self, root: Path, project: str, actor: str, kind: str, payload: dict[str, object]
     ) -> None: ...
     def files(self, project: str) -> list[FileEntry]: ...
+    def projects(self) -> list[ProjectInfo]: ...
     def history(self, project: str, path: str | None = None) -> list[VersionInfo]: ...
     def make_project(self, path: Path) -> ProjectInfo: ...
     def search(self, project: str, query: str, limit: int = 50) -> list[object]: ...
@@ -179,12 +184,19 @@ def _parse_model(text: str) -> tuple[Mode, float] | None:
     return mode, float(raw) if raw else 0.8
 
 
-def _from_model(router: Router, line: str, tier: str) -> Classified | None:
-    parsed = _parse_model(router.complete(PROMPT, line, tier))
+def _from_model(router: Router, line: str, tier: str, places: navigate.Places) -> Classified | None:
+    reply = router.complete(navigate.in_project_prompt(PROMPT, places), line, tier)
+    prompt = f"{PROMPT_ID}+{navigate.PROMPT_ID}" if places else PROMPT_ID
+    place = navigate.chosen(reply, places)
+    if place is not None:
+        reopen, goto = navigate.targets(place)
+        found = _intent("search", line, "reopen")
+        return Classified(found, 0.8, _alts("search"), "model", False, reopen, goto, prompt)
+    parsed = _parse_model(reply)
     if parsed is None:
         return None
     mode, confidence = parsed
-    return Classified(_intent(mode, line, mode), confidence, _alts(mode), "model")
+    return Classified(_intent(mode, line, mode), confidence, _alts(mode), "model", prompt=prompt)
 
 
 def classify(
@@ -199,7 +211,7 @@ def classify(
     if found is not None:
         return found
     if router is not None and allow_model:
-        parsed = _from_model(router, line, "local" if router.tier == "local" else router.tier)
+        parsed = _from_model(router, line, router.tier, navigate.of_project(host, project))
         if parsed is not None:
             return parsed
     return _titled("search", line, "search")
@@ -216,7 +228,7 @@ def _log(
     root = host._root(project)
     payload: dict[str, object] = {
         "model": "rule" if found.via == "rule" else "model",
-        "prompt": PROMPT_ID,
+        "prompt": found.prompt,
         "mode": found.intent.mode,
         "confidence": f"{found.confidence:.2f}",
         "line": store_blob(root, line),
@@ -274,6 +286,8 @@ def surface_href(
     project: str, found: Classified, line: str, *, path: str = "", chat: str = "", app: str = ""
 ) -> str:
     """URL of the opened surface, including the quiet line."""
+    if found.goto:
+        return found.goto
     extra = _query(found, line)
     if found.reopen:
         return f"/p/{project}/f/{quote(found.reopen)}?{extra}"
@@ -309,6 +323,17 @@ class IntentBridge:
 
     def use_intent_model(self, router: Router) -> None:
         self._intent_router = router
+
+    def use_local_model(self) -> None:
+        """The line and chats use the local Ollama models from now on."""
+        connect(self)
+
+    def place_line(self, line: str) -> tuple[Literal["project", "folder"], str] | None:
+        """Start screen: the local model picks a project or workspace folder to open."""
+        router = self._router()
+        if router is None or router.tier != "local" or not line.strip():
+            return None
+        return navigate.on_start(router.complete, cast(_Host, self).projects(), _workspace(), line)
 
     def default_workspace(self) -> Path:
         return _workspace()
@@ -347,7 +372,7 @@ class IntentBridge:
     def open_line(self, project: str, found: Classified, line: str, actor: str) -> str:
         """Create the empty surface and return its path."""
         host = cast(_Host, self)
-        if found.reopen or found.review or found.intent.mode == "search":
+        if found.goto or found.reopen or found.review or found.intent.mode == "search":
             return surface_href(project, found, line)
         if found.intent.mode == "document":
             path = _document(host, project, found.intent.title, actor)
