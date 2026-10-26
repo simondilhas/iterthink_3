@@ -45,12 +45,12 @@ def _log_break(bridge: Bridge, project_id: str) -> str:
 def project(request: Request, project_id: str, bridge: Bridge = _bridge) -> HTMLResponse:
     message = _log_break(bridge, project_id)
     counts = _counts(bridge.files(project_id))
-    pulsing = bool(bridge.proposals(project_id))
+    waiting = bool(bridge.proposals(project_id))
     return render(
         request,
         "project/page.html",
         project_id=project_id,
         counts=counts,
         log_break=message,
-        pulsing=pulsing,
+        waiting=waiting,
     )

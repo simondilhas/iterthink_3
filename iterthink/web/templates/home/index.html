@@ -7,10 +7,10 @@
 {% block line %}
 <script type="module" src="/static/js/the-line.js"></script>
 <div class="start">
-  <form method="post" action="/line" hx-post="/line" hx-target="#search-results" hx-swap="innerHTML">
+  <form class="line-row" method="post" action="/line" hx-post="/line" hx-target="#search-results" hx-swap="innerHTML">
     <input id="line" name="q" placeholder="What do you want to achieve?" autocomplete="off" autofocus>
+    <span class="dot" data-state="idle" aria-hidden="true"></span>
   </form>
-  <span class="dot" data-state="idle" aria-hidden="true"></span>
   <div id="search-results"></div>
 </div>
 <details class="menu">

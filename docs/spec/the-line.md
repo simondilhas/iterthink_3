@@ -1,6 +1,7 @@
 # The line (start screen and universal entry)
-White screen, one centered line: "What do you want to achieve?", a pulsing
-dot under it. Nothing else on screen: no project list, no folder form.
+White screen, one centered line: "What do you want to achieve?", the dot
+next to it (its pulse carries the state, see Recall and state). Nothing else
+on screen: no project list, no folder form.
 A quiet three-dot menu in the top right holds Open project and Open folder;
 everything else happens through the line ("open project" lists projects to
 pick from, a project name opens it, a folder path lists its folders).

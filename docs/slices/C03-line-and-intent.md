@@ -116,10 +116,11 @@ def interpret(project_dir: Path, line: str, context: LineContext, router: Router
 - [x] `test_unbuilt_mode_falls_back_to_search`
 - [x] `test_intent_is_logged_with_prompt_id`
 - [x] `test_continue_and_file_name_reopen_work`
-- [x] `test_dot_pulses_when_proposals_are_open`
-- [x] `test_dot_idle_is_steady`
+- [x] `test_dot_is_solid_orange_when_a_verdict_waits`
+- [x] `test_dot_idle_pulses_slowly_in_ink`
+- [x] `test_dot_sits_next_to_the_line_on_the_start_screen`
 - [x] `test_dot_typing_marks_the_line`
-- [x] `test_dot_working_marks_the_line`
+- [x] `test_dot_working_pulses_faster_until_the_answer`
 - [x] `test_dot_verdict_uses_warning_or_accent`
 - [x] `test_dot_error_uses_error_or_accent`
 - [x] `test_dot_precedence_and_reduced_motion`

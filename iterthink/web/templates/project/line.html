@@ -1,7 +1,7 @@
 <script type="module" src="/static/js/the-line.js"></script>
-{% set dot_state = 'error' if log_break else ('verdict' if pulsing else 'idle') %}
+{% set dot_state = 'error' if log_break else ('verdict' if waiting else 'idle') %}
 <form id="line-form" method="post" action="/p/{{ project_id }}/line" hx-post="/p/{{ project_id }}/line" hx-target="#search-results" hx-swap="innerHTML">
-  <span class="dot{% if dot_state == 'verdict' %} pulsing{% endif %}" data-state="{{ dot_state }}" aria-hidden="true"{% if has_route(request, "panel") %} hx-get="/p/{{ project_id }}/panel?tab=proposals" hx-target="#right" hx-swap="innerHTML" hx-trigger="click"{% endif %}></span>
+  <span class="dot" data-state="{{ dot_state }}" aria-hidden="true"{% if has_route(request, "panel") %} hx-get="/p/{{ project_id }}/panel?tab=proposals" hx-target="#right" hx-swap="innerHTML" hx-trigger="click"{% endif %}></span>
   <input id="line" name="q" placeholder="What do you want to achieve?" autocomplete="off"
     hx-get="/p/{{ project_id }}/search" hx-trigger="input changed delay:150ms"
     hx-target="#search-results" hx-params="q">

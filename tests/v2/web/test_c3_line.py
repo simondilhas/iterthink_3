@@ -51,6 +51,16 @@ def _bridge(tmp_path: Path, project_dir: Path) -> tuple[RealBridge, str]:
     return bridge, bridge.make_project(project_dir).id
 
 
+def _rule(css: str, selector: str) -> str:
+    start = css.index(selector + " {")
+    return css[start : css.index("}", start)]
+
+
+@pytest.fixture
+def client_home(tmp_path: Path) -> TestClient:
+    return _client(RealBridge(state_dir=tmp_path / "state", machine="m-test"))
+
+
 def _break_log(project_dir: Path, project: str) -> None:
     append(
         project_dir,
@@ -174,26 +184,37 @@ def test_app_without_a_builder_says_why_and_falls_back_to_search(
     assert bridge.apps(project) == []
 
 
-def test_dot_pulses_when_proposals_are_open(tmp_path: Path, project_dir: Path) -> None:
+def test_dot_is_solid_orange_when_a_verdict_waits(tmp_path: Path, project_dir: Path) -> None:
     bridge, project = _bridge(tmp_path, project_dir)
     client = _client(bridge)
     idle = client.get(f"/p/{project}")
-    assert "pulsing" not in idle.text
+    assert 'data-state="idle"' in idle.text
     bridge.propose(project, {"Pflichtenheft.md": "Neu\n"}, "user:ada", "retitle")
     waiting = client.get(f"/p/{project}")
-    assert 'class="dot pulsing"' in waiting.text
+    assert 'data-state="verdict"' in waiting.text
     assert "tab=proposals" in waiting.text
     assert 'hx-trigger="click"' in waiting.text
+    rule = _rule(CSS.read_text(encoding="utf-8"), '.dot[data-state="verdict"]')
+    assert "var(--warn)" in rule
+    assert "animation: none" in rule
 
 
-def test_dot_idle_is_steady(tmp_path: Path, project_dir: Path) -> None:
+def test_dot_idle_pulses_slowly_in_ink(tmp_path: Path, project_dir: Path) -> None:
     bridge, project = _bridge(tmp_path, project_dir)
     page = _client(bridge).get(f"/p/{project}")
     assert 'data-state="idle"' in page.text
-    assert "pulsing" not in page.text
-    css = CSS.read_text(encoding="utf-8")
-    assert ".dot" in css
-    assert "animation: none" in css
+    rule = _rule(CSS.read_text(encoding="utf-8"), ".dot")
+    assert "var(--fg)" in rule
+    assert "it-pulse 3s" in rule
+
+
+def test_dot_sits_next_to_the_line_on_the_start_screen(client_home: TestClient) -> None:
+    page = client_home.get("/").text
+    form = page[page.index('<form class="line-row"') : page.index("</form>")]
+    assert 'id="line"' in form
+    assert 'class="dot"' in form
+    css = Path("iterthink/web/static/css/a1-shell.css").read_text(encoding="utf-8")
+    assert "flex-direction: row" in _rule(css, ".start .line-row")
 
 
 def test_dot_typing_marks_the_line() -> None:
@@ -202,15 +223,16 @@ def test_dot_typing_marks_the_line() -> None:
     assert 'setState("typing")' in script
     assert "dataset.state = name" in script
     assert 'event.target.id !== "line"' in script
-    assert 'data-state="typing"' in css
+    assert "animation: none" in _rule(css, '.dot[data-state="typing"]')
+    assert "dataset.base" in script
 
 
-def test_dot_working_marks_the_line() -> None:
+def test_dot_working_pulses_faster_until_the_answer() -> None:
     script = SCRIPT.read_text(encoding="utf-8")
     css = CSS.read_text(encoding="utf-8")
     assert 'setState("working")' in script
-    assert "submit" in script
-    assert 'data-state="working"' in css
+    assert "htmx:afterRequest" in script
+    assert "it-pulse 0.9s" in _rule(css, '.dot[data-state="working"]')
 
 
 def test_dot_verdict_uses_the_warning_colour(tmp_path: Path, project_dir: Path) -> None:
@@ -245,7 +267,7 @@ def test_dot_precedence_and_reduced_motion(tmp_path: Path, project_dir: Path) ->
     css = CSS.read_text(encoding="utf-8")
     script = SCRIPT.read_text(encoding="utf-8")
     assert 'data-state="error"' in page.text
-    assert "pulsing" not in page.text
+    assert 'data-state="verdict"' not in page.text
     assert "prefers-reduced-motion: reduce" in css
     assert 'dataset.state === "error"' in script
     assert 'dataset.state === "verdict"' in script

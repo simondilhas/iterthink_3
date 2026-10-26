@@ -43,11 +43,6 @@ input[name="path"] {
   background: var(--accent);
   display: inline-block;
   flex: none;
-  animation: pulse 1.4s ease-in-out infinite;
-}
-
-@keyframes pulse {
-  50% { opacity: 0.35; }
 }
 
 /* Start screen: one centered question on a white page. Everything else waits in the menu. */
@@ -95,8 +90,18 @@ body:has(.start) .workspace {
   color: var(--muted);
 }
 
-.start .dot {
-  margin-top: 4px;
+.start .line-row {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: var(--gap);
+}
+
+/* Balances the dot on the right so the question stays centred. */
+.start .line-row::before {
+  content: "";
+  width: 12px;
+  flex: none;
 }
 
 .start #search-results {
