@@ -38,6 +38,19 @@ def _release_previous_panel() -> None:
 _release_previous_panel()
 
 
+def _kept(bridge: Bridge, project_id: str) -> list[object]:
+    finder = getattr(bridge, "apps", None)
+    if not callable(finder):
+        return []
+    try:
+        found = finder(project_id)
+    except NotImplementedError:
+        return []
+    if not isinstance(found, list):
+        return []
+    return [item for item in found if getattr(item, "status", "") == "kept"]
+
+
 def _panel(bridge: Bridge, project_id: str) -> object:
     finder = getattr(bridge, "explorer_panel", None)
     if not callable(finder):
@@ -54,6 +67,7 @@ def explorer(request: Request, project_id: str, bridge: Bridge = _bridge) -> HTM
         project_id=project_id,
         tree=tree,
         panel=_panel(bridge, project_id),
+        kept=_kept(bridge, project_id),
     )
 
 

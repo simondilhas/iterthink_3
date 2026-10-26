@@ -1,15 +1,47 @@
+/* The dot is steady unless a verdict is waiting. warning and error fall back to accent. */
+
 .dot {
   animation: none;
 }
 
+.dot[data-state="typing"] {
+  animation: none;
+  opacity: 0.55;
+}
+
+.dot[data-state="working"] {
+  animation: it-spin 0.8s linear infinite;
+}
+
+.dot[data-state="verdict"],
 .dot.pulsing {
+  background: var(--warning, var(--accent));
   animation: it-pulse 1s ease-in-out infinite;
+}
+
+.dot[data-state="error"] {
+  background: var(--error, var(--accent));
+  animation: none;
 }
 
 @keyframes it-pulse {
   50% {
     opacity: 0.15;
     transform: scale(1.6);
+  }
+}
+
+@keyframes it-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .dot,
+  .dot.pulsing,
+  .dot[data-state="working"] {
+    animation: none;
   }
 }
 

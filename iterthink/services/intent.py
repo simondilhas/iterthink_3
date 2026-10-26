@@ -5,9 +5,11 @@ from __future__ import annotations
 import re
 from dataclasses import dataclass
 from pathlib import Path
+from secrets import token_hex
 from typing import Literal, Protocol, cast
 from urllib.parse import quote
 
+from iterthink import config
 from iterthink.services.bridge import (
     Bridge,
     ChatInfo,
@@ -18,7 +20,6 @@ from iterthink.services.bridge import (
     ProjectInfo,
     VersionInfo,
 )
-from iterthink.services.documents import create
 from iterthink.services.egress import check
 from iterthink.services.event_log import store_blob
 
@@ -75,8 +76,6 @@ class _Host(Protocol):
     def files(self, project: str) -> list[FileEntry]: ...
     def history(self, project: str, path: str | None = None) -> list[VersionInfo]: ...
     def make_project(self, path: Path) -> ProjectInfo: ...
-    def default_workspace(self) -> Path: ...
-    def chat_start(self, project: str, text: str, actor: str) -> ChatInfo: ...
     def search(self, project: str, query: str, limit: int = 50) -> list[object]: ...
 
 
@@ -194,22 +193,43 @@ def _log(
         "mode": "review" if found.review else found.intent.mode,
         "confidence": f"{found.confidence:.2f}",
         "line": store_blob(root, line),
+        "source": _input_source(root),
     }
     if correction:
         payload["correction"] = correction
     host._event(root, project, actor, "intent", payload)
 
 
+def _input_source(root: Path) -> str:
+    from iterthink.services.dictation import take_source
+
+    return take_source(root)
+
+
 def _slug(title: str) -> str:
-    cleaned = " ".join(title.split())
+    cleaned = " ".join(title.replace("/", " ").replace("\\", " ").split())
     return cleaned or "Untitled"
 
 
-def _document(bridge: Bridge, project: str, title: str, actor: str) -> str:
+def _document(host: _Host, project: str, title: str, actor: str) -> str:
+    name = _slug(title)
+    rel = f"{name}.md"
     try:
-        return create(bridge, project, "", _slug(title), title, actor)
+        cast(Bridge, host).save(project, rel, f"# {name}\n", actor, name)
     except Invalid:
-        return f"{_slug(title)}.md"
+        return rel
+    return rel
+
+
+def _chat(host: _Host, project: str, line: str) -> ChatInfo:
+    """A chat file so the switch has somewhere to go until chats are built."""
+    root = host._root(project)
+    chat_id = f"c-{token_hex(4)}"
+    rel = f".iterthink/chats/{chat_id}.md"
+    path = root / rel
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(f"# {line}\n", encoding="utf-8")
+    return ChatInfo(id=chat_id, title=line, path=rel, references=())
 
 
 def _query(found: Classified, line: str) -> str:
@@ -243,8 +263,16 @@ def surface_href(
     return f"/p/{project}/search?q={quote(line)}&{extra}"
 
 
-def _bridge(host: _Host) -> Bridge:
-    return cast(Bridge, host)
+def _workspace() -> Path:
+    root = config.DOCUMENTS.expanduser().resolve()
+    root.mkdir(parents=True, exist_ok=True)
+    return root
+
+
+def _project_dir(title: str) -> Path:
+    folder = _workspace() / _slug(title)
+    folder.mkdir(parents=True, exist_ok=True)
+    return folder
 
 
 class IntentBridge:
@@ -252,6 +280,9 @@ class IntentBridge:
 
     def use_intent_model(self, router: Router) -> None:
         self._intent_router = router
+
+    def default_workspace(self) -> Path:
+        return _workspace()
 
     def _router(self) -> Router | None:
         found = getattr(self, "_intent_router", None)
@@ -290,10 +321,10 @@ class IntentBridge:
         if found.reopen or found.review or found.intent.mode == "search":
             return surface_href(project, found, line)
         if found.intent.mode == "document":
-            path = _document(_bridge(host), project, found.intent.title, actor)
+            path = _document(host, project, found.intent.title, actor)
             return surface_href(project, found, line, path=path)
         if found.intent.mode == "chat":
-            info = host.chat_start(project, line, actor)
+            info = _chat(host, project, line)
             return surface_href(project, found, line, chat=info.id)
         return surface_href(project, found, line)
 
@@ -303,9 +334,8 @@ class IntentBridge:
         if found is None or (found.intent.mode == "search" and not found.review):
             return None
         host = cast(_Host, self)
-        info = host.make_project(Path(found.intent.title))
+        info = host.make_project(_project_dir(found.intent.title))
         _log(host, info.id, actor, line, found)
         href = self.open_line(info.id, found, line, actor)
-        where = str(host.default_workspace())
         join = "&" if "?" in href else "?"
-        return f"{href}{join}where={quote(where)}"
+        return f"{href}{join}where={quote(str(self.default_workspace()))}"

@@ -3,6 +3,7 @@
   <p>{{ who(proposal.actor) }}</p>
   <p>{{ when(proposal.created) }}</p>
   <p>{{ proposal.status }}</p>
+  {% include "review/auto.html" %}
   {% if notice %}<p>{{ notice }}</p>{% endif %}
   {% for view in views %}{% include "history/diff.html" %}{% endfor %}
   {% include "review/impact.html" %}

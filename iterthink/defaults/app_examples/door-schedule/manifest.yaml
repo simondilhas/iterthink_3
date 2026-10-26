@@ -1,0 +1,9 @@
+attempts: 0
+created_by: example
+hidden: false
+inputs: []
+model: local
+prompt_version: example
+purpose: list doors from the model
+status: draft
+title: Door schedule

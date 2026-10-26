@@ -155,7 +155,7 @@ def _apply(records: dict[str, dict[str, object]], event: Event) -> None:
             records[pid]["decided_by"] = event.actor
     elif event.type == "conflict":
         pid = str(payload.get("proposal", ""))
-        if pid in records and records[pid]["status"] == "open":
+        if pid in records and records[pid]["status"] in {"open", "accepted"}:
             records[pid]["status"] = "conflict"
             records[pid]["decided_by"] = event.actor
 

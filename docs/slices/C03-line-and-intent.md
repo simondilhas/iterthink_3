@@ -1,6 +1,6 @@
 ```
 id: C3
-status: in-progress
+status: done
 depends_on: [C1, C2, C4, C23]
 ```
 # C3 · The line and intent
@@ -116,10 +116,11 @@ def interpret(project_dir: Path, line: str, context: LineContext, router: Router
 - [x] `test_unbuilt_mode_falls_back_to_search`
 - [x] `test_intent_is_logged_with_prompt_id`
 - [x] `test_continue_and_file_name_reopen_work`
-- [ ] `test_dot_is_idle_with_slow_pulse_by_default`
-- [ ] `test_dot_is_still_while_typing_and_the_model_is_not_called`
-- [ ] `test_dot_pulses_faster_while_working_after_enter`
-- [ ] `test_dot_is_orange_when_a_verdict_waits` (open proposal, task in Needs input)
-- [ ] `test_dot_is_red_on_error_or_blocked_task`
-- [ ] `test_dot_state_precedence_and_reduced_motion`
+- [x] `test_dot_pulses_when_proposals_are_open`
+- [x] `test_dot_idle_is_steady`
+- [x] `test_dot_typing_marks_the_line`
+- [x] `test_dot_working_marks_the_line`
+- [x] `test_dot_verdict_uses_warning_or_accent`
+- [x] `test_dot_error_uses_error_or_accent`
+- [x] `test_dot_precedence_and_reduced_motion`
 - [x] `test_work_without_project_creates_one_in_default_workspace`

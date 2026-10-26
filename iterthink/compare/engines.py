@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from typing import Protocol
 
+from iterthink.compare.engine_ifc import IfcEngine
 from iterthink.compare.engine_plan import PlanEngine
 from iterthink.compare.engine_table import TableEngine
 from iterthink.compare.engine_text import TextEngine
@@ -41,3 +42,4 @@ def diff(path: str, before: bytes | None, after: bytes | None) -> FileDiff:
 register(TextEngine())
 register(TableEngine())
 register(PlanEngine())
+register(IfcEngine())

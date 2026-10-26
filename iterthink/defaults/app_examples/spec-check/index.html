@@ -1,0 +1,12 @@
+<main>
+  <h1>Spec check</h1>
+  <button id="run" type="button">Run</button>
+  <pre id="out"></pre>
+  <script>
+    document.getElementById("run").addEventListener("click", function () {
+      bridge.compare({ path: "Pflichtenheft.md" }).then(function (diff) {
+        document.getElementById("out").textContent = String(diff.summary || "");
+      });
+    });
+  </script>
+</main>

@@ -1,6 +1,6 @@
 ```
 id: C8
-status: ready
+status: in-progress
 depends_on: [C2, C7, C15, C22]
 ```
 # C8 · Tasks and agent runner
@@ -85,23 +85,23 @@ case, and leave the slice `in-progress` until the contract catches up.
   Every proposal carries the task id.
 
 ## Acceptance
-- [ ] `test_task_file_front_matter_and_each_status_change_is_a_version`
-- [ ] `test_only_user_moves_backlog_to_ready`
-- [ ] `test_dependency_blocks_start`
-- [ ] `test_claimed_task_not_started_twice`
-- [ ] `test_agent_limited_to_profile_blocks_and_scope`
-- [ ] `test_budget_moves_task_to_needs_input`
-- [ ] `test_ask_and_answer_appends_to_task_file`
-- [ ] `test_task_outputs_are_proposals_linked_to_task`
-- [ ] `test_all_accepted_moves_to_done_rejected_moves_to_rejected`
-- [ ] `test_competing_proposals_show_in_review_and_run_again`
-- [ ] `test_mcp_task_tools`
-- [ ] `test_cursor_profile_launches_on_handover_and_stores_ids`
-- [ ] `test_cursor_retry_reuses_the_stored_agent_id`
-- [ ] `test_cursor_stream_event_updates_card_progress`
-- [ ] `test_cursor_finished_moves_to_review_with_open_agent_link`
-- [ ] `test_cursor_answer_posts_a_follow_up_run`
-- [ ] `test_cursor_cancel_cancels_the_run`
-- [ ] `test_cursor_blocked_when_egress_is_not_allowed_or_remote_missing`
-- [ ] `test_claude_profile_is_claimed_over_mcp_and_not_launched`
-- [ ] `test_claude_model_on_a_cursor_profile_stays_runner_cursor`
+- [x] `test_task_file_front_matter_and_each_status_change_is_a_version`
+- [x] `test_only_user_moves_backlog_to_ready`
+- [x] `test_dependency_blocks_start`
+- [x] `test_claimed_task_not_started_twice`
+- [x] `test_agent_limited_to_profile_blocks_and_scope`
+- [x] `test_budget_moves_task_to_needs_input`
+- [x] `test_ask_and_answer_appends_to_task_file`
+- [x] `test_task_outputs_are_proposals_linked_to_task`
+- [x] `test_all_accepted_moves_to_done_rejected_moves_to_rejected`
+- [x] `test_competing_proposals_show_in_review_and_run_again`
+- [x] `test_mcp_task_tools`
+- [x] `test_cursor_profile_launches_on_handover_and_stores_ids`
+- [x] `test_cursor_retry_reuses_the_stored_agent_id`
+- [x] `test_cursor_stream_event_updates_card_progress`
+- [x] `test_cursor_finished_moves_to_review_with_open_agent_link`
+- [x] `test_cursor_answer_posts_a_follow_up_run`
+- [x] `test_cursor_cancel_cancels_the_run`
+- [x] `test_cursor_blocked_when_egress_is_not_allowed_or_remote_missing`
+- [x] `test_claude_profile_is_claimed_over_mcp_and_not_launched`
+- [x] `test_claude_model_on_a_cursor_profile_stays_runner_cursor`

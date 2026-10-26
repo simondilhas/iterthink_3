@@ -1,0 +1,49 @@
+.task-board {
+  display: flex;
+  gap: var(--gap);
+  overflow-x: auto;
+  align-items: flex-start;
+}
+
+.task-column {
+  min-width: 12rem;
+  flex: 1;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: var(--gap);
+  background: var(--bg);
+}
+
+.task-card {
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: var(--gap);
+  margin-top: var(--gap);
+}
+
+.task-card h3,
+.task-column h2 {
+  font-size: 1rem;
+  margin: 0 0 0.4rem;
+}
+
+.task-progress,
+.task-blocked,
+.task-overlap,
+.task-question {
+  color: var(--muted);
+  margin: 0.2rem 0;
+}
+
+.task-card a {
+  color: var(--accent);
+}
+
+.task-card form {
+  margin-top: 0.6rem;
+}
+
+.task-card input,
+.task-card button {
+  font: inherit;
+}

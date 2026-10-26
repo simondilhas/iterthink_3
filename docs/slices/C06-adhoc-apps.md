@@ -1,6 +1,6 @@
 ```
 id: C6
-status: ready
+status: done
 depends_on: [C3, C15]
 ```
 # C6 · Ad-hoc apps
@@ -75,16 +75,16 @@ Implementation); Security (CSP); article §6.
   added by C9 with their tests.
 
 ## Acceptance
-- [ ] `test_builder_prompt_contains_structure_never_content`
-- [ ] `test_bridge_reference_is_generated_from_bridge_py`
-- [ ] `test_schemas_pass_privacy_shield_before_remote_call`
-- [ ] `test_app_frame_uses_srcdoc_sandbox_without_same_origin`
-- [ ] `test_app_reads_data_only_through_allowlisted_bridge`
-- [ ] `test_app_cannot_write_files_only_propose`
-- [ ] `test_validation_rejects_external_urls_and_eval`
-- [ ] `test_three_attempts_then_plain_error`
-- [ ] `test_keep_and_discard_move_files`
-- [ ] `test_shell_csp_unchanged_when_app_open`
-- [ ] `test_example_apps_run` (each example)
-- [ ] `test_build_under_egress_none_sends_no_content`
-- [ ] `test_build_is_logged_with_attempts`
+- [x] `test_builder_prompt_contains_structure_never_content`
+- [x] `test_bridge_reference_is_generated_from_bridge_py`
+- [x] `test_schemas_pass_privacy_shield_before_remote_call`
+- [x] `test_app_frame_uses_srcdoc_sandbox_without_same_origin`
+- [x] `test_app_reads_data_only_through_allowlisted_bridge`
+- [x] `test_app_cannot_write_files_only_propose`
+- [x] `test_validation_rejects_external_urls_and_eval`
+- [x] `test_three_attempts_then_plain_error`
+- [x] `test_keep_and_discard_move_files`
+- [x] `test_shell_csp_unchanged_when_app_open`
+- [x] `test_example_apps_run` (each example)
+- [x] `test_build_under_egress_none_sends_no_content`
+- [x] `test_build_is_logged_with_attempts`

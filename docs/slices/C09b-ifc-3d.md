@@ -1,6 +1,6 @@
 ```
 id: C9b
-status: ready
+status: blocked
 depends_on: [C9]
 ```
 # C9b · IFC 3D diff
@@ -74,16 +74,16 @@ View components (`<ifc-viewer>`, `<ifc-diff>`); Ad-hoc apps → Building blocks
   (elements matched, booleans done or fallen back). The table fills in as rows arrive.
 
 ## Acceptance
-- [ ] `test_boolean_difference_volumes`: a wall lengthened by 1 m gives an
+- [x] `test_boolean_difference_volumes`: a wall lengthened by 1 m gives an
       `added_volume` equal to 1 m × height × thickness, and an empty
       `removed_volume`.
-- [ ] `test_boolean_failure_falls_back_to_overlay`: a forced kernel error sets
+- [x] `test_boolean_failure_falls_back_to_overlay`: a forced kernel error sets
       `diff_method = "overlay"`, and the rest of the diff completes.
-- [ ] `test_diff_glb_nodes_carry_guid_category_part`: the GLB parses, and the
+- [x] `test_diff_glb_nodes_carry_guid_category_part`: the GLB parses, and the
       node names and extras match `details["elements"]`.
-- [ ] `test_glb_writer_roundtrip`: `ifc_glb` output passes a glTF structure
+- [x] `test_glb_writer_roundtrip`: `ifc_glb` output passes a glTF structure
       check (header, JSON chunk, BIN chunk alignment).
-- [ ] `test_glb_cached_outside_project`: no file is written under the project
+- [x] `test_glb_cached_outside_project`: no file is written under the project
       root, and a second call hits the cache.
 - [ ] `test_model_compare_page_loads_viewer_and_legend`: `<ifc-diff>` has
       all four attributes, plus a legend with six categories.

@@ -30,6 +30,34 @@ class Version:
     paths: tuple[str, ...]
 
 
+def _forget_erased(root: Path) -> set[str]:
+    """Drop bytes named by erase events. Returns those version ids."""
+    from iterthink.services.erase import apply_erases, erased_ids
+
+    apply_erases(root)
+    return erased_ids(root)
+
+
+def _object_file(directory: Path, digest: str) -> Path | None:
+    if len(digest) != 64 or any(char not in "0123456789abcdef" for char in digest):
+        return None
+    return directory / digest
+
+
+def _split_hashes(manifests: list[dict[str, Any]], wanted: set[str]) -> tuple[set[str], set[str]]:
+    erased: set[str] = set()
+    kept: set[str] = set()
+    for manifest in manifests:
+        files = manifest.get("files")
+        if not isinstance(files, dict):
+            continue
+        bucket = erased if str(manifest.get("id")) in wanted else kept
+        for digest in files.values():
+            if isinstance(digest, str):
+                bucket.add(digest)
+    return erased, kept
+
+
 def _canonical(obj: object) -> str:
     return json.dumps(obj, sort_keys=True, separators=(",", ":"), ensure_ascii=False)
 
@@ -40,11 +68,38 @@ def _check_path(path: str) -> str:
     parts = path.split("/")
     if any(part in {"", ".", ".."} for part in parts):
         raise SnapshotError("path escapes the project")
-    if ".iterthink" in parts:
-        chat = parts[:2] == [".iterthink", "chats"] and len(parts) == 3
-        if not chat or not parts[2].endswith(".md"):
-            raise SnapshotError("path escapes the project")
+    if ".iterthink" in parts and not _own_version(parts):
+        raise SnapshotError("path escapes the project")
     return path
+
+
+def _own_version(parts: list[str]) -> bool:
+    """Chat notes, task files and app files are versions. Other iterthink data is not."""
+    if parts[:2] == [".iterthink", "chats"] and len(parts) == 3:
+        return parts[2].endswith(".md")
+    if parts[:2] == [".iterthink", "tasks"] and len(parts) == 3:
+        name = parts[2]
+        return name.endswith(".md") and not name.startswith(".")
+    if parts[:2] != [".iterthink", "apps"] or len(parts) != 4:
+        return False
+    slug = parts[2]
+    if not slug or slug.startswith("."):
+        return False
+    return parts[3] in {"index.html", "module.js"}
+
+
+def _event_order(root: Path) -> dict[str, tuple[str, str, int]]:
+    """Last log position of each version id. Merge order is time, machine, sequence."""
+    from iterthink.services.event_log import read_all
+
+    order: dict[str, tuple[str, str, int]] = {}
+    for event in read_all(root):
+        if event.type != "version":
+            continue
+        version = event.payload.get("version")
+        if isinstance(version, str):
+            order[version] = (event.ts, event.machine, event.seq)
+    return order
 
 
 def _atomic(directory: Path, name: str, data: bytes) -> None:
@@ -83,8 +138,10 @@ class Snapshots:
 
     def history(self, path: str | None = None) -> list[Version]:
         """Newest version first. ``path`` keeps versions that contain that file."""
+        gone = _forget_erased(self._root)
         chosen = None if path is None else _check_path(path)
         versions = [self._version(item) for item in self._manifests_data()]
+        versions = [item for item in versions if item.id not in gone]
         if chosen is not None:
             versions = [item for item in versions if chosen in item.paths]
         versions.sort(key=lambda item: item.timestamp, reverse=True)
@@ -92,11 +149,29 @@ class Snapshots:
 
     def file_at(self, version: str, path: str) -> bytes | None:
         """Bytes of ``path`` in ``version``, or ``None`` when the version lacks it."""
+        _forget_erased(self._root)
         checked = _check_path(path)
         digest = self._load(version)["files"].get(checked)
         if not isinstance(digest, str):
             return None
-        return (self._objects / digest).read_bytes()
+        target = _object_file(self._objects, digest)
+        if target is None or not target.is_file():
+            return None
+        return target.read_bytes()
+
+    def drop_unique(self, version_ids: list[str]) -> tuple[str, ...]:
+        """Delete object files that only these versions referenced."""
+        wanted = set(version_ids)
+        manifests = self._manifests_data()
+        known = {str(item.get("id")) for item in manifests}
+        erased, kept = _split_hashes(manifests, wanted & known)
+        deleted: list[str] = []
+        for digest in sorted(erased - kept):
+            target = _object_file(self._objects, digest)
+            if target is not None and target.is_file():
+                target.unlink()
+                deleted.append(digest)
+        return tuple(deleted)
 
     def restore(self, version: str, paths: list[str], description: str, author: str) -> Version:
         """New version: listed paths from ``version``, every other path from head."""
@@ -111,8 +186,29 @@ class Snapshots:
         return self._commit(merged, description, author, str(current["id"]), draft=False)
 
     def head(self) -> Version:
-        """Latest version that is not a draft."""
+        """Latest version that is not a draft.
+
+        When two versions share a parent, the one whose version event is last
+        in merge order (time, machine, sequence) is head.
+        """
         return self._version(self._require_head())
+
+    def snapshot_from(
+        self, parent: str | None, files: dict[str, bytes], description: str, author: str
+    ) -> Version:
+        """Store ``files`` under ``parent``. The other machine may still see that parent."""
+        if parent is not None:
+            self._load(parent)
+        return self._commit(self._hash_files(files), description, author, parent, draft=False)
+
+    def tips(self) -> list[Version]:
+        """Versions that are not a parent of another version."""
+        return [self._version(item) for item in self._tips()]
+
+    def parent_of(self, version: str) -> str | None:
+        """The parent id, or None for the first version."""
+        raw = self._load(version).get("parent")
+        return raw if isinstance(raw, str) else None
 
     def draft(
         self, baseline: str, changes: dict[str, bytes], description: str, author: str
@@ -185,17 +281,33 @@ class Snapshots:
         return self._read_manifest(path)
 
     def _head_manifest(self) -> dict[str, Any] | None:
-        applied = [item for item in self._manifests_data() if item.get("draft") is not True]
-        if not applied:
-            return None
-        applied.sort(key=lambda item: str(item["ts"]), reverse=True)
-        return applied[0]
+        return self._winning()
 
     def _require_head(self) -> dict[str, Any]:
-        current = self._head_manifest()
+        current = self._winning()
         if current is None:
             raise SnapshotError("no version yet")
         return current
+
+    def _tips(self) -> list[dict[str, Any]]:
+        applied = [item for item in self._manifests_data() if item.get("draft") is not True]
+        parents = {item.get("parent") for item in applied}
+        return [item for item in applied if item.get("id") not in parents]
+
+    def _winning(self) -> dict[str, Any] | None:
+        tips = self._tips()
+        if not tips:
+            return None
+        if len(tips) == 1:
+            return tips[0]
+        return max(tips, key=self._event_key)
+
+    def _event_key(self, manifest: dict[str, Any]) -> tuple[str, str, int]:
+        version = str(manifest.get("id", ""))
+        found = _event_order(self._root).get(version)
+        if found is not None:
+            return found
+        return (str(manifest.get("ts", "")), "", 0)
 
     def _next_ts(self) -> str:
         stamps = [str(item["ts"]) for item in self._manifests_data()]

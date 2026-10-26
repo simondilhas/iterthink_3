@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+{% block title %}Tasks{% endblock %}
+{% block head %}
+<script src="/static/js/task-board.js" defer></script>
+{% endblock %}
+{% block line %}
+{% include "project/line.html" %}
+{% include "project/nav.html" %}
+{% endblock %}
+{% block main %}
+<h1>Tasks</h1>
+<div class="task-board">
+{% for column in columns %}
+{% include "tasks/column.html" %}
+{% endfor %}
+</div>
+{% endblock %}

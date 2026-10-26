@@ -1,0 +1,13 @@
+app-frame,
+app-frame iframe {
+  display: block;
+  width: 100%;
+  min-height: 70vh;
+  border: 0;
+  background: var(--bg);
+}
+
+#app-revise textarea {
+  width: 100%;
+  min-height: 6rem;
+}

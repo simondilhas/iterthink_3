@@ -9,6 +9,8 @@ from pathlib import Path
 from typing import cast
 
 from iterthink.persistence.snapshots import SnapshotError, Snapshots
+from iterthink.services.adhoc_apps import AppsBridge as Apps
+from iterthink.services.agent_rules import guarded_propose
 from iterthink.services.audit import publish_break
 from iterthink.services.bridge import (
     BridgeError,
@@ -27,21 +29,23 @@ from iterthink.services.bridge import (
     SearchHit,
     VerifyInfo,
     VersionInfo,
-    kind_of,
 )
 from iterthink.services.chats import ChatsBridge
+from iterthink.services.dictation import DictationBridge as Voice
 from iterthink.services.disk_scan import notice, scan, start_watching, subscribe
 from iterthink.services.documents import DocumentsBridge
 from iterthink.services.egress import apply_setting
 from iterthink.services.egress import shield_text as shield_outbound
+from iterthink.services.erase import EraseBridge
 from iterthink.services.event_log import LogCorrupt, append, checkpoint, read_all, store_blob
 from iterthink.services.event_log import utc_now as event_now
 from iterthink.services.handover import hand_over
-from iterthink.services.impact_review import ImpactBridge
+from iterthink.services.impact_review import ImpactBridge as Advice
 from iterthink.services.importer_1x import preview as preview_store
 from iterthink.services.importer_1x import run_import
 from iterthink.services.indexer import schedule_index
 from iterthink.services.intent import IntentBridge
+from iterthink.services.plan_render import PlansBridge
 from iterthink.services.projects import (
     Registry,
     compare_file,
@@ -65,7 +69,6 @@ from iterthink.services.proposals import (
     Proposal,
     compete,
     conflicts,
-    create,
     diff_files,
     load_all,
     reason_text,
@@ -73,10 +76,10 @@ from iterthink.services.proposals import (
 )
 from iterthink.services.search import indexed_log, indexed_search
 from iterthink.services.settings import SettingsBridge
+from iterthink.services.tasks import TasksBridge, on_verdict
 from iterthink.services.verify_log import verify_all
-from iterthink.services.workspaces import WorkspacesBridge
-
-_TEXT = {"markdown", "table", "text"}
+from iterthink.services.watcher import SharedBridge
+from iterthink.services.workspaces import WorkspacesBridge as Work
 
 
 def _info_of(root: Path, item: Proposal) -> ProposalInfo:
@@ -93,12 +96,18 @@ def _info_of(root: Path, item: Proposal) -> ProposalInfo:
 
 
 class RealBridge(
-    SettingsBridge,
+    PlansBridge,
+    Work,
+    Voice,
     IntentBridge,
-    WorkspacesBridge,
+    SettingsBridge,
     DocumentsBridge,
     ChatsBridge,
-    ImpactBridge,
+    Advice,
+    Apps,
+    TasksBridge,
+    SharedBridge,
+    EraseBridge,
     Later,
 ):
     def __init__(
@@ -266,27 +275,7 @@ class RealBridge(
         reason: str,
         baseline: str | None = None,
     ) -> ProposalInfo:
-        root = self._root(project)
-        rels = {relative(path): text for path, text in changes.items()}
-        for rel in rels:
-            if kind_of(rel) not in _TEXT:
-                raise Invalid(f"{rel} is not a text file")
-            inside(root, rel)
-        try:
-            made = create(
-                root,
-                Snapshots(root),
-                machine=self.machine,
-                project=project,
-                changes=rels,
-                actor=actor,
-                reason=reason,
-                baseline=baseline,
-                now=self._now,
-            )
-        except SnapshotError as exc:
-            raise NotFound(str(exc)) from exc
-        return _info_of(root, made)
+        return guarded_propose(self, project, changes, actor, reason, baseline)
 
     def proposals(self, project: str, status: ProposalStatus | None = "open") -> list[ProposalInfo]:
         root = self._root(project)
@@ -307,25 +296,26 @@ class RealBridge(
         if stale:
             self._event(root, project, actor, "conflict", {"paths": stale, "proposal": proposal_id})
             raise Conflict(f"{', '.join(stale)} changed since the proposal was made")
-        for rel, data in Snapshots(root).read_draft(found.draft).items():
+        drafted = Snapshots(root).read_draft(found.draft)
+        for rel, data in drafted.items():
             write_bytes(inside(root, rel), data)
         note = reason.strip() or reason_text(root, found.reason_ref)
         snaps = Snapshots(root)
-        version = snaps.snapshot(tracked_files(root), f"accepted {note}".strip(), actor)
+        files = tracked_files(root)
+        files.update(_app_bytes(drafted))
+        version = snaps.snapshot(files, f"accepted {note}".strip(), actor)
         made = shown(version if version is not None else snaps.head())
-        self._event(
-            root,
-            project,
-            actor,
-            "verdict",
-            {
-                "proposal": proposal_id,
-                "reason": store_blob(root, note),
-                "verdict": "accepted",
-                "version": made.id,
-            },
-        )
+        payload: dict[str, object] = {
+            "proposal": proposal_id,
+            "reason": store_blob(root, note),
+            "verdict": "accepted",
+            "version": made.id,
+        }
+        if actor.startswith("rule:"):
+            payload["auto"] = True
+        self._event(root, project, actor, "verdict", payload)
         self._compete(root, project, proposal_id, found.paths, actor)
+        on_verdict(self, project, proposal_id, "accepted", actor, reason)
         return made
 
     def _compete(
@@ -347,6 +337,7 @@ class RealBridge(
             "verdict",
             {"proposal": proposal_id, "reason": store_blob(root, reason), "verdict": "rejected"},
         )
+        on_verdict(self, project, proposal_id, "rejected", actor, reason)
 
     def log(self, project: str, limit: int = 200) -> list[LogEntry]:
         root = self._root(project)
@@ -377,3 +368,14 @@ class RealBridge(
         self._root(project)
         pending = subscribe(project)
         return lambda: notice(pending.get())
+
+
+def _app_bytes(drafted: Mapping[str, bytes]) -> dict[str, bytes]:
+    """An accepted app stays in the version. Other iterthink data does not."""
+    kept: dict[str, bytes] = {}
+    for rel, data in drafted.items():
+        parts = rel.split("/")
+        own = len(parts) == 4 and parts[:2] == [".iterthink", "apps"]
+        if own and not parts[2].startswith("."):
+            kept[rel] = data
+    return kept

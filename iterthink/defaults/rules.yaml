@@ -1,0 +1,8 @@
+agents:
+  default: propose
+  direct: []
+  deny: []
+  propose_always:
+    - "**/*.ifc"
+    - "**/*.csv"
+deletions: propose

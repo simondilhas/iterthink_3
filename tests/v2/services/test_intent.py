@@ -118,3 +118,26 @@ def test_model_answers_when_no_rule_matches(tmp_path: Path, project_dir: Path) -
     untitled = bridge.classify_line(project, "new document", None, "user:ada")
     assert untitled.intent.mode == "document"
     assert untitled.intent.title == "Untitled"
+
+
+def test_names_apps_and_blank_lines(tmp_path: Path, project_dir: Path) -> None:
+    (project_dir / "extra").mkdir()
+    (project_dir / "extra" / "Note.md").write_text("a\n", encoding="utf-8")
+    (project_dir / "other").mkdir()
+    (project_dir / "other" / "Note.md").write_text("b\n", encoding="utf-8")
+    bridge = _bridge(tmp_path)
+    project = bridge.make_project(project_dir).id
+    stem = bridge.classify_line(project, "Notiz Grundriss EG.md", None, "user:ada")
+    assert stem.reopen == "Pläne/Notiz Grundriss EG.md"
+    ambiguous = bridge.classify_line(project, "Note.md", None, "user:ada")
+    assert ambiguous.reopen is None
+    blank = bridge.classify_line(project, "   ", None, "user:ada")
+    assert blank.intent.mode == "search"
+    app = bridge.classify_line(project, "Door schedule from the model", None, "user:ada")
+    assert "soon=1" in bridge.open_line(project, app, app.intent.title, "user:ada")
+    found = bridge.classify_line(project, "find the hall", None, "user:ada")
+    assert "/search" in bridge.open_line(project, found, "find the hall", "user:ada")
+    empty = tmp_path / "empty-project"
+    empty.mkdir()
+    continued = bridge.classify_line(bridge.make_project(empty).id, "continue", None, "user:ada")
+    assert continued.reopen is None

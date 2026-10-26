@@ -1,6 +1,6 @@
 ```
 id: C19
-status: ready
+status: done
 depends_on: [C13]
 ```
 # C19 · Erase
@@ -32,7 +32,7 @@ text in the run report.
   chain is unchanged).
 
 ## Acceptance
-- [ ] `test_erased_content_unreachable_in_history`
-- [ ] `test_log_still_verifies_after_erase`
-- [ ] `test_erase_event_has_no_content`
-- [ ] `test_erase_requires_reason_and_confirmation`
+- [x] `test_erased_content_unreachable_in_history`
+- [x] `test_log_still_verifies_after_erase`
+- [x] `test_erase_event_has_no_content`
+- [x] `test_erase_requires_reason_and_confirmation`

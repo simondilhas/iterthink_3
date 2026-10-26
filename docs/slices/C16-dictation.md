@@ -1,6 +1,6 @@
 ```
 id: C16
-status: ready
+status: done
 depends_on: [C3, C15]
 ```
 # C16 · Dictation
@@ -42,10 +42,10 @@ processed locally; it behaves exactly like typing.
   the model skip only if the `voice` extra is missing locally, and fail in CI.
 
 ## Acceptance
-- [ ] `test_transcribes_fixture_standard_german`
-- [ ] `test_transcript_streams_into_field_without_enter`
-- [ ] `test_capture_runs_in_python_not_webview`
-- [ ] `test_default_key_is_mod_shift_space_and_configurable`
-- [ ] `test_no_network_during_dictation`
-- [ ] `test_audio_not_written_to_disk`
-- [ ] `test_voice_source_recorded_on_following_ai_action`
+- [x] `test_transcribes_fixture_standard_german`
+- [x] `test_transcript_streams_into_field_without_enter`
+- [x] `test_capture_runs_in_python_not_webview`
+- [x] `test_default_key_is_mod_shift_space_and_configurable`
+- [x] `test_no_network_during_dictation`
+- [x] `test_audio_not_written_to_disk`
+- [x] `test_voice_source_recorded_on_following_ai_action`
