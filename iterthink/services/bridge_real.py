@@ -31,6 +31,7 @@ from iterthink.services.bridge import (
     VersionInfo,
 )
 from iterthink.services.chats import ChatsBridge
+from iterthink.services.checks_review import ChecksBridge
 from iterthink.services.dictation import DictationBridge as Voice
 from iterthink.services.disk_scan import notice, scan, start_watching, subscribe
 from iterthink.services.documents import DocumentsBridge
@@ -112,6 +113,7 @@ class RealBridge(
     EraseBridge,
     DeliverBridge,
     IncomingBridge,
+    ChecksBridge,
     Later,
 ):
     def __init__(

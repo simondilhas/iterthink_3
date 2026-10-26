@@ -1,6 +1,6 @@
 ```
 id: C25
-status: ready
+status: done
 depends_on: [C1, C2]
 ```
 # C25 · Checks panel
@@ -36,8 +36,8 @@ Building blocks (Judge: `runCheck`).
   cached per (file version, check version).
 
 ## Acceptance
-- [ ] `test_checks_listed_from_inherited_checks_yaml`
-- [ ] `test_run_streams_results_and_changes_nothing`
-- [ ] `test_check_respects_egress_none`
-- [ ] `test_cached_result_reused_for_same_version`
-- [ ] `test_panel_closed_by_default`
+- [x] `test_checks_listed_from_inherited_checks_yaml`
+- [x] `test_run_streams_results_and_changes_nothing`
+- [x] `test_check_respects_egress_none`
+- [x] `test_cached_result_reused_for_same_version`
+- [x] `test_panel_closed_by_default`

@@ -1,0 +1,22 @@
+#checks-panel {
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: var(--gap);
+}
+
+#checks-panel summary {
+  color: var(--muted);
+}
+
+.check-mark {
+  color: var(--accent);
+  font-weight: 700;
+}
+
+.check-sources {
+  color: var(--muted);
+}
+
+check-symbols {
+  display: block;
+}
