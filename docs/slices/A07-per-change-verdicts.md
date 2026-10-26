@@ -1,6 +1,6 @@
 ```
 id: A7
-status: ready
+status: done
 depends_on: [A5, B1]
 ```
 # A7 · Per-change verdicts
@@ -63,14 +63,14 @@ def edit_change(self, project, proposal_id, change_id, text, actor,
   form field `candidate`; response is the fragment plus an out-of-band status bar.
 
 ## Acceptance (tests first)
-- [ ] `test_text_blocks_carry_stable_change_ids` — same input, same ids; stable blocks `""`
-- [ ] contract: `test_deciding_every_change_applies_only_accepted_ones`
-- [ ] contract: `test_stale_candidate_is_a_conflict_and_decides_nothing`
-- [ ] contract: `test_rejecting_all_changes_rejects_the_proposal_with_reason`
-- [ ] contract: `test_edit_change_keeps_it_open_and_changes_the_candidate`
-- [ ] contract: `test_source_untouched_until_the_last_change_is_decided` (invariant 3)
-- [ ] `test_change_verdicts_rebuild_from_the_log` (invariant 5)
-- [ ] `test_change_fragment_posts_and_409_marks_outdated`
+- [x] `test_text_blocks_carry_stable_change_ids` — same input, same ids; stable blocks `""`
+- [x] contract: `test_deciding_every_change_applies_only_accepted_ones`
+- [x] contract: `test_stale_candidate_is_a_conflict_and_decides_nothing`
+- [x] contract: `test_rejecting_all_changes_rejects_the_proposal_with_reason`
+- [x] contract: `test_edit_change_keeps_it_open_and_changes_the_candidate`
+- [x] contract: `test_source_untouched_until_the_last_change_is_decided` (invariant 3)
+- [x] `test_change_verdicts_rebuild_from_the_log` (invariant 5)
+- [x] `test_change_fragment_posts_and_409_marks_outdated`
 
 ## Done when
 All acceptance tests pass and `scripts/check.py --full` is green.

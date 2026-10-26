@@ -5,7 +5,8 @@
   <p>{{ proposal.status }}</p>
   {% include "review/auto.html" %}
   {% if notice %}<p>{{ notice }}</p>{% endif %}
-  {% for view in views %}{% include "history/diff.html" %}{% endfor %}
+  {% if total_changes and proposal.status == "open" %}{% include "review/change_status.html" %}{% endif %}
+  {% for view in views %}{% if view.decidable %}{% include "review/changes.html" %}{% else %}{% include "history/diff.html" %}{% endif %}{% endfor %}
   {% include "review/impact.html" %}
   {% if proposal.status == "open" %}
   <form id="accept" method="post" action="/p/{{ project_id }}/proposals/{{ proposal.id }}/accept" hx-post="/p/{{ project_id }}/proposals/{{ proposal.id }}/accept" hx-target="#main" hx-swap="innerHTML">

@@ -31,6 +31,7 @@ from iterthink.services.bridge import (
     VerifyInfo,
     VersionInfo,
 )
+from iterthink.services.change_verdicts import ChangeVerdictsBridge, accept_files, proposal_info
 from iterthink.services.chats import ChatsBridge
 from iterthink.services.checks_review import ChecksBridge
 from iterthink.services.dictation import DictationBridge as Voice
@@ -56,27 +57,20 @@ from iterthink.services.projects import (
     compare_file,
     default_state_dir,
     file_entries,
-    inside,
     machine_id,
     read_content,
     relative,
     restore_file,
     settings_of,
-    shown,
     store_edit,
-    tracked_files,
     version_history,
-    write_bytes,
 )
 from iterthink.services.proposals import (
     CONTRACT,
     Later,
     Proposal,
-    compete,
-    conflicts,
     diff_files,
     load_all,
-    reason_text,
     require,
 )
 from iterthink.services.search import indexed_log, indexed_search, with_filters
@@ -85,19 +79,6 @@ from iterthink.services.tasks import TasksBridge, on_verdict
 from iterthink.services.verify_log import verify_all
 from iterthink.services.watcher import SharedBridge
 from iterthink.services.workspaces import WorkspacesBridge as Work
-
-
-def _info_of(root: Path, item: Proposal) -> ProposalInfo:
-    return ProposalInfo(
-        id=item.id,
-        baseline=item.baseline,
-        actor=item.actor,
-        reason=reason_text(root, item.reason_ref),
-        paths=item.paths,
-        status=item.status,
-        created=item.created,
-        decided_by=item.decided_by,
-    )
 
 
 class RealBridge(
@@ -117,6 +98,7 @@ class RealBridge(
     IncomingBridge,
     ChecksBridge,
     ModelsBridge,
+    ChangeVerdictsBridge,
     Later,
 ):
     def __init__(
@@ -289,7 +271,7 @@ class RealBridge(
     def proposals(self, project: str, status: ProposalStatus | None = "open") -> list[ProposalInfo]:
         root = self._root(project)
         chosen = [
-            _info_of(root, item)
+            proposal_info(root, item)
             for item in load_all(root, Snapshots(root))
             if status is None or item.status == status
         ]
@@ -299,38 +281,8 @@ class RealBridge(
         return diff_files(self._root(project), proposal_id)
 
     def accept(self, project: str, proposal_id: str, actor: str, reason: str = "") -> VersionInfo:
-        root = self._root(project)
-        found = self._open(root, proposal_id)
-        stale = conflicts(found, Snapshots(root), root)
-        if stale:
-            self._event(root, project, actor, "conflict", {"paths": stale, "proposal": proposal_id})
-            raise Conflict(f"{', '.join(stale)} changed since the proposal was made")
-        drafted = Snapshots(root).read_draft(found.draft)
-        for rel, data in drafted.items():
-            write_bytes(inside(root, rel), data)
-        note = reason.strip() or reason_text(root, found.reason_ref)
-        snaps = Snapshots(root)
-        files = tracked_files(root)
-        files.update(_app_bytes(drafted))
-        version = snaps.snapshot(files, f"accepted {note}".strip(), actor)
-        made = shown(version if version is not None else snaps.head())
-        payload: dict[str, object] = {
-            "proposal": proposal_id,
-            "reason": store_blob(root, note),
-            "verdict": "accepted",
-            "version": made.id,
-        }
-        if actor.startswith("rule:"):
-            payload["auto"] = True
-        self._event(root, project, actor, "verdict", payload)
-        self._compete(root, project, proposal_id, found.paths, actor)
-        on_verdict(self, project, proposal_id, "accepted", actor, reason)
-        return made
-
-    def _compete(
-        self, root: Path, project: str, proposal_id: str, paths: tuple[str, ...], actor: str
-    ) -> None:
-        compete(root, Snapshots(root), project, proposal_id, paths, actor, self._event)
+        found = self._open(self._root(project), proposal_id)
+        return accept_files(self, project, found, None, actor, reason)
 
     def reject(self, project: str, proposal_id: str, actor: str, reason: str) -> None:
         if not reason.strip():
@@ -385,14 +337,3 @@ class RealBridge(
         self._root(project)
         pending = subscribe(project)
         return lambda: notice(pending.get())
-
-
-def _app_bytes(drafted: Mapping[str, bytes]) -> dict[str, bytes]:
-    """An accepted app stays in the version. Other iterthink data does not."""
-    kept: dict[str, bytes] = {}
-    for rel, data in drafted.items():
-        parts = rel.split("/")
-        own = len(parts) == 4 and parts[:2] == [".iterthink", "apps"]
-        if own and not parts[2].startswith("."):
-            kept[rel] = data
-    return kept

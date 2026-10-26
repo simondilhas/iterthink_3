@@ -1,0 +1,3 @@
+{% include "review/change.html" %}
+{% with oob = true %}{% include "review/change_status.html" %}{% endwith %}
+{% if toast %}<div id="toast" hx-swap-oob="true">{{ toast }}</div>{% endif %}

@@ -17,7 +17,7 @@ import io
 import json
 import secrets
 from collections.abc import Callable, Iterator, Mapping
-from dataclasses import dataclass, replace
+from dataclasses import dataclass, field, replace
 from datetime import UTC, datetime
 from pathlib import Path, PurePosixPath
 from typing import Literal
@@ -55,6 +55,16 @@ from iterthink.services.bridge import (
     VersionInfo,
     kind_of,
 )
+from iterthink.services.change_ids import (
+    DECIDABLE_KINDS,
+    candidate_of,
+    change_ids,
+    decided_text,
+    edited_text,
+    recorded,
+    statuses,
+    with_ids,
+)
 
 DATA_DIRS = (".iterthink", ".jj")
 TEXT_KINDS = {"markdown", "table", "text"}
@@ -73,6 +83,7 @@ class _Proposal:
     info: ProposalInfo
     changes: dict[str, str]
     base_content: dict[str, bytes | None]  # None: file did not exist at baseline
+    verdicts: dict[str, str] = field(default_factory=dict)  # change id → accepted|rejected
 
 
 @dataclass
@@ -404,7 +415,7 @@ class FakeBridge:
     def proposals(self, project: str, status: ProposalStatus | None = "open") -> list[ProposalInfo]:
         p = self._project(project)
         items = [
-            prop.info
+            self._info(prop)
             for prop in p.proposals.values()
             if status is None or prop.info.status == status
         ]
@@ -430,6 +441,12 @@ class FakeBridge:
     def accept(self, project: str, proposal_id: str, actor: str, reason: str = "") -> VersionInfo:
         p = self._project(project)
         prop = self._proposal(p, proposal_id)
+        return self._accept_texts(p, prop, prop.changes, actor, reason)
+
+    def _accept_texts(
+        self, p: _Project, prop: _Proposal, texts: Mapping[str, str], actor: str, reason: str
+    ) -> VersionInfo:
+        proposal_id = prop.info.id
         if prop.info.status != "open":
             raise Conflict(f"proposal {proposal_id} is already {prop.info.status}")
         current = self._scan(p.root)
@@ -443,7 +460,7 @@ class FakeBridge:
                 f"proposal {proposal_id} conflicts with later changes to {', '.join(stale)}",
             )
             raise Conflict(f"{', '.join(stale)} changed since the proposal was made")
-        for rel, text in prop.changes.items():
+        for rel, text in texts.items():
             full = self._file(p, rel)
             full.parent.mkdir(parents=True, exist_ok=True)
             full.write_bytes(text.encode("utf-8"))
@@ -519,6 +536,33 @@ class FakeBridge:
 
     # --- later slices ----------------------------------------------------
 
+    def _text_diffs(self, prop: _Proposal) -> list[FileDiff]:
+        return [
+            diff_bytes(rel, prop.base_content[rel], text.encode("utf-8"))
+            for rel, text in sorted(prop.changes.items())
+            if kind_of(rel) in DECIDABLE_KINDS
+        ]
+
+    def _candidate(self, prop: _Proposal) -> str:
+        return candidate_of({rel: text.encode("utf-8") for rel, text in prop.changes.items()})
+
+    def _info(self, prop: _Proposal) -> ProposalInfo:
+        if prop.info.status != "open":
+            return replace(prop.info, changes=recorded(prop.verdicts), candidate="")
+        changes = statuses(self._text_diffs(prop), prop.verdicts, "open")
+        return replace(prop.info, changes=changes, candidate=self._candidate(prop))
+
+    def _open_change(
+        self, project: str, proposal_id: str, candidate: str | None
+    ) -> tuple[_Project, _Proposal, list[FileDiff]]:
+        p = self._project(project)
+        prop = self._proposal(p, proposal_id)
+        if prop.info.status != "open":
+            raise Conflict(f"proposal {proposal_id} is already {prop.info.status}")
+        if candidate is not None and candidate != self._candidate(prop):
+            raise Conflict(f"proposal {proposal_id} changed since it was shown")
+        return p, prop, self._text_diffs(prop)
+
     def decide_change(
         self,
         project: str,
@@ -529,7 +573,25 @@ class FakeBridge:
         reason: str = "",
         candidate: str | None = None,
     ) -> ProposalInfo:
-        raise NotImplementedError("slice A7")
+        p, prop, diffs = self._open_change(project, proposal_id, candidate)
+        if change_id not in change_ids(diffs):
+            raise NotFound(f"unknown change {change_id}")
+        verdicts = {**prop.verdicts, change_id: verdict}
+        current = set(statuses(diffs, verdicts, "open").values())
+        if "open" not in current and "accepted" not in current and not reason.strip():
+            raise Invalid("rejecting every change needs a reason")
+        prop.verdicts = verdicts
+        self._append_log(
+            p, actor, "change_verdict", f"{verdict} one change of proposal {proposal_id}"
+        )
+        if "open" not in current and "accepted" in current:
+            texts = dict(prop.changes)
+            for diff in diffs:
+                texts[diff.path] = decided_text(diff.blocks, verdicts, prop.changes[diff.path])
+            self._accept_texts(p, prop, texts, actor, reason)
+        elif "open" not in current:
+            self.reject(project, proposal_id, actor, reason)
+        return self._info(prop)
 
     def edit_change(
         self,
@@ -540,7 +602,17 @@ class FakeBridge:
         actor: str,
         candidate: str | None = None,
     ) -> ProposalInfo:
-        raise NotImplementedError("slice A7")
+        p, prop, diffs = self._open_change(project, proposal_id, candidate)
+        target = next((diff for diff in diffs if change_id in change_ids([diff])), None)
+        if target is None:
+            raise NotFound(f"unknown change {change_id}")
+        if not text.strip():
+            raise Invalid("an edited change needs text")
+        proposed = prop.changes[target.path]
+        prop.changes[target.path] = edited_text(target.blocks, change_id, text.strip(), proposed)
+        prop.verdicts.pop(change_id, None)
+        self._append_log(p, actor, "change_edit", f"edited one change of proposal {proposal_id}")
+        return self._info(prop)
 
     def interpret(self, project: str, line: str) -> Intent:
         raise NotImplementedError("slice C3")
@@ -694,7 +766,10 @@ def _text_diff(path: str, before: str, after: str) -> FileDiff:
     counts = {k: sum(1 for x in blocks if x.kind == k) for k in ("modified", "added", "removed")}
     parts = [f"{n} paragraph{'s' if n != 1 else ''} {k}" for k, n in counts.items() if n]
     return FileDiff(
-        path=path, kind="text", summary=", ".join(parts) or "no changes", blocks=tuple(blocks)
+        path=path,
+        kind="text",
+        summary=", ".join(parts) or "no changes",
+        blocks=with_ids(path, tuple(blocks)),
     )
 
 

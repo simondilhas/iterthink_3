@@ -1,0 +1,9 @@
+<div id="diff">
+{% for change in view.changes %}{% include "review/change.html" %}{% endfor %}
+{% if view.stable %}
+<details>
+  <summary>{{ view.stable|length }} unchanged paragraph{% if view.stable|length != 1 %}s{% endif %}</summary>
+  {% for text in view.stable %}<p>{{ text }}</p>{% endfor %}
+</details>
+{% endif %}
+</div>

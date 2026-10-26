@@ -1,6 +1,7 @@
 {% extends "base.html" %}
 {% block title %}Proposal{% endblock %}
 {% block head %}
+<meta name="htmx-config" content='{"responseHandling":[{"code":"204","swap":false},{"code":"[23]..","swap":true},{"code":"[45]..","swap":true,"error":true}]}'>
 {% include "home/head.html" %}
 <script type="module" src="/static/js/review-keys.js"></script>
 {% endblock %}

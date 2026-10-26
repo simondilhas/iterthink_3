@@ -8,6 +8,7 @@ from iterthink.compare.margin import split_paragraphs
 from iterthink.compare.paragraph_align import DiffParagraph, compute_alignment
 from iterthink.compare.paragraph_compare import _base_kind_from_diff
 from iterthink.services.bridge import Block, FileDiff, FileKind, Segment
+from iterthink.services.change_ids import with_ids
 
 _CHANGED = frozenset({"refined", "modified", "rephrased"})
 
@@ -27,7 +28,7 @@ class TextEngine:
         else:
             rows = compute_alignment("\n\n".join(old), "\n\n".join(new))
             blocks = tuple(_block(row) for row in rows)
-        return FileDiff(path, "text", _summary(blocks), blocks=blocks)
+        return FileDiff(path, "text", _summary(blocks), blocks=with_ids(path, blocks))
 
 
 def _text(data: bytes | None) -> str:

@@ -15,6 +15,7 @@ from iterthink.services.bridge import (
     Forbidden,
     Invalid,
     NotFound,
+    ProposalInfo,
     kind_of,
 )
 
@@ -363,6 +364,101 @@ def test_proposal_can_create_a_new_file(ctx: Ctx) -> None:
 def test_unknown_proposal_raises_not_found(ctx: Ctx) -> None:
     with pytest.raises(NotFound):
         ctx.bridge.accept(ctx.project, "pr-unknown", ctx.actor)
+
+
+# --- per-change verdicts (A7) ------------------------------------------------
+
+
+def _propose_two(ctx: Ctx) -> str:
+    text = (ctx.root / MD).read_text("utf-8").replace("EI30", "EI60").replace("1.2 m", "1.5 m")
+    return ctx.bridge.propose(ctx.project, {MD: text}, "agent:checker", "Türen und Fluchtwege").id
+
+
+def _change_ids(ctx: Ctx, pid: str) -> list[str]:
+    (diff,) = ctx.bridge.proposal_diff(ctx.project, pid)
+    return [block.id for block in diff.blocks if block.kind != "stable"]
+
+
+def _info(ctx: Ctx, pid: str) -> ProposalInfo:
+    return next(item for item in ctx.bridge.proposals(ctx.project, None) if item.id == pid)
+
+
+def test_deciding_every_change_applies_only_accepted_ones(ctx: Ctx) -> None:
+    pid = _propose_two(ctx)
+    door, exits = _change_ids(ctx, pid)
+    info = ctx.bridge.decide_change(ctx.project, pid, door, "accepted", ctx.actor)
+    assert info.status == "open"
+    assert dict(info.changes) == {door: "accepted", exits: "open"}
+    info = ctx.bridge.decide_change(ctx.project, pid, exits, "rejected", ctx.actor)
+    assert info.status == "accepted"
+    assert (ctx.root / MD).read_text("utf-8") == (
+        "# Pflichtenheft\n\nDie Türen im EG sind EI60.\n\nFluchtwege 1.2 m.\n"
+    )
+    assert ctx.bridge.log(ctx.project)[0].type == "verdict"
+
+
+def test_stale_candidate_is_a_conflict_and_decides_nothing(ctx: Ctx) -> None:
+    pid = _propose_two(ctx)
+    door, _exits = _change_ids(ctx, pid)
+    with pytest.raises(Conflict):
+        ctx.bridge.decide_change(ctx.project, pid, door, "accepted", ctx.actor, candidate="0" * 64)
+    assert set(_info(ctx, pid).changes.values()) == {"open"}
+    with pytest.raises(NotFound):
+        ctx.bridge.decide_change(ctx.project, pid, "unknown", "accepted", ctx.actor)
+    current = _info(ctx, pid).candidate
+    info = ctx.bridge.decide_change(
+        ctx.project, pid, door, "accepted", ctx.actor, candidate=current
+    )
+    assert info.changes[door] == "accepted"
+
+
+def test_rejecting_all_changes_rejects_the_proposal_with_reason(ctx: Ctx) -> None:
+    pid = _propose_two(ctx)
+    door, exits = _change_ids(ctx, pid)
+    before = snapshot_sources(ctx.root)
+    ctx.bridge.decide_change(ctx.project, pid, door, "rejected", ctx.actor)
+    with pytest.raises(Invalid):
+        ctx.bridge.decide_change(ctx.project, pid, exits, "rejected", ctx.actor)
+    info = ctx.bridge.decide_change(ctx.project, pid, exits, "rejected", ctx.actor, reason="bleibt")
+    assert info.status == "rejected"
+    assert snapshot_sources(ctx.root) == before
+    with pytest.raises(Conflict):
+        ctx.bridge.decide_change(ctx.project, pid, exits, "accepted", ctx.actor)
+
+
+def test_edit_change_keeps_it_open_and_changes_the_candidate(ctx: Ctx) -> None:
+    pid = _propose_two(ctx)
+    first = _info(ctx, pid)
+    assert first.candidate
+    door, _exits = _change_ids(ctx, pid)
+    text = "Die Türen im EG sind EI90."
+    edited = ctx.bridge.edit_change(ctx.project, pid, door, text, ctx.actor, first.candidate)
+    assert edited.status == "open"
+    assert edited.candidate not in ("", first.candidate)
+    assert len(edited.changes) == 2
+    assert set(edited.changes.values()) == {"open"}
+    (diff,) = ctx.bridge.proposal_diff(ctx.project, pid)
+    assert any(block.after == text for block in diff.blocks)
+    with pytest.raises(Conflict):
+        ctx.bridge.edit_change(ctx.project, pid, door, "x", ctx.actor, candidate=first.candidate)
+    ctx.bridge.accept(ctx.project, pid, ctx.actor)
+    assert "EI90" in (ctx.root / MD).read_text("utf-8")
+
+
+def test_source_untouched_until_the_last_change_is_decided(ctx: Ctx) -> None:
+    pid = _propose_two(ctx)
+    door, exits = _change_ids(ctx, pid)
+    before = snapshot_sources(ctx.root)
+    ctx.bridge.decide_change(ctx.project, pid, door, "accepted", ctx.actor)
+    ctx.bridge.edit_change(ctx.project, pid, exits, "Fluchtwege 1.4 m.", ctx.actor)
+    assert snapshot_sources(ctx.root) == before
+    info = _info(ctx, pid)
+    assert info.changes[door] == "accepted"
+    (newer,) = [key for key, status in info.changes.items() if status == "open"]
+    ctx.bridge.decide_change(ctx.project, pid, newer, "accepted", ctx.actor)
+    text = (ctx.root / MD).read_text("utf-8")
+    assert "EI60" in text
+    assert "1.4 m" in text
 
 
 # --- log, verify, search, vocabulary ----------------------------------------

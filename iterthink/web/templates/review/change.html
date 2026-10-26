@@ -1,0 +1,39 @@
+{% set base = "/p/" ~ project_id ~ "/proposals/" ~ proposal.id ~ "/changes/" ~ change.id %}
+<section class="change{% if outdated %} outdated{% endif %}" id="change-{{ change.id }}" data-change="{{ change.index }}" data-change-id="{{ change.id }}" data-hash="{{ proposal.candidate }}" data-status="{{ change.status }}">
+  <p>{{ change.kind }}</p>
+  <p>
+    {% if change.segments %}
+      {% for segment in change.segments %}
+        {% if segment.op == "delete" %}<del>{{ segment.text }}</del>
+        {% elif segment.op == "insert" %}<ins>{{ segment.text }}</ins>
+        {% else %}{{ segment.text }}{% endif %}
+      {% endfor %}
+    {% elif change.kind == "added" %}<ins>{{ change.after }}</ins>
+    {% elif change.kind == "removed" %}<del>{{ change.before }}</del>
+    {% else %}{{ change.before }} {{ change.after }}{% endif %}
+  </p>
+  {% if outdated %}<p class="change-outdated">This change was outdated and has been refreshed. Check it again.</p>{% endif %}
+  {% if change.status == "open" %}
+  <div class="change-actions">
+    <form method="post" action="{{ base }}/accept" hx-post="{{ base }}/accept" hx-target="#change-{{ change.id }}" hx-swap="outerHTML">
+      <input type="hidden" name="candidate" value="{{ proposal.candidate }}">
+      <button type="submit">Accept change</button>
+    </form>
+    <form method="post" action="{{ base }}/reject" hx-post="{{ base }}/reject" hx-target="#change-{{ change.id }}" hx-swap="outerHTML">
+      <input type="hidden" name="candidate" value="{{ proposal.candidate }}">
+      <input name="reason" value="" placeholder="Reason (optional)">
+      <button type="submit">Reject change</button>
+    </form>
+    <details>
+      <summary>Edit change</summary>
+      <form method="post" action="{{ base }}/edit" hx-post="{{ base }}/edit" hx-target="#main" hx-swap="innerHTML">
+        <input type="hidden" name="candidate" value="{{ proposal.candidate }}">
+        <textarea name="text" required>{{ change.after }}</textarea>
+        <button type="submit">Save edit</button>
+      </form>
+    </details>
+  </div>
+  {% else %}
+  <p class="change-status">{{ change.status }}</p>
+  {% endif %}
+</section>

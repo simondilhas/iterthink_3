@@ -4,10 +4,9 @@ from __future__ import annotations
 
 import secrets
 from collections.abc import Callable, Iterator, Mapping
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from datetime import datetime
 from pathlib import Path
-from typing import Literal
 
 from iterthink.compare.engines import diff as diff_bytes
 from iterthink.persistence.snapshots import SnapshotError, Snapshots
@@ -44,6 +43,7 @@ class Proposal:
     status: ProposalStatus
     created: str
     decided_by: str | None = None
+    verdicts: Mapping[str, str] = field(default_factory=dict)  # change id → accepted|rejected
 
 
 def describe(root: Path, event_type: str, payload: Mapping[str, object]) -> str:
@@ -62,6 +62,11 @@ def describe(root: Path, event_type: str, payload: Mapping[str, object]) -> str:
         word = "accepted" if payload.get("verdict") == "accepted" else "rejected"
         detail = reason_text(root, payload.get("reason"))
         return f"{word} proposal {payload.get('proposal')}: {detail}"
+    if event_type == "change_verdict":
+        word = "accepted" if payload.get("verdict") == "accepted" else "rejected"
+        return f"{word} one change of proposal {payload.get('proposal')}"
+    if event_type == "change_edit":
+        return f"edited one change of proposal {payload.get('proposal')}"
     if event_type == "conflict":
         paths = payload.get("paths")
         listed = ", ".join(paths) if isinstance(paths, list) else ""
@@ -159,6 +164,22 @@ def _apply(records: dict[str, dict[str, object]], event: Event) -> None:
         if pid in records and records[pid]["status"] in {"open", "accepted"}:
             records[pid]["status"] = "conflict"
             records[pid]["decided_by"] = event.actor
+    elif event.type in ("change_verdict", "change_edit"):
+        _apply_change(records.get(str(payload.get("proposal", ""))), event)
+
+
+def _apply_change(record: dict[str, object] | None, event: Event) -> None:
+    if record is None or record["status"] != "open":
+        return
+    verdicts = record["verdicts"]
+    change = str(event.payload.get("change", ""))
+    if not isinstance(verdicts, dict):
+        return
+    if event.type == "change_edit":
+        record["draft"] = str(event.payload.get("draft", record["draft"]))
+        verdicts.pop(change, None)
+    elif event.payload.get("verdict") in ("accepted", "rejected"):
+        verdicts[change] = str(event.payload["verdict"])
 
 
 def _record(root: Path, item: dict[str, object]) -> Proposal:
@@ -166,6 +187,7 @@ def _record(root: Path, item: dict[str, object]) -> Proposal:
     path_tuple = tuple(paths) if isinstance(paths, tuple) else ()
     status = item["status"]
     decided = item["decided_by"]
+    verdicts = item.get("verdicts")
     return Proposal(
         id=str(item["id"]),
         baseline=str(item["baseline"]),
@@ -176,11 +198,13 @@ def _record(root: Path, item: dict[str, object]) -> Proposal:
         status=status if status in {"open", "accepted", "rejected", "conflict"} else "open",
         created=str(item["created"]),
         decided_by=decided if isinstance(decided, str) else None,
+        verdicts=dict(verdicts) if isinstance(verdicts, dict) else {},
     )
 
 
 def load_all(project_dir: Path, snaps: Snapshots) -> list[Proposal]:
-    """Rebuild every proposal from `proposal_created`, `verdict` and `conflict`."""
+    """Rebuild every proposal from `proposal_created`, `verdict`, `conflict` and the
+    per-change `change_verdict` and `change_edit` events."""
     try:
         snaps.head()
     except SnapshotError:
@@ -202,6 +226,7 @@ def load_all(project_dir: Path, snaps: Snapshots) -> list[Proposal]:
                 "status": "open",
                 "created": event.ts,
                 "decided_by": None,
+                "verdicts": {},
             }
             order.append(pid)
         else:
@@ -237,29 +262,6 @@ def diff_files(project_dir: Path, proposal_id: str) -> list[FileDiff]:
 
 class Later:
     """Bridge methods that belong to a later slice. They refuse until that slice."""
-
-    def decide_change(
-        self,
-        project: str,
-        proposal_id: str,
-        change_id: str,
-        verdict: Literal["accepted", "rejected"],
-        actor: str,
-        reason: str = "",
-        candidate: str | None = None,
-    ) -> ProposalInfo:
-        raise NotImplementedError("slice A7")
-
-    def edit_change(
-        self,
-        project: str,
-        proposal_id: str,
-        change_id: str,
-        text: str,
-        actor: str,
-        candidate: str | None = None,
-    ) -> ProposalInfo:
-        raise NotImplementedError("slice A7")
 
     def interpret(self, project: str, line: str) -> Intent:
         raise NotImplementedError("slice C3")
